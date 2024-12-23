@@ -76,9 +76,9 @@ export const ui = {
   main: {
     index: 0,
     index_target: 0,
-    svg: ["play", "chart", "settings", "credits"],
-    text: ["play!", "top performance", "settings", "credits"],
-    color: ["green", "blue", "purple", "grade_Z"],
+    svg: ["play", "chart", "settings", "about"],
+    text: ["play!", "top performance", "settings", "info"],
+    color: ["green", "blue", "purple", "white"],
   },
 
   list: {
@@ -945,13 +945,66 @@ export const ui = {
     main.classList.add("centerbox");
     document.body.appendChild(main);
     main.innerHTML = `
-      <h1 style="width: 40vw;"> Credits </h1>
-      <h3> Music </h3>
-      <div style="text-align: left;">
-        <p><span> piano_music_01.mp3 <l></l></span><span> Crispin Merrell </span></p>
-        <p><span> Deep Under <l></l></span><span> Whitesand </span></p>
-        <p><span> Loneliness <l></l></span><span> infiniteXforever </span></p>
+      <h1> Credits </h1>
+      <div style="text-align: left;" id="real_credits">
+        <h3 style="text-align: center;"> Music </h3>
+        <p style="width: max(40vw, 50ch);"><a href="https://squirkymusic.sourceaudio.com/track/25689665" target="_blank"><span> piano_music_01.mp3 <l></l></span><span> Crispin Merrell </span></a></p>
+        <p><a href="https://youtu.be/fCNQMJba86A" target="_blank"><span> Deep Under <l></l></span><span> Whitesand </span></a></p>
+        <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
+        <h3 style="text-align: center;"> Images </h3>
+        <p><a href="https://res.cloudinary.com/dzzjrhgkb/image/upload/dfjk/deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
+      <h1> Versions </h1>
+      <div style="text-align: left;">
+      <h3> v0.3.3 | 23-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - spent like 3 hours typing this versions list </p>
+      <p> - added credits </p>
+      <h3> v0.3.2 | 23-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - slightly modified piano_music_01.mp3 hard </p>
+      <p> - finally added 2 seconds of silence in <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/v1734967578/dfjk/loneliness.mp3" target="_blank">Loneliness</a> </p>
+      <p> - added more back buttons on mobile </p>
+      <h3> v0.3.1 | 22-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - added song playback speed option in settings </p>
+      <h3> v0.3.0 | 21-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - created the main menu! </p>
+      <h3> v0.2.7 | 20-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - made a better mobile song list </p>
+      <h3> v0.2.6 | 18-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - added line offset option in settings </p>
+      <p> - improved results screen for mobile </p>
+      <h3> v0.2.5 | 16-12-2024 | 🎶 4  📊 6 </h3>
+      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/loneliness.mp3" target="_blank">Loneliness</a> </p>
+      <p> - added easy chart for Deep Under </p>
+      <h3> v0.2.4 | 15-12-2024 | 🎶 3  📊 5 </h3>
+      <p> - changed picture of piano_music_01.mp3 </p>
+      <p> - modified a few difficulty numbers </p>
+      <h3> v0.2.3 | 15-12-2024 | 🎶 3  📊 5 </h3>
+      <p> - added pictures in the song list </p>
+      <p> - made back and restart button for mobile </p>
+      <h3> v0.2.2 | 14-12-2024 | 🎶 3  📊 5 </h3>
+      <p> - added mobile gameplay controls! (full mobile support!) </p>
+      <h3> v0.2.1 | 13-12-2024 | 🎶 3  📊 5 </h3>
+      <p> - added mobile GUI controls! </p>
+      <h3> v0.2.0 | 12-12-2024 | 🎶 3  📊 5 </h3>
+      <p> - created the song list! </p>
+      <p> - added a hard chart for Deep Under </p>
+      <h3> v0.1.3 | ??-12-2024 | 🎶 3  📊 4 </h3>
+      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/deepunder.mp3" target="_blank">Deep Under</a> internally </p>
+      <p> - added hard chart and updated easy chart for piano_music_01.mp3 </p>
+      <h3> v0.1.2 | ??-12-2024 | 🎶 2  📊 3 </h3>
+      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/beeps.mp3" target="_blank">beeps</a> as calibration for audio offset in settings </p>
+      <p> - also added easy chart for piano_music_01.mp3 </p>
+      <h3> v0.1.1 | ??-12-2024 | 🎶 1  📊 1 </h3>
+      <p> - added settings (just the audio offset) </p>
+      <h3> v0.1.0 | 10-12-2024 | 🎶 1  📊 1 </h3>
+      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/saloon.mp3" target="_blank">piano_music_01.mp3</a> </p>
+      <p> - and made a chart for it (it's now the medium one) </p>
+      <p> - this started working </p>
+      <h3> v0.0.1 | 09-12-2024 | 🎶 0  📊 0 </h3>
+      <p> - started working on this </p>
+      <h3> v0.0.0 | 09-12-2024 | 🎶 0  📊 0 </h3>
+      <p> - site created! </p>
+      </div> 
     `;
     if (ui.mobile) main.addEventListener("click", function() {
       ui.hide_box("credits");

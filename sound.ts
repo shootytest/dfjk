@@ -4,12 +4,14 @@ export class Sound {
 
   static current?: Sound;
 
-  static current_time = function() {
-    return Sound.current?.time ?? 0;
-  };
+  static current_time: number = 0;
 
   static play_sfx = function(name: string) {
     return sfx[name].play();
+  };
+
+  static tick = function() {
+    Sound.current_time = Sound.current?.time ?? 0;
   };
 
   ctx: AudioContext;
@@ -36,7 +38,7 @@ export class Sound {
     this.ctx = new AudioContext();
     this.element = document.createElement("audio");
     this.element.crossOrigin = "anonymous";
-    this.element.src = `https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/${path}`;
+    this.element.src = `https://res.cloudinary.com/dzzjrhgkb/video/upload/v1734967578/dfjk/${path}`;
     (document.getElementById("audio") ?? document.body).appendChild(this.element);
     this.track = this.ctx.createMediaElementSource(this.element);
     // this.track.connect(this.ctx.destination);
@@ -100,6 +102,7 @@ export class Sound {
   }
 
   make_interval() {
+    if (!this.options.start || !this.options.end) return;
     this.options.interval = setInterval(() => {
       if (!this.options.start || !this.options.end) return;
       if (this.element.currentTime * 1000 >= this.options.end) {
@@ -109,6 +112,7 @@ export class Sound {
   }
   
   clear_interval() {
+    if (!this.options.start || !this.options.end) return;
     clearInterval(this.options.interval);
   }
 
@@ -135,7 +139,7 @@ export class Sound {
   }
 
   get time(): number {
-    return this.element.currentTime * 1000 - settings.offset;
+    return this.element.currentTime * 1000 - settings.offset * settings.play_speed;
     if (this.play_timestamp < 0) {
       return -1000; // todo replace with play delay
     } else if (this.pause_timestamp < 0) {
@@ -171,7 +175,7 @@ export const sounds: { [key: string]: Sound } = {
   saloon: new Sound("saloon.mp3", 0.4),
   saloon_preview: new Sound("saloon.mp3", 0.4, 2200, 31900),
   loneliness: new Sound("loneliness.mp3", 0.7),
-  loneliness_preview: new Sound("loneliness.mp3", 0.7, 70300, 94350),
+  loneliness_preview: new Sound("loneliness.mp3", 0.7, 72300, 96350),
   deepunder: new Sound("deepunder.mp3", 1),
   deepunder_preview: new Sound("deepunder.mp3", 1, 41950, 64625),
 };

@@ -315,7 +315,7 @@ export class Chart {
             this.lane_pressed[lane] = true;
         if (Sound.current?.paused)
             return;
-        const time = Sound.current_time();
+        const time = Sound.current_time;
         this.lane_last_hit[lane] = time;
         const q = this.queue[lane];
         let to_remove = 0;
@@ -346,7 +346,7 @@ export class Chart {
     key_release(lane) {
         if (!mouse.lanes[0])
             this.lane_pressed[lane] = false;
-        const time = Sound.current_time();
+        const time = Sound.current_time;
         this.lane_last_release[lane] = time;
     }
     deactivate_note(note) {
@@ -357,6 +357,9 @@ export class Chart {
         if (this.combo > this.max_combo) {
             this.max_combo = this.combo;
         }
+    }
+    check_lane_hit(lane) {
+        return this.lane_pressed[lane] || (Sound.current_time - this.lane_last_release[lane] < 40);
     }
     finish() {
         if (this.finished)
@@ -437,6 +440,8 @@ export class Note {
         if (!Sound.current)
             return;
         const t = -Sound.current.time_to(this.time); // t = time after hitting
+        if (t < -3000)
+            return; // hopefully this is optimisation
         if (this.hit < 0 && t > 160) {
             this.hit_note(0);
             // console.log("missed " + this.type + " note.");
@@ -469,18 +474,18 @@ export class Note {
             const frac = this.lane - floored;
             let lane_pressed = false;
             if (frac >= 0.4 && frac <= 0.6) {
-                lane_pressed = this.chart.lane_pressed[floored] || this.chart.lane_pressed[floored + 1];
+                lane_pressed = this.chart.check_lane_hit(floored) || this.chart.check_lane_hit(floored + 1);
             }
             else if (frac > 0.6) {
-                lane_pressed = this.chart.lane_pressed[floored + 1];
+                lane_pressed = this.chart.check_lane_hit(floored + 1);
             }
             else { // frac < 0.4
-                lane_pressed = this.chart.lane_pressed[floored];
+                lane_pressed = this.chart.check_lane_hit(floored);
             }
             if (lane_pressed) {
-                this.hit_note(t > 35 ? 3 : 4);
+                this.hit_note(t > 40 ? 3 : 4);
             }
-            else if (t > 70) {
+            else if (t > 80) {
                 this.hit_note(0);
                 // console.log("missed spam note...");
             }
@@ -493,7 +498,7 @@ export class Note {
         if (this.hit >= 0)
             return; // already hit!
         this.hit = hit;
-        this.hit_time = Sound.current_time();
+        this.hit_time = Sound.current_time;
         this.chart.result[hit]++;
         if (this.hit === 0) {
             this.chart.combo = 0;
@@ -2047,7 +2052,7 @@ export const chart_definitions = {
     loneliness_1: {
         song: "loneliness",
         notes: [
-            [note_type.none, 0, 35, 60000 / 480.76],
+            [note_type.none, 0, 2035, 60000 / 480.76],
             [note_type.hold, 2, 0, 8],
             [note_type.spam, 2, 4],
             [note_type.normal, 4, 8],
@@ -2075,7 +2080,7 @@ export const chart_definitions = {
             [note_type.hold, 3, 108, 4],
             [note_type.hold, 4, 112, 8],
             [note_type.hold, 1, 124, 2],
-            [note_type.none, 0, 35 + 60000 / 480.76 * 128, 60000 / 480.76],
+            [note_type.none, 0, 2035 + 60000 / 480.76 * 128, 60000 / 480.76],
             [note_type.normal, 2, 0],
             [note_type.normal, 3, 0],
             [note_type.normal, 1, 4],
@@ -2129,7 +2134,7 @@ export const chart_definitions = {
             [note_type.spam, 4, 125],
             [note_type.spam, 3, 126],
             [note_type.spam, 4, 127],
-            [note_type.none, 0, 35 + 60000 / 480.76 * 256, 60000 / 480.76],
+            [note_type.none, 0, 2035 + 60000 / 480.76 * 256, 60000 / 480.76],
             [note_type.hold, 3, 0, 8],
             [note_type.spam, 3, 1],
             [note_type.spam, 3, 2],
@@ -2224,7 +2229,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 122],
             [note_type.normal, 3, 124],
             [note_type.normal, 4, 126],
-            [note_type.none, 0, 35 + 60000 / 480.76 * 384, 60000 / 480.76],
+            [note_type.none, 0, 2035 + 60000 / 480.76 * 384, 60000 / 480.76],
             [note_type.hold, 3, 0, 4],
             [note_type.spam, 3, 2],
             [note_type.spam, 3, 3],
@@ -2299,7 +2304,7 @@ export const chart_definitions = {
             [note_type.spam, 3.6, 125],
             [note_type.spam, 3.5, 126],
             [note_type.spam, 3.4, 127],
-            [note_type.none, 0, 35 + 60000 / 480.76 * 512, 60000 / 480.76],
+            [note_type.none, 0, 2035 + 60000 / 480.76 * 512, 60000 / 480.76],
             [note_type.spam, 3.3, 0],
             [note_type.spam, 3.2, 1],
             [note_type.spam, 3.1, 2],
@@ -2343,7 +2348,7 @@ export const chart_definitions = {
             [note_type.hold, 2, 112, 4],
             [note_type.normal, 1, 120],
             [note_type.normal, 2, 124],
-            [note_type.none, 0, 35 + 60000 / 480.76 * 640, 60000 / 480.76],
+            [note_type.none, 0, 2035 + 60000 / 480.76 * 640, 60000 / 480.76],
             [note_type.normal, 3, 0],
             [note_type.normal, 4, 4],
             [note_type.normal, 3, 8],
@@ -2374,8 +2379,8 @@ export const chart_definitions = {
             [note_type.spam, 4, 109],
             [note_type.spam, 4, 110],
             [note_type.spam, 4, 111],
-            [note_type.hold, 2, 112, 16],
-            [note_type.none, 0, 35 + 60000 / 480.76 * 768, 60000 / 480.76],
+            [note_type.hold, 2, 112, 18],
+            [note_type.none, 0, 2035 + 60000 / 480.76 * 770, 60000 / 480.76],
             [note_type.hold, 3, 0, 16],
         ],
     },

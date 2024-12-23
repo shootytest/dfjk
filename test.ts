@@ -24,7 +24,7 @@ const init = function() {
   key.add_key_listener("Escape", ui.back);
   key.add_key_listener("Backquote", ui.back);
   key.add_key_listener("Digit1", function() {
-    if (Sound.current) Sound.current.element.currentTime = 36.000;
+    if (Sound.current) Sound.current.element.currentTime = 88.000;
   });
   key.add_key_listener("Backspace", ui.back);
   key.add_key_listener("KeyP", function() {
@@ -92,6 +92,7 @@ const init = function() {
 };
 
 const tick = function(time?: number) {
+  Sound.tick();
   Chart.current?.tick();
   ui.tick();
   ui.draw();

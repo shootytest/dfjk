@@ -9,7 +9,7 @@ html {
 
 body {
   background-color: #111111;
-  color: white;
+  color: #eeeeee;
   font-family: "Roboto Mono";
   font-size: 14px;
   text-align: center;
@@ -61,29 +61,38 @@ table td, table th {
   padding: 0.3em;
 }
 
-#credits p {
+#real_credits p a {
   text-decoration: none;
   display: grid;
   grid-template-columns: auto max-content;
   align-items: end;
 }
 
-#credits p span:first-child {
+#real_credits p a span:first-child {
   position: relative;
   overflow: hidden;
 }
 
-#credits p span:last-child {
+#real_credits p a span:last-child {
   min-width: 1ch;
   padding-left: 0.5ch;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-#credits p l::after {
+#real_credits p a l::after {
   position: absolute;
   padding-inline-start: .25ch;
   width: 100px;
   content: "........................................................................................................................................................................";
   text-align: right;
+}
+
+#real_credits a {
+  text-decoration: none;
+}
+
+a {
+  color: #eeeeee;
+  font-family: "Roboto Mono";
 }

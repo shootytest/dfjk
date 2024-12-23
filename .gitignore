@@ -1,4 +1,5 @@
 .vscode/*
+.firebase/*
 assets/*
 unpublished/*
 .surgeignore
@@ -6,4 +7,5 @@ auto.appcache
 CNAME
 .firebaserc
 firebase.json
+firebase-debug.log
 database.rules.json
