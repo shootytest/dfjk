@@ -1,0 +1,2397 @@
+import { scores, settings, songs } from "./settings.js";
+import { Sound, sounds } from "./sound.js";
+import { mouse } from "./util/key.js";
+export class Chart {
+    static current;
+    static make(chart_metadata) {
+        const chart_name = chart_metadata.chart_name;
+        const definition = chart_definitions[chart_name];
+        if (!definition)
+            return;
+        if (charts[chart_name]) {
+            charts[chart_name].reset();
+        }
+        else {
+            charts[chart_name] = new Chart(definition, chart_metadata);
+        }
+        Chart.current = charts[chart_name];
+        if (!Chart.current) {
+            console.error("chart not found: " + chart_name);
+        }
+        Sound.current = sounds[definition.song];
+        if (!Sound.current) {
+            console.error("song not found: " + definition.song);
+        }
+        Sound.current.reset();
+    }
+    ;
+    static judge(note, offset) {
+        offset = Math.abs(offset);
+        if (offset > 160) {
+            return 0;
+        }
+        else {
+            if (note.type === note_type.hold) { // more lenient
+                if (offset > 120)
+                    return 2;
+                if (offset > 80)
+                    return 3;
+                return 4;
+            }
+            else {
+                if (offset > 120)
+                    return 1;
+                if (offset > 80)
+                    return 2;
+                if (offset > 40)
+                    return 3;
+                return 4;
+            }
+        }
+    }
+    ;
+    static grade(score) {
+        if (score >= 1010000) {
+            return "✪"; // ✮
+        }
+        else if (score >= 1009500) {
+            return "✸";
+        }
+        else if (score >= 1009000) {
+            return "★★";
+        }
+        else if (score >= 1008000) {
+            return "★";
+        }
+        else if (score >= 1006000) {
+            return "✦✦"; // +
+        }
+        else if (score >= 1004000) {
+            return "✦✦";
+        }
+        else if (score >= 1002000) {
+            return "✦"; // +
+        }
+        else if (score >= 1000000) {
+            return "✦";
+        }
+        else if (score >= 995000) {
+            return "SS+";
+        }
+        else if (score >= 990000) {
+            return "SS";
+        }
+        else if (score >= 985000) {
+            return "S+";
+        }
+        else if (score >= 980000) {
+            return "S";
+        }
+        else if (score >= 965000) {
+            return "AA+";
+        }
+        else if (score >= 950000) {
+            return "AA";
+        }
+        else if (score >= 925000) {
+            return "A+";
+        }
+        else if (score >= 900000) {
+            return "A";
+        }
+        else if (score >= 875000) {
+            return "B+";
+        }
+        else if (score >= 850000) {
+            return "B";
+        }
+        else if (score >= 800000) {
+            return "C+";
+        }
+        else if (score >= 750000) {
+            return "C";
+        }
+        else if (score >= 650000) {
+            return "D+";
+        }
+        else if (score >= 500000) {
+            return "D";
+        }
+        else if (score >= 250000) {
+            return "E";
+        }
+        else if (score >= 1) {
+            return "F";
+        }
+        else if (score === 0) {
+            return "Z";
+        }
+        else {
+            return "-";
+        }
+    }
+    static grode(score) {
+        return "grode " + score;
+    }
+    static special_grade_number(result) {
+        let special = 0;
+        if (result[0] <= 0) {
+            special = 1;
+            if (result[1] <= 0) {
+                special = 2;
+                if (result[2] <= 0) {
+                    special = 3;
+                    if (result[3] <= 0) {
+                        special = 4;
+                    }
+                }
+            }
+        }
+        return special;
+    }
+    static special_grades = ["", "FC", "FC+", "AP", "AP+"];
+    static special_grade(result) {
+        return Chart.special_grades[Chart.special_grade_number(result)];
+    }
+    static skill_rate_data = (function () {
+        const raw = `
+      1010000	✪	1	2.05	0
+      1009500	✸	500	2.04	0.01
+      1009000	★★	500	2.03	0.01
+      1008000	★	1000	2	0.03
+      1004000	✦✦	4000	1.8	0.2
+      1000000	✦	4000	1.6	0.2
+      995000	SS+	5000	1.45	0.15
+      990000	SS	5000	1.3	0.15
+      985000	S+	5000	1.15	0.15
+      980000	S	5000	1	0.15
+      965000	AA+	15000	0.9090909091	0.09090909091
+      950000	AA	15000	0.8333333333	0.07575757576
+      925000	A+	25000	0.7407407407	0.09259259259
+      900000	A	25000	0.6666666667	0.07407407407
+      875000	B+	25000	0.6060606061	0.06060606061
+      850000	B	25000	0.5555555556	0.05050505051
+      800000	C+	50000	0.5	0.05555555556
+      750000	C	50000	0.44	0.06
+      650000	D+	100000	0.35	0.09
+      500000	D	150000	0.25	0.1
+      250000	E	250000	0.125	0.125
+      1	F	249999	0	0.125
+      0	Z	1	0	0
+    `;
+        const result = [];
+        for (const line of raw.trim().split("\n")) {
+            const [s, r, ds, m, dm] = line.trim().split("\t");
+            const s_ = parseInt(s);
+            const ds_ = parseInt(ds);
+            const m_ = parseFloat(m);
+            const dm_ = parseFloat(dm);
+            result.push({
+                score: s_,
+                rank: r,
+                d_score: ds_,
+                mult: m_,
+                d_mult: dm_,
+            });
+        }
+        console.log(result);
+        return result;
+    })();
+    static skill_rate(difficulty, score, special) {
+        let result = difficulty;
+        for (const a of Chart.skill_rate_data) {
+            if (a.score <= score) {
+                const mult = a.mult + ((score - a.score) / a.d_score * a.d_mult) + special * 0.05;
+                return difficulty * mult; // runs once
+            }
+        }
+        return result;
+    }
+    metadata;
+    // metadata_2: chart_metadata_2;
+    notes;
+    queue;
+    active_notes;
+    lane_pressed;
+    lane_last_hit;
+    lane_last_release;
+    result;
+    total_notes;
+    combo;
+    max_combo;
+    total_offset;
+    number_offset;
+    sound;
+    finished;
+    old_score;
+    constructor(definition, metadata) {
+        this.metadata = metadata;
+        // this.metadata_2 = charts[this.metadata.chart_name];
+        this.notes = [];
+        this.active_notes = {};
+        this.queue = [[], [], [], [], []];
+        this.lane_pressed = [false, false, false, false, false];
+        this.lane_last_hit = [-1, -1, -1, -1, -1];
+        this.lane_last_release = [-1, -1, -1, -1, -1];
+        this.result = [0, 0, 0, 0, 0];
+        this.total_notes = 0;
+        this.combo = 0;
+        this.max_combo = 0;
+        this.total_offset = 0;
+        this.number_offset = 0;
+        this.sound = sounds[definition.song];
+        this.finished = false;
+        this.old_score = this.score_obj?.value ?? 0;
+        let t = 0, d = 0;
+        for (const nd of definition.notes) {
+            if (nd[0] === note_type.none) {
+                t = nd[2];
+                if (nd[3])
+                    d = nd[3];
+            }
+            else {
+                if (nd[2] < 0) {
+                    nd[2] = -nd[2];
+                }
+                else {
+                    nd[2] = t + d * nd[2];
+                }
+                if (nd[3]) {
+                    if (nd[3] < 0) {
+                        nd[3] = -nd[3];
+                    }
+                    else {
+                        nd[3] = d * nd[3];
+                    }
+                }
+                this.notes.push(new Note(nd, this));
+            }
+        }
+        this.notes.sort((n1, n2) => n1.time - n2.time);
+        this.reset();
+    }
+    get score() {
+        let total = 0;
+        for (let i = 0; i < 5; i++) {
+            total += this.result[i] * [0, 0.3, 0.7, 1, 1.01][i];
+        }
+        return Math.round(1000000 * total / this.total_notes);
+    }
+    get score_obj() {
+        return scores.map[this.metadata.chart_name];
+    }
+    get notes_played() {
+        let total = 0;
+        for (const i of this.result) {
+            total += i;
+        }
+        return total;
+    }
+    get avg_offset() {
+        if (this.number_offset === 0)
+            return 0;
+        return this.total_offset / this.number_offset;
+    }
+    get difficulty_type() {
+        return songs[this.metadata.song_id].types[this.metadata.song_type];
+    }
+    get difficulty_number() {
+        return songs[this.metadata.song_id].difficulties[this.metadata.song_type];
+    }
+    tick() {
+        if (mouse.lanes[0]) {
+            this.lane_pressed = [false, false, false, false, false];
+        }
+        for (let i = 1; i <= 4; i++) {
+            if (mouse.lanes[i])
+                this.lane_pressed[i] = true;
+        }
+        for (const n of this.notes) {
+            n.tick();
+        }
+    }
+    key_hit(lane) {
+        if (!mouse.lanes[0])
+            this.lane_pressed[lane] = true;
+        if (Sound.current?.paused)
+            return;
+        const time = Sound.current_time();
+        this.lane_last_hit[lane] = time;
+        const q = this.queue[lane];
+        let to_remove = 0;
+        for (const n of q) {
+            const offset = time - n.time; // positive is late, negative is early
+            if (offset > 160) {
+                n.hit_note(0);
+                to_remove++;
+                continue;
+            }
+            else if ((n.type === note_type.normal && offset < -280) || (n.type === note_type.hold && offset < -160)) {
+                break; // too early for any misses even
+            }
+            else {
+                n.hit_note(Chart.judge(n, offset));
+                if (n.hit > 0) {
+                    this.total_offset += offset;
+                    this.number_offset++;
+                }
+                to_remove++;
+                break;
+            }
+        }
+        if (to_remove > 0) {
+            q.splice(0, to_remove);
+        }
+    }
+    key_release(lane) {
+        if (!mouse.lanes[0])
+            this.lane_pressed[lane] = false;
+        const time = Sound.current_time();
+        this.lane_last_release[lane] = time;
+    }
+    deactivate_note(note) {
+        delete this.active_notes[note.id];
+    }
+    increase_combo() {
+        this.combo++;
+        if (this.combo > this.max_combo) {
+            this.max_combo = this.combo;
+        }
+    }
+    finish() {
+        if (this.finished)
+            return;
+        this.finished = true;
+        const special = Chart.special_grade_number(this.result);
+        const skill = Chart.skill_rate(this.difficulty_number, this.score, special);
+        if ((Sound.current?.element?.playbackRate ?? 0) >= 1) {
+            scores.add({
+                chart: this.metadata.chart_name,
+                song_id: this.metadata.song_id,
+                song_type: this.metadata.song_type,
+                value: this.score,
+                max_combo: this.max_combo,
+                special: special,
+                skill: skill,
+            });
+        }
+    }
+    reset() {
+        this.queue = [[], [], [], [], []];
+        this.lane_pressed = [false, false, false, false, false];
+        this.lane_last_hit = [-1, -1, -1, -1, -1];
+        this.lane_last_release = [-1, -1, -1, -1, -1];
+        this.result = [0, 0, 0, 0, 0];
+        this.total_notes = 0;
+        this.combo = 0;
+        this.max_combo = 0;
+        this.total_offset = 0;
+        this.number_offset = 0;
+        this.finished = false;
+        this.old_score = this.score_obj?.value ?? 0;
+        for (const n of this.notes) {
+            // help initialise queue
+            if (n.type === note_type.hold || n.type === note_type.normal) {
+                this.queue[Math.round(n.lane)].push(n);
+            }
+            // count total notes
+            this.total_notes++;
+            if (n.type === note_type.hold)
+                this.total_notes++;
+        }
+        for (const k in this.active_notes) {
+            delete this.active_notes[k];
+        }
+        this.active_notes = {};
+        for (const n of this.notes) {
+            n.reset();
+            this.active_notes[n.id] = n;
+        }
+    }
+}
+;
+export class Note {
+    static cumulative_id = 0;
+    id;
+    type;
+    lane;
+    time;
+    duration;
+    hit = -1; // -1 = not hit yet, 0 = missed, 1 = bad, 2 = good, 3 = perfect, 4 = perfect+ (temporary names ok) (i guess it's permanent now)
+    hit_time = -1; // -1 = not hit yet, >0 = relative timestamp of hit
+    release = -1;
+    visible = true;
+    chart;
+    constructor(definition, chart) {
+        this.id = Note.cumulative_id++;
+        [this.type, this.lane, this.time, this.duration] = definition; // wow nice
+        this.chart = chart;
+        if (this.type === note_type.spam && this.duration != undefined) {
+            this.visible = false;
+        }
+    }
+    get time2() {
+        return this.time + (this.duration ?? 0);
+    }
+    tick() {
+        if (!Sound.current)
+            return;
+        const t = -Sound.current.time_to(this.time); // t = time after hitting
+        if (this.hit < 0 && t > 160) {
+            this.hit_note(0);
+            // console.log("missed " + this.type + " note.");
+            return;
+        }
+        if (this.type === note_type.hold) {
+            const t2 = Sound.current.time_to(this.time + (this.duration ?? 0)); // t2 = time to the end
+            if (t > 0 && t2 > 60 && this.hit > 0 && this.hit_time > 0 && this.release < 0) { // if haven't released yet (why so many conditions???)
+                if (this.chart.lane_pressed[this.lane]) { // this.chart.lane_last_release[this.lane] <= this.hit_time) {
+                    // good, still holding on
+                    // do nothing
+                }
+                else {
+                    this.release_note((t > 60 && t2 <= 120) ? 2 : 1);
+                }
+            }
+            else if (t > 0 && t2 <= 60 && this.release < 0) {
+                if (this.hit > 0) {
+                    this.release_note(4);
+                }
+                else if (this.hit === 0) {
+                    this.release_note(this.chart.lane_last_hit[this.lane] > this.time ? 1 : 0);
+                    // console.log(this, t, t2, this.chart.lane_last_hit[this.lane], this.chart.lane_last_release[this.lane], "missed release note!");
+                }
+            }
+            return;
+        }
+        if (this.hit < 0 && this.type === note_type.spam && t > 0) {
+            const floored = Math.floor(this.lane);
+            const frac = this.lane - floored;
+            let lane_pressed = false;
+            if (frac >= 0.4 && frac <= 0.6) {
+                lane_pressed = this.chart.lane_pressed[floored] || this.chart.lane_pressed[floored + 1];
+            }
+            else if (frac > 0.6) {
+                lane_pressed = this.chart.lane_pressed[floored + 1];
+            }
+            else { // frac < 0.4
+                lane_pressed = this.chart.lane_pressed[floored];
+            }
+            if (lane_pressed) {
+                this.hit_note(t > 35 ? 3 : 4);
+            }
+            else if (t > 70) {
+                this.hit_note(0);
+                // console.log("missed spam note...");
+            }
+        }
+        if (this.hit < 0 && this.type === note_type.inverse && t > 0) {
+            this.hit_note(this.chart.lane_pressed[this.lane] ? 0 : 4);
+        }
+    }
+    hit_note(hit) {
+        if (this.hit >= 0)
+            return; // already hit!
+        this.hit = hit;
+        this.hit_time = Sound.current_time();
+        this.chart.result[hit]++;
+        if (this.hit === 0) {
+            this.chart.combo = 0;
+        }
+        else if (this.hit > 1) {
+            this.chart.increase_combo();
+            if (settings.hit_volume)
+                Sound.play_sfx("hit" + settings.hit_volume);
+            // Sound.play_sfx("hit"); // to make it louder
+        }
+    }
+    release_note(release) {
+        if (this.release >= 0)
+            return; // already released!
+        this.release = release;
+        this.chart.result[release]++;
+        if (this.release === 0) {
+            this.chart.combo = 0;
+        }
+        else if (this.release > 1) {
+            this.chart.increase_combo();
+        }
+    }
+    reset() {
+        this.hit = -1;
+        this.hit_time = -1;
+        this.release = -1;
+    }
+}
+;
+export var note_type;
+(function (note_type) {
+    note_type["none"] = "none";
+    note_type["normal"] = "normal";
+    note_type["hold"] = "hold";
+    note_type["spam"] = "spam";
+    note_type["fake"] = "fake";
+    note_type["inverse"] = "inverse";
+})(note_type || (note_type = {}));
+;
+export const chart_definitions = {
+    saloon_0: {
+        song: "saloon",
+        notes: [
+            [note_type.none, 0, 2100, 60000 / 486],
+            // [ note_type.spam,   1, 0 ],
+            // [ note_type.spam,   2, 1 ],
+            // [ note_type.spam,   3, 2 ],
+            // [ note_type.spam,   4, 3 ],
+            [note_type.normal, 1, 5],
+            [note_type.spam, 1.5, 6],
+            [note_type.normal, 3, 8],
+            [note_type.spam, 3.5, 9],
+            // [ note_type.spam,   3, 14 ],
+            [note_type.normal, 2, 15],
+            [note_type.spam, 1.5, 17],
+            [note_type.normal, 4, 20],
+            [note_type.spam, 3.5, 23],
+            [note_type.normal, 1, 29],
+            [note_type.spam, 1.5, 30],
+            [note_type.normal, 3, 32],
+            [note_type.spam, 3.5, 33],
+            [note_type.spam, 3, 35.5],
+            [note_type.hold, 2, 39, 6],
+            [note_type.spam, 2.5, 41],
+            [note_type.spam, 2, 43],
+            [note_type.normal, 1, 52],
+            [note_type.spam, 1.5, 53],
+            [note_type.normal, 3, 55],
+            [note_type.spam, 3.5, 56],
+            // [ note_type.spam,   3, 61 ],
+            [note_type.normal, 2, 62],
+            [note_type.spam, 1.5, 64],
+            [note_type.normal, 4, 67],
+            [note_type.spam, 3.5, 69.9],
+            // [ note_type.spam,   4, 73 ],
+            [note_type.normal, 1, 74],
+            [note_type.spam, 1.5, 77],
+            [note_type.normal, 3, 79],
+            [note_type.spam, 2.5, 81.5],
+            [note_type.hold, 2, 86, 9],
+            [note_type.spam, 2, 89],
+            [note_type.spam, 2, 92],
+            // [ note_type.spam,   4, 95 ],
+            // [ note_type.spam,   3, 96 ],
+            // [ note_type.spam,   2, 97 ],
+            // [ note_type.spam,   1, 98 ],
+            [note_type.hold, 1, 100, 3],
+            [note_type.normal, 3, 100, 3],
+            [note_type.spam, 2.5, 103],
+            [note_type.normal, 4, 104],
+            [note_type.spam, 3.5, 106],
+            [note_type.normal, 2, 107],
+            [note_type.spam, 1.5, 109],
+            [note_type.normal, 3, 110],
+            [note_type.spam, 2.5, 112.1],
+            [note_type.hold, 1, 115.4, 7],
+            [note_type.spam, 1, 115.9],
+            [note_type.spam, 1, 116.4],
+            [note_type.spam, 1, 116.9],
+            [note_type.spam, 1, 117.4],
+            [note_type.spam, 1, 117.9],
+            [note_type.spam, 1, 118.4],
+            [note_type.spam, 1, 118.9],
+            [note_type.spam, 1, 119.4],
+            [note_type.spam, 1, 119.9],
+            [note_type.spam, 1, 120.4],
+            [note_type.spam, 1, 120.9],
+            [note_type.spam, 1, 121.4],
+            [note_type.spam, 1, 121.9],
+            [note_type.normal, 1, 124],
+            [note_type.normal, 3, 126.26],
+            [note_type.normal, 2, 129.6],
+            [note_type.normal, 4, 131],
+            [note_type.spam, 3.5, 134.4],
+            [note_type.hold, 1, 138, 4],
+            [note_type.hold, 3, 144, 6],
+            [note_type.spam, 3.19, 144.5, 5.5],
+            [note_type.spam, 3.38, 144.9, 5.1],
+            [note_type.spam, 3.57, 145.3, 4.7],
+            [note_type.none, 0, 21500, 60000 / 486],
+            [note_type.normal, 1, 3],
+            // [ note_type.spam, 1.5, 5 ],
+            [note_type.normal, 3, 6],
+            // [ note_type.spam, 3.5, 8 ],
+            [note_type.normal, 4, 9],
+            // [ note_type.spam, 3.5, 11 ],
+            [note_type.normal, 2, 12],
+            // [ note_type.spam, 1.5, 14 ],
+            [note_type.normal, 1, 15],
+            [note_type.spam, 1.5, 17],
+            [note_type.hold, 3, 20, 5],
+            [note_type.none, 0, 24462.963, 60000 / 486],
+            [note_type.normal, 1, 3],
+            // [ note_type.spam, 1.5, 5 ],
+            [note_type.normal, 3, 6],
+            // [ note_type.spam, 3.5, 8 ],
+            [note_type.normal, 4, 9],
+            // [ note_type.spam, 3.5, 11 ],
+            [note_type.normal, 2, 12],
+            // [ note_type.spam, 1.5, 14 ],
+            [note_type.normal, 1, 15],
+            [note_type.spam, 1.5, 17],
+            [note_type.hold, 4, 20, 5],
+            [note_type.none, 0, 21500, 60000 / 486],
+            [note_type.hold, 1, 50.5, 5],
+            [note_type.hold, 3, 50.5, 5],
+            [note_type.hold, 2, 58.5, 8],
+            [note_type.hold, 4, 59, 7.5],
+            [note_type.hold, 1, 69, 10],
+            [note_type.spam, 1.57, 69.3],
+            [note_type.hold, 3, 69.6, 9.4],
+            [note_type.spam, 3.57, 69.9],
+        ],
+    },
+    saloon_1: {
+        song: "saloon",
+        notes: [
+            [note_type.none, 0, 2100, 60000 / 486],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 4, 9],
+            [note_type.normal, 1, 14],
+            [note_type.normal, 2, 15],
+            [note_type.normal, 1, 17],
+            [note_type.normal, 4, 20],
+            [note_type.normal, 3, 23],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 2, 30],
+            [note_type.normal, 3, 32],
+            [note_type.normal, 4, 33],
+            [note_type.normal, 3, 35.5],
+            [note_type.normal, 2, 39],
+            [note_type.normal, 3, 41],
+            [note_type.normal, 4, 44],
+            [note_type.normal, 1, 52],
+            [note_type.normal, 2, 53],
+            [note_type.normal, 3, 55],
+            [note_type.normal, 4, 56],
+            [note_type.normal, 1, 61],
+            [note_type.normal, 2, 62],
+            [note_type.normal, 1, 64],
+            [note_type.normal, 4, 67],
+            [note_type.normal, 3, 69.9],
+            [note_type.normal, 1, 73],
+            [note_type.normal, 2, 74],
+            [note_type.normal, 1, 77],
+            [note_type.normal, 4, 79],
+            [note_type.normal, 3, 81.5],
+            [note_type.normal, 1, 85],
+            [note_type.normal, 2, 86],
+            [note_type.normal, 3, 89],
+            [note_type.normal, 4, 92],
+            [note_type.normal, 3, 100],
+            [note_type.normal, 4, 100],
+            [note_type.normal, 2, 103],
+            [note_type.normal, 4, 104],
+            [note_type.normal, 3, 106],
+            [note_type.normal, 2, 107],
+            [note_type.normal, 1, 109],
+            [note_type.normal, 4, 110],
+            [note_type.normal, 3, 112.1],
+            [note_type.hold, 2, 115.4, 7],
+            [note_type.spam, 2, 115.9],
+            [note_type.spam, 2, 116.4],
+            [note_type.spam, 2, 116.9],
+            [note_type.spam, 2, 117.4],
+            [note_type.spam, 2, 117.9],
+            [note_type.spam, 2, 118.4],
+            [note_type.spam, 2, 118.9],
+            [note_type.spam, 2, 119.4],
+            [note_type.spam, 2, 119.9],
+            [note_type.spam, 2, 120.4],
+            [note_type.spam, 2, 120.9],
+            [note_type.spam, 2, 121.4],
+            [note_type.normal, 1, 124],
+            [note_type.normal, 3, 126.26],
+            [note_type.normal, 2, 129.6],
+            [note_type.normal, 4, 131],
+            [note_type.normal, 3, 134.4],
+            [note_type.hold, 1, 138, 4],
+            [note_type.hold, 3, 144, 6],
+            [note_type.spam, 3.19, 144.5, 5.5],
+            [note_type.spam, 3.38, 144.9, 5.1],
+            [note_type.spam, 3.57, 145.3, 4.7],
+            [note_type.none, 0, 21490, 60000 / 486],
+            [note_type.normal, 1, 3],
+            // [ note_type.spam, 1.5, 5 ],
+            [note_type.normal, 3, 6],
+            // [ note_type.spam, 3.5, 8 ],
+            [note_type.normal, 4, 9],
+            // [ note_type.spam, 3.5, 11 ],
+            [note_type.normal, 2, 12],
+            // [ note_type.spam, 1.5, 14 ],
+            [note_type.normal, 1, 15],
+            [note_type.normal, 2, 17],
+            [note_type.hold, 3, 20, 5],
+            [note_type.none, 0, 24352.963, 60000 / 486],
+            [note_type.normal, 1, 3],
+            // [ note_type.spam, 1.5, 5 ],
+            [note_type.normal, 3, 6],
+            // [ note_type.spam, 3.5, 8 ],
+            [note_type.normal, 4, 9],
+            // [ note_type.spam, 3.5, 11 ],
+            [note_type.normal, 2, 12],
+            // [ note_type.spam, 1.5, 14 ],
+            [note_type.normal, 1, 15],
+            [note_type.normal, 2, 17],
+            [note_type.hold, 4, 20, 5],
+            [note_type.none, 0, 21500, 60000 / 486],
+            [note_type.hold, 1, 50.5, 5],
+            [note_type.hold, 3, 50.5, 5],
+            [note_type.hold, 2, 58.5, 8],
+            [note_type.hold, 4, 59, 7.5],
+            [note_type.hold, 1, 69, 10],
+            [note_type.spam, 1.5, 69.3],
+            [note_type.hold, 3, 69.6, 9.4],
+            [note_type.spam, 3.5, 69.9],
+        ],
+    },
+    saloon_2: {
+        song: "saloon",
+        notes: [
+            /*
+            [ note_type.hold,   4, 1000, 500 ],*/
+            /*
+           [ note_type.spam,   1, -1500 ],
+           [ note_type.spam,   2, -1500 ],
+           [ note_type.spam,   3, -1500 ],*/
+            [note_type.none, 0, 2100, 60000 / 486],
+            [note_type.normal, 1, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 3, 8],
+            [note_type.hold, 4, 9, 3],
+            // [ note_type.spam,   4, 10, 1 ],
+            // [ note_type.spam,   4, 11, 1 ],
+            [note_type.normal, 3, 14],
+            [note_type.hold, 4, 15, 2],
+            [note_type.normal, 3, 17],
+            [note_type.normal, 4, 20],
+            [note_type.normal, 3, 23],
+            [note_type.normal, 4, 23],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 2, 30],
+            [note_type.normal, 3, 32],
+            [note_type.normal, 4, 33],
+            [note_type.normal, 3, 35.5],
+            [note_type.hold, 2, 39, 4],
+            [note_type.normal, 3, 41],
+            [note_type.normal, 4, 44],
+            [note_type.normal, 1, 52],
+            [note_type.normal, 2, 53],
+            [note_type.normal, 3, 55],
+            [note_type.normal, 2, 56],
+            [note_type.normal, 4, 56],
+            [note_type.normal, 3, 61],
+            [note_type.normal, 2, 62],
+            [note_type.normal, 4, 62],
+            [note_type.normal, 3, 64],
+            [note_type.normal, 1, 67],
+            [note_type.normal, 4, 67],
+            [note_type.normal, 1, 69.9],
+            [note_type.normal, 3, 69.9],
+            [note_type.normal, 1, 73],
+            [note_type.normal, 2, 74],
+            [note_type.normal, 4, 74],
+            [note_type.normal, 2, 77],
+            [note_type.normal, 3, 77],
+            [note_type.normal, 2, 79],
+            [note_type.normal, 4, 79],
+            [note_type.normal, 2, 81.5],
+            [note_type.normal, 3, 81.5],
+            [note_type.normal, 4, 85],
+            [note_type.hold, 1, 86, 6],
+            [note_type.normal, 2, 86],
+            [note_type.spam, 1, 89, 1],
+            [note_type.normal, 3, 89],
+            [note_type.normal, 2, 92],
+            [note_type.normal, 4, 92],
+            [note_type.normal, 4, 95],
+            [note_type.normal, 3, 96],
+            [note_type.normal, 2, 97],
+            [note_type.normal, 1, 98],
+            [note_type.hold, 2, 100, 3],
+            [note_type.hold, 3, 100, 3],
+            [note_type.hold, 4, 100, 3],
+            [note_type.normal, 1, 103],
+            [note_type.normal, 4, 104],
+            [note_type.normal, 3, 106],
+            [note_type.normal, 2, 107],
+            [note_type.normal, 1, 109],
+            [note_type.normal, 4, 110],
+            [note_type.normal, 3, 112.1],
+            [note_type.normal, 2, 115.4],
+            [note_type.hold, 1, 115.4, 6],
+            [note_type.normal, 1, 124],
+            [note_type.normal, 3, 126.26],
+            [note_type.normal, 2, 129.6],
+            [note_type.normal, 4, 131],
+            [note_type.normal, 2, 134.4],
+            [note_type.hold, 1, 138, 4],
+            [note_type.hold, 2, 138, 4],
+            [note_type.hold, 3, 138, 4],
+            [note_type.hold, 4, 138, 4],
+            [note_type.hold, 1, 144, 6],
+            [note_type.hold, 2, 144.5, 5.5],
+            [note_type.hold, 3, 144.9, 5.1],
+            [note_type.hold, 4, 145.3, 4.7],
+            [note_type.none, 0, 21490, 60000 / 486],
+            [note_type.normal, 1, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 9],
+            [note_type.normal, 4, 11],
+            [note_type.normal, 3, 12],
+            [note_type.normal, 1, 14],
+            [note_type.normal, 2, 15],
+            [note_type.normal, 3, 17],
+            [note_type.normal, 2, 20],
+            [note_type.hold, 4, 20, 6],
+            [note_type.normal, 3, 27],
+            [note_type.normal, 1, 27],
+            [note_type.normal, 2, 29],
+            [note_type.normal, 3, 30],
+            [note_type.normal, 4, 32],
+            [note_type.normal, 2, 33],
+            [note_type.normal, 4, 35],
+            [note_type.normal, 3, 36],
+            [note_type.normal, 1, 38],
+            [note_type.normal, 2, 39],
+            [note_type.normal, 3, 41],
+            [note_type.hold, 2, 44, 4],
+            [note_type.hold, 4, 44, 6],
+            [note_type.none, 0, 21500, 60000 / 486],
+            [note_type.hold, 1, 50.5, 6],
+            [note_type.hold, 2, 50.5, 6],
+            [note_type.hold, 3, 50.5, 6],
+            [note_type.hold, 2, 58.5, 9],
+            [note_type.hold, 3, 58.8, 8.7],
+            [note_type.hold, 4, 59.1, 8.4],
+            // [ note_type.none,   0, 30000, 60000 / 486 ],
+            [note_type.hold, 1, 69, 11],
+            [note_type.hold, 2, 69.3, 10.7],
+            [note_type.hold, 3, 69.6, 10.4],
+            [note_type.hold, 4, 69.9, 10.1],
+        ],
+    },
+    saloon_3: {
+        song: "saloon",
+        notes: [
+            [note_type.none, 0, 2100, 60000 / 486],
+            [note_type.normal, 1, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 2, 3],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 1, 5],
+            [note_type.hold, 2, 6, 2],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 4, 8],
+            [note_type.hold, 1, 9, 3],
+            [note_type.hold, 3, 9, 3],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 2, 14],
+            [note_type.hold, 1, 15, 2],
+            [note_type.hold, 4, 15, 2],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 4, 18],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 3, 20],
+            [note_type.normal, 2, 21],
+            [note_type.hold, 1, 23, 2.5],
+            [note_type.hold, 2, 23, 2],
+            [note_type.hold, 3, 23, 1.5],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 2, 27],
+            // [ note_type.normal, 4, 28 ],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 2, 30],
+            [note_type.hold, 3, 30, 2],
+            [note_type.normal, 4, 32],
+            [note_type.hold, 1, 33, 1],
+            [note_type.normal, 3, 33],
+            [note_type.normal, 4, 35.5],
+            // [ note_type.spam,   3.6, 35.65 ],
+            // [ note_type.spam,   3.2, 35.8 ],
+            // [ note_type.spam,   2.8, 35.95 ],
+            // [ note_type.spam,   2.4, 36.1 ],
+            // [ note_type.spam,   2.0, 36.25 ],
+            // [ note_type.spam,   1.6, 36.4 ],
+            // [ note_type.spam,   1.2, 36.55 ],
+            [note_type.hold, 1, 39, 8],
+            [note_type.normal, 2, 39,],
+            [note_type.normal, 3, 39,],
+            [note_type.hold, 2, 41, 6],
+            [note_type.hold, 3, 44, 3],
+            [note_type.normal, 1, 52],
+            [note_type.hold, 2, 53, 2],
+            [note_type.normal, 3, 53],
+            [note_type.normal, 4, 55],
+            [note_type.hold, 1, 56, 3],
+            [note_type.hold, 3, 56, 3],
+            [note_type.normal, 4, 59],
+            [note_type.normal, 2, 61],
+            [note_type.hold, 1, 62, 2],
+            [note_type.hold, 4, 62, 2],
+            [note_type.normal, 2, 64],
+            [note_type.normal, 4, 65],
+            [note_type.normal, 1, 67],
+            [note_type.normal, 3, 67],
+            [note_type.normal, 2, 68],
+            [note_type.normal, 1, 69.9],
+            [note_type.normal, 3, 69.9],
+            [note_type.normal, 4, 69.9],
+            [note_type.normal, 2, 71],
+            [note_type.normal, 1, 73],
+            [note_type.normal, 2, 74],
+            [note_type.normal, 3, 74],
+            [note_type.normal, 4, 74],
+            [note_type.normal, 1, 77],
+            [note_type.normal, 2, 77],
+            [note_type.normal, 3, 77],
+            [note_type.normal, 1, 79],
+            [note_type.normal, 2, 79],
+            [note_type.normal, 4, 79],
+            // [ note_type.spam,   2, 80 ],
+            [note_type.normal, 1, 81.5],
+            [note_type.normal, 3, 81.5],
+            [note_type.normal, 4, 81.5],
+            [note_type.normal, 2, 83],
+            [note_type.normal, 3, 85],
+            [note_type.hold, 1, 86, 5],
+            [note_type.hold, 4, 86, 5],
+            [note_type.normal, 2, 86],
+            [note_type.normal, 3, 89],
+            [note_type.normal, 1, 92],
+            [note_type.hold, 2, 92, 3],
+            [note_type.hold, 3, 92, 2],
+            [note_type.normal, 4, 92],
+            [note_type.normal, 4, 95],
+            [note_type.normal, 3, 96],
+            [note_type.normal, 2, 97],
+            [note_type.normal, 1, 98],
+            [note_type.normal, 3, 98],
+            [note_type.hold, 2, 100, 3],
+            [note_type.hold, 4, 100, 3],
+            [note_type.normal, 1, 101],
+            [note_type.normal, 3, 103],
+            [note_type.normal, 2, 104],
+            [note_type.normal, 4, 104],
+            [note_type.normal, 3, 106],
+            [note_type.normal, 2, 107],
+            [note_type.normal, 1, 109],
+            [note_type.normal, 4, 110],
+            [note_type.normal, 3, 110],
+            [note_type.normal, 3, 112.1],
+            [note_type.normal, 2, 112.1],
+            [note_type.hold, 2, 115.4, 7],
+            [note_type.hold, 1, 115.4, 6],
+            [note_type.normal, 1, 124],
+            [note_type.hold, 4, 124, 9],
+            [note_type.normal, 3, 126.26],
+            [note_type.normal, 2, 127.35],
+            [note_type.normal, 3, 129.6],
+            [note_type.hold, 1, 131, 3.4],
+            [note_type.hold, 2, 131, 3.4],
+            [note_type.hold, 3, 134.4, 2.6],
+            [note_type.hold, 4, 134.4, 2.6],
+            [note_type.hold, 1, 138, 4],
+            [note_type.hold, 2, 138, 4],
+            [note_type.hold, 3, 138, 4],
+            [note_type.hold, 4, 138, 4],
+            [note_type.hold, 1, 144, 6],
+            [note_type.hold, 2, 144.5, 5.5],
+            [note_type.hold, 3, 144.9, 5.1],
+            [note_type.hold, 4, 145.3, 4.7],
+            [note_type.none, 0, 21490, 60000 / 486],
+            [note_type.normal, 1, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 4, 3],
+            [note_type.hold, 1, 3, 3],
+            [note_type.normal, 2, 6],
+            [note_type.hold, 2, 9, 3],
+            [note_type.normal, 1, 12],
+            [note_type.hold, 1, 15, 3],
+            [note_type.normal, 2, 18],
+            [note_type.hold, 2, 21, 3],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 3, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 3, 9],
+            [note_type.normal, 3, 11],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 3, 15],
+            [note_type.normal, 4, 17],
+            [note_type.normal, 3, 20],
+            [note_type.hold, 4, 20, 6],
+            [note_type.none, 0, 24452.963, 60000 / 486],
+            [note_type.hold, 1, 3, 3],
+            [note_type.normal, 2, 6],
+            [note_type.hold, 2, 9, 3],
+            [note_type.normal, 1, 12],
+            [note_type.hold, 1, 15, 3],
+            [note_type.normal, 2, 18],
+            [note_type.hold, 2, 21, 3],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 3, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 3, 9],
+            [note_type.normal, 3, 11],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 3, 15],
+            [note_type.normal, 4, 17],
+            [note_type.normal, 3, 20],
+            [note_type.hold, 4, 20, 6],
+            [note_type.none, 0, 21500, 60000 / 486],
+            [note_type.hold, 1, 50.5, 6],
+            [note_type.hold, 2, 50.5, 6],
+            [note_type.hold, 3, 50.5, 6],
+            [note_type.hold, 2, 58.5, 9],
+            [note_type.hold, 3, 58.8, 8.7],
+            [note_type.hold, 4, 59.1, 8.4],
+            [note_type.hold, 1, 69, 11],
+            [note_type.hold, 2, 69.3, 10.7],
+            [note_type.hold, 3, 69.6, 10.4],
+            [note_type.hold, 4, 69.9, 10.1],
+        ],
+    },
+    deepunder_0: {
+        song: "deepunder",
+        notes: [],
+    },
+    deepunder_1: {
+        song: "deepunder",
+        notes: [
+            [note_type.none, 0, 3900, 60000 / 252],
+            [note_type.hold, 4, 0, 1],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 1, 12],
+            [note_type.normal, 2, 14],
+            [note_type.hold, 3, 16, 1],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 32, 60000 / 252],
+            [note_type.hold, 4, 0, 1],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 1, 12],
+            [note_type.normal, 2, 14],
+            [note_type.hold, 3, 16, 1],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 64, 60000 / 252],
+            [note_type.hold, 4, 0, 15],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.spam, 4, 4],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 3, 8],
+            [note_type.spam, 4, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 1, 12],
+            [note_type.spam, 4, 12],
+            [note_type.normal, 2, 14],
+            [note_type.hold, 3, 16, 15],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 20],
+            [note_type.spam, 3, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 4, 24],
+            [note_type.spam, 3, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 28],
+            [note_type.spam, 3, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 96, 60000 / 252],
+            [note_type.hold, 4, 0, 15],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.spam, 4, 4],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 3, 8],
+            [note_type.spam, 4, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 1, 12],
+            [note_type.spam, 4, 12],
+            [note_type.normal, 2, 14],
+            [note_type.hold, 3, 16, 15],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 20],
+            [note_type.spam, 3, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 4, 24],
+            [note_type.spam, 3, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 28],
+            [note_type.spam, 3, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 128, 60000 / 252],
+            [note_type.hold, 4, 0, 2],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 1, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 1, 12],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 2, 14],
+            [note_type.hold, 3, 16, 2],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 160, 60000 / 252],
+            [note_type.hold, 4, 0, 2],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 1, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 4, 10],
+            [note_type.normal, 1, 12],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 2, 14],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 2, 16],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 3, 20],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 3, 28],
+            [note_type.normal, 3, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 192, 60000 / 252],
+            [note_type.normal, 2, 0],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 2, 8],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 3, 10],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.hold, 2, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 3, 18],
+            [note_type.normal, 1, 20],
+            [note_type.spam, 4, 20],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 1, 24],
+            [note_type.spam, 4, 24],
+            [note_type.normal, 3, 26],
+            [note_type.hold, 1, 28, 2],
+            [note_type.hold, 2, 30, 2],
+            [note_type.normal, 4, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 224, 60000 / 252],
+            [note_type.hold, 3, 0, 15],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 1, 2],
+            [note_type.normal, 4, 4],
+            [note_type.spam, 3, 4],
+            [note_type.normal, 1, 6],
+            [note_type.normal, 4, 8],
+            [note_type.spam, 3, 8],
+            [note_type.normal, 1, 10],
+            [note_type.normal, 4, 12],
+            [note_type.spam, 3, 12],
+            [note_type.normal, 1, 14],
+            [note_type.hold, 4, 16, 1.5],
+            //[ note_type.normal, 3, 16 ],
+            [note_type.spam, 4, 17],
+            [note_type.hold, 1, 18, 1.5],
+            [note_type.spam, 1, 19],
+            [note_type.hold, 4, 20, 1.5],
+            // [ note_type.normal, 3, 20 ],
+            [note_type.spam, 4, 21],
+            [note_type.hold, 1, 22, 1.5],
+            [note_type.spam, 1, 23],
+            [note_type.hold, 4, 24, 1.5],
+            // [ note_type.normal, 3, 24 ],
+            [note_type.spam, 4, 25],
+            [note_type.hold, 1, 26, 1.5],
+            [note_type.spam, 1, 27],
+            [note_type.hold, 4, 28, 1.5],
+            // [ note_type.normal, 3, 28 ],
+            [note_type.spam, 4, 29],
+            [note_type.hold, 2, 30, 1.5],
+            [note_type.none, 0, 3900 + 60000 / 252 * 256, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 2, 8],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 3, 10],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.hold, 2, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 3, 18],
+            [note_type.normal, 1, 20],
+            [note_type.spam, 4, 20],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 1, 24],
+            [note_type.spam, 4, 24],
+            [note_type.normal, 3, 26],
+            [note_type.hold, 1, 28, 2],
+            [note_type.hold, 2, 30, 2],
+            [note_type.normal, 4, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 288, 60000 / 252],
+            [note_type.hold, 3, 0, 15],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 1, 2],
+            [note_type.normal, 4, 4],
+            [note_type.spam, 3, 4],
+            [note_type.normal, 1, 6],
+            [note_type.normal, 4, 8],
+            [note_type.spam, 3, 8],
+            [note_type.normal, 1, 10],
+            [note_type.normal, 4, 12],
+            [note_type.spam, 3, 12],
+            [note_type.normal, 1, 14],
+            [note_type.hold, 4, 16, 1.5],
+            // [ note_type.normal, 2, 16 ],
+            [note_type.spam, 4, 17],
+            [note_type.hold, 1, 18, 1.5],
+            [note_type.spam, 1, 19],
+            [note_type.hold, 4, 20, 1.5],
+            [note_type.normal, 3, 20],
+            [note_type.spam, 4, 21],
+            [note_type.hold, 1, 22, 1.5],
+            [note_type.spam, 1, 23],
+            [note_type.hold, 4, 24, 1.5],
+            [note_type.normal, 3, 24],
+            [note_type.spam, 4, 25],
+            [note_type.hold, 1, 26, 1.5],
+            [note_type.spam, 1, 27],
+            [note_type.hold, 4, 28, 1.5],
+            [note_type.normal, 3, 28],
+            [note_type.spam, 4, 29],
+            [note_type.hold, 2, 30, 1.5],
+            [note_type.none, 0, 3900 + 60000 / 252 * 320, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 4, 2],
+            [note_type.normal, 4, 4],
+            [note_type.normal, 3, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 4, 10],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.hold, 2, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 22],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 27],
+            [note_type.hold, 3, 28, 4],
+            [note_type.normal, 1, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 352, 60000 / 252],
+            [note_type.hold, 2, 0, 12],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 3, 4],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 3, 10],
+            [note_type.normal, 3, 12],
+            [note_type.hold, 1, 12, 3],
+            [note_type.normal, 3, 14],
+            [note_type.hold, 4, 16, 15],
+            [note_type.normal, 2, 16],
+            [note_type.normal, 2, 18],
+            [note_type.normal, 2, 20],
+            [note_type.normal, 2, 22],
+            [note_type.normal, 2, 24],
+            [note_type.normal, 2, 26],
+            [note_type.normal, 2, 28],
+            [note_type.normal, 2, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 384, 60000 / 252],
+            [note_type.normal, 3, 0],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 4, 2],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 3, 4],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 4, 10],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.spam, 1, 13],
+            [note_type.hold, 3, 14, 2],
+            // [ note_type.normal, 2, 14 ],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 2, 18],
+            [note_type.normal, 3, 20],
+            [note_type.spam, 4, 20],
+            [note_type.normal, 2, 22],
+            [note_type.normal, 3, 24],
+            [note_type.spam, 4, 24],
+            [note_type.normal, 2, 26],
+            [note_type.hold, 2, 28, 2],
+            [note_type.spam, 2, 29],
+            [note_type.hold, 4, 30, 2],
+            [note_type.none, 0, 3900 + 60000 / 252 * 416, 60000 / 252],
+            [note_type.hold, 3, 0, 7],
+            [note_type.normal, 1, 2],
+            [note_type.normal, 4, 4],
+            [note_type.spam, 3, 4],
+            [note_type.normal, 1, 6],
+            [note_type.normal, 4, 8],
+            [note_type.hold, 2, 8, 8],
+            [note_type.normal, 4, 10],
+            [note_type.spam, 2, 10],
+            [note_type.spam, 2, 12],
+            [note_type.normal, 4, 12],
+            [note_type.spam, 2, 14],
+            [note_type.normal, 4, 14],
+            [note_type.hold, 3, 16, 16],
+            [note_type.spam, 3, 17],
+            [note_type.hold, 1, 18, 1.5],
+            [note_type.spam, 1, 19],
+            [note_type.normal, 4, 20],
+            [note_type.spam, 3, 21],
+            [note_type.hold, 1, 22, 1.5],
+            [note_type.spam, 1, 23],
+            [note_type.normal, 4, 24],
+            [note_type.spam, 3, 25],
+            [note_type.hold, 1, 26, 6],
+            [note_type.spam, 1, 27],
+            [note_type.spam, 1, 28],
+            [note_type.spam, 3, 28],
+            [note_type.spam, 1, 29],
+            [note_type.spam, 1, 30],
+            [note_type.spam, 1, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 448, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 4, 2],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 4, 10],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 2, 14],
+            [note_type.normal, 3, 16],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 3, 28],
+            [note_type.normal, 1, 30],
+            [note_type.none, 0, 3900 + 60000 / 252 * 480, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 1, 28],
+            [note_type.normal, 1, 30],
+        ],
+    },
+    deepunder_3: {
+        song: "deepunder",
+        notes: [
+            [note_type.none, 0, 3900, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 1, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 1, 7],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 1, 9],
+            [note_type.normal, 3, 10],
+            [note_type.normal, 1, 11],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 1, 13],
+            [note_type.normal, 3, 14],
+            [note_type.normal, 1, 15],
+            [note_type.normal, 3, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 4, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 23],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 27],
+            [note_type.normal, 4, 28],
+            [note_type.normal, 2, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 2, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 32, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 1, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 1, 7],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 1, 9],
+            [note_type.normal, 3, 10],
+            [note_type.normal, 1, 11],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 1, 13],
+            [note_type.normal, 3, 14],
+            [note_type.normal, 1, 15],
+            [note_type.normal, 3, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 4, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 23],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 27],
+            [note_type.normal, 4, 28],
+            [note_type.normal, 2, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 2, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 64, 60000 / 252],
+            [note_type.hold, 4, 0, 16],
+            [note_type.normal, 1, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.spam, 4, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 1, 7],
+            [note_type.spam, 4, 8],
+            [note_type.normal, 1, 9],
+            [note_type.normal, 3, 10],
+            [note_type.normal, 1, 11],
+            [note_type.normal, 2, 12],
+            [note_type.spam, 4, 12],
+            [note_type.normal, 1, 13],
+            [note_type.normal, 3, 14],
+            [note_type.normal, 1, 15],
+            [note_type.hold, 3, 16, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 4, 20],
+            [note_type.spam, 3, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 23],
+            [note_type.spam, 3, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 27],
+            [note_type.normal, 4, 28],
+            [note_type.spam, 3, 28],
+            [note_type.normal, 2, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 2, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 96, 60000 / 252],
+            [note_type.hold, 4, 0, 16],
+            [note_type.normal, 1, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.spam, 4, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 1, 7],
+            [note_type.spam, 4, 8],
+            [note_type.normal, 1, 9],
+            [note_type.normal, 3, 10],
+            [note_type.normal, 1, 11],
+            [note_type.normal, 2, 12],
+            [note_type.spam, 4, 12],
+            [note_type.normal, 1, 13],
+            [note_type.normal, 3, 14],
+            [note_type.normal, 1, 15],
+            [note_type.hold, 3, 16, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 4, 20],
+            [note_type.spam, 3, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 23],
+            [note_type.spam, 3, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 2, 27],
+            [note_type.normal, 4, 28],
+            [note_type.spam, 3, 28],
+            [note_type.normal, 2, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 2, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 128, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 4, 5],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 4, 7],
+            [note_type.normal, 1, 8],
+            [note_type.normal, 4, 9],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 1, 12],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 4, 13],
+            [note_type.normal, 2, 14],
+            [note_type.normal, 4, 15],
+            [note_type.normal, 3, 16],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 3, 19],
+            [note_type.normal, 2, 20],
+            [note_type.normal, 3, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 3, 23],
+            [note_type.normal, 2, 24],
+            [note_type.normal, 3, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 3, 27],
+            [note_type.normal, 2, 28],
+            [note_type.normal, 3, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 3, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 160, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 4, 5],
+            [note_type.normal, 2, 6],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 7],
+            [note_type.normal, 1, 8],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 4, 10],
+            [note_type.normal, 4, 11],
+            [note_type.normal, 1, 12],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 4, 13],
+            [note_type.normal, 2, 14],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 4, 15],
+            [note_type.normal, 2, 16],
+            [note_type.normal, 3, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 3, 19],
+            [note_type.normal, 3, 20],
+            [note_type.normal, 3, 21],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 3, 23],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 3, 25],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 3, 27],
+            [note_type.normal, 3, 28],
+            [note_type.normal, 3, 29],
+            [note_type.normal, 3, 30],
+            [note_type.normal, 3, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 192, 60000 / 252],
+            [note_type.normal, 2, 0],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 1, 7],
+            [note_type.normal, 2, 8],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 3, 10],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 3, 13],
+            [note_type.hold, 2, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 3, 15],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 3, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 1, 20],
+            [note_type.spam, 4, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 2, 23],
+            [note_type.normal, 1, 24],
+            [note_type.spam, 4, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 2, 27],
+            [note_type.hold, 1, 28, 2],
+            [note_type.spam, 4, 28],
+            [note_type.normal, 3, 29],
+            [note_type.hold, 2, 30, 2],
+            [note_type.normal, 4, 30],
+            [note_type.normal, 3, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 224, 60000 / 252],
+            [note_type.hold, 3, 0, 15],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 1, 2],
+            [note_type.normal, 2, 3],
+            [note_type.normal, 4, 4],
+            [note_type.spam, 3, 4],
+            [note_type.normal, 2, 5],
+            [note_type.normal, 1, 6],
+            [note_type.normal, 2, 7],
+            // [ note_type.normal, 1, 8 ],
+            [note_type.normal, 4, 8],
+            [note_type.spam, 3, 8],
+            [note_type.normal, 2, 9],
+            [note_type.normal, 1, 10],
+            [note_type.normal, 2, 11],
+            [note_type.hold, 4, 12, 3],
+            [note_type.spam, 3, 12],
+            [note_type.normal, 2, 13],
+            [note_type.normal, 1, 14],
+            [note_type.normal, 2, 15],
+            [note_type.normal, 3, 15.8],
+            [note_type.normal, 4, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 19],
+            [note_type.normal, 3, 19.8],
+            [note_type.normal, 4, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 3, 23.8],
+            [note_type.normal, 4, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 1, 27],
+            [note_type.normal, 3, 27.8],
+            [note_type.normal, 4, 28],
+            [note_type.normal, 1, 29],
+            [note_type.hold, 2, 30, 2],
+            [note_type.none, 0, 3900 + 60000 / 252 * 256, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 1, 7],
+            [note_type.normal, 2, 8],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 3, 10],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 3, 13],
+            [note_type.hold, 2, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 3, 15],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 3, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 1, 20],
+            [note_type.spam, 4, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 2, 23],
+            [note_type.normal, 1, 24],
+            [note_type.spam, 4, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 2, 27],
+            [note_type.hold, 1, 28, 2],
+            [note_type.spam, 4, 28],
+            [note_type.normal, 3, 29],
+            [note_type.hold, 2, 30, 2],
+            [note_type.normal, 4, 30],
+            [note_type.normal, 3, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 288, 60000 / 252],
+            [note_type.hold, 3, 0, 15],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 1, 2],
+            [note_type.normal, 2, 3],
+            [note_type.normal, 4, 4],
+            [note_type.spam, 3, 4],
+            [note_type.normal, 2, 5],
+            [note_type.normal, 1, 6],
+            [note_type.normal, 2, 7],
+            // [ note_type.normal, 1, 8 ],
+            [note_type.normal, 4, 8],
+            [note_type.spam, 3, 8],
+            [note_type.normal, 2, 9],
+            [note_type.normal, 1, 10],
+            [note_type.normal, 2, 11],
+            [note_type.hold, 4, 12, 3],
+            [note_type.spam, 3, 12],
+            [note_type.normal, 2, 13],
+            [note_type.normal, 1, 14],
+            [note_type.normal, 2, 15],
+            [note_type.normal, 4, 15.8],
+            [note_type.normal, 3, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 19],
+            [note_type.normal, 4, 19.8],
+            [note_type.normal, 3, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 4, 23.8],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 1, 27],
+            [note_type.normal, 4, 27.8],
+            [note_type.normal, 3, 28],
+            [note_type.normal, 1, 29],
+            [note_type.hold, 2, 30, 2],
+            [note_type.none, 0, 3900 + 60000 / 252 * 320, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 4, 1],
+            [note_type.normal, 4, 2],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 4, 4],
+            [note_type.normal, 3, 5],
+            [note_type.normal, 4, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 4, 7],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 4, 9],
+            [note_type.normal, 4, 10],
+            [note_type.normal, 4, 11],
+            [note_type.hold, 1, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.normal, 4, 13],
+            [note_type.hold, 2, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 4, 15],
+            [note_type.hold, 4, 16, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 1, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 19],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 1, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 2, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 1, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 1, 27],
+            [note_type.normal, 2, 27],
+            [note_type.hold, 3, 28, 4],
+            [note_type.normal, 1, 28],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 1, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 352, 60000 / 252],
+            [note_type.hold, 2, 0, 15],
+            [note_type.normal, 3, 1],
+            [note_type.normal, 3, 2],
+            [note_type.normal, 3, 3],
+            [note_type.normal, 3, 4],
+            [note_type.normal, 3, 5],
+            [note_type.normal, 3, 6],
+            [note_type.normal, 3, 7],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 3, 9],
+            [note_type.normal, 3, 10],
+            [note_type.normal, 3, 11],
+            [note_type.normal, 3, 12],
+            [note_type.hold, 1, 12, 3],
+            [note_type.normal, 3, 13],
+            [note_type.normal, 3, 14],
+            [note_type.normal, 3, 15],
+            [note_type.hold, 4, 16, 15],
+            [note_type.normal, 2, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 2, 18],
+            [note_type.normal, 2, 19],
+            [note_type.normal, 2, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 2, 22],
+            [note_type.normal, 2, 23],
+            [note_type.normal, 2, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 2, 26],
+            [note_type.normal, 2, 27],
+            [note_type.normal, 2, 28],
+            [note_type.normal, 2, 29],
+            [note_type.normal, 2, 30],
+            [note_type.normal, 2, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 384, 60000 / 252],
+            [note_type.normal, 3, 0],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 4, 2],
+            [note_type.normal, 1, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 3, 4],
+            [note_type.normal, 1, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 1, 7],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 1, 9],
+            [note_type.normal, 4, 10],
+            [note_type.normal, 1, 11],
+            [note_type.hold, 2, 12, 2],
+            [note_type.normal, 4, 12],
+            [note_type.spam, 1, 13],
+            [note_type.hold, 3, 14, 2],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 1, 15],
+            [note_type.hold, 4, 16, 16],
+            [note_type.normal, 1, 17],
+            [note_type.normal, 2, 18],
+            [note_type.normal, 1, 19],
+            [note_type.normal, 3, 20],
+            [note_type.spam, 4, 20],
+            [note_type.normal, 1, 21],
+            [note_type.normal, 2, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 3, 24],
+            [note_type.spam, 4, 24],
+            [note_type.normal, 1, 25],
+            [note_type.normal, 2, 26],
+            [note_type.normal, 1, 27],
+            [note_type.hold, 2, 28, 2],
+            [note_type.spam, 1, 29],
+            [note_type.hold, 3, 30, 2],
+            [note_type.normal, 1, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 416, 60000 / 252],
+            [note_type.hold, 2, 0, 7],
+            [note_type.normal, 4, 1],
+            [note_type.normal, 1, 2],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 3, 4],
+            [note_type.spam, 2, 4],
+            [note_type.normal, 4, 5],
+            [note_type.normal, 1, 6],
+            [note_type.normal, 4, 7],
+            [note_type.normal, 3, 8],
+            [note_type.hold, 2, 8, 1.5],
+            [note_type.normal, 4, 9],
+            [note_type.normal, 1, 10],
+            [note_type.hold, 2, 10, 1.5],
+            [note_type.normal, 4, 11],
+            [note_type.hold, 2, 12, 1.5],
+            [note_type.normal, 3, 12],
+            [note_type.normal, 4, 13],
+            [note_type.hold, 2, 14, 1.5],
+            [note_type.normal, 1, 14],
+            [note_type.normal, 4, 15],
+            [note_type.normal, 4, 15.8],
+            [note_type.hold, 3, 16, 16],
+            [note_type.normal, 2, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 19],
+            [note_type.normal, 4, 19.8],
+            [note_type.spam, 3, 20],
+            [note_type.normal, 2, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 4, 23.8],
+            [note_type.spam, 3, 24],
+            [note_type.normal, 2, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 1, 27],
+            [note_type.normal, 1, 28],
+            [note_type.spam, 3, 28],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 1, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 448, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 4, 2],
+            [note_type.normal, 2, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 4, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 2, 7],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 9],
+            [note_type.normal, 4, 10],
+            [note_type.normal, 2, 11],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 4, 13],
+            [note_type.normal, 2, 14],
+            [note_type.normal, 4, 15],
+            [note_type.normal, 3, 16],
+            [note_type.normal, 1, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 3, 19],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 1, 21],
+            [note_type.normal, 3, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 1, 25],
+            [note_type.normal, 3, 26],
+            [note_type.normal, 1, 27],
+            [note_type.normal, 3, 28],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 3, 31],
+            [note_type.none, 0, 3900 + 60000 / 252 * 480, 60000 / 252],
+            [note_type.normal, 4, 0],
+            [note_type.normal, 2, 1],
+            [note_type.normal, 2, 2],
+            [note_type.normal, 4, 3],
+            [note_type.normal, 2, 4],
+            [note_type.normal, 4, 5],
+            [note_type.normal, 4, 6],
+            [note_type.normal, 2, 7],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 9],
+            [note_type.normal, 2, 10],
+            [note_type.normal, 4, 11],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 4, 13],
+            [note_type.normal, 4, 14],
+            [note_type.normal, 2, 15],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 3, 17],
+            [note_type.normal, 1, 18],
+            [note_type.normal, 1, 19],
+            [note_type.normal, 1, 20],
+            [note_type.normal, 3, 21],
+            [note_type.normal, 1, 22],
+            [note_type.normal, 1, 23],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 1, 25],
+            [note_type.normal, 1, 26],
+            [note_type.normal, 3, 27],
+            [note_type.normal, 1, 28],
+            [note_type.normal, 1, 29],
+            [note_type.normal, 1, 30],
+            [note_type.normal, 3, 31],
+        ],
+    },
+    loneliness_1: {
+        song: "loneliness",
+        notes: [
+            [note_type.none, 0, 35, 60000 / 480.76],
+            [note_type.hold, 2, 0, 8],
+            [note_type.spam, 2, 4],
+            [note_type.normal, 4, 8],
+            [note_type.hold, 1, 16, 8],
+            [note_type.spam, 1, 20],
+            [note_type.normal, 3, 24],
+            [note_type.normal, 4, 32],
+            [note_type.normal, 3, 36],
+            [note_type.normal, 2, 40],
+            [note_type.normal, 1, 44],
+            [note_type.hold, 2, 48, 16],
+            [note_type.spam, 1.5, 52],
+            [note_type.spam, 2, 56],
+            [note_type.spam, 2.5, 60],
+            [note_type.hold, 3, 64, 8],
+            [note_type.spam, 3, 68],
+            [note_type.normal, 4, 72],
+            [note_type.hold, 2, 80, 8],
+            [note_type.spam, 2, 84],
+            [note_type.normal, 3, 88],
+            [note_type.normal, 4, 92],
+            [note_type.hold, 1, 96, 8],
+            [note_type.spam, 1, 100],
+            [note_type.hold, 2, 104, 4],
+            [note_type.hold, 3, 108, 4],
+            [note_type.hold, 4, 112, 8],
+            [note_type.hold, 1, 124, 2],
+            [note_type.none, 0, 35 + 60000 / 480.76 * 128, 60000 / 480.76],
+            [note_type.normal, 2, 0],
+            [note_type.normal, 3, 0],
+            [note_type.normal, 1, 4],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 4, 8],
+            [note_type.normal, 2, 12],
+            [note_type.normal, 1, 16],
+            [note_type.normal, 4, 16],
+            [note_type.normal, 3, 20],
+            [note_type.normal, 1, 24],
+            [note_type.normal, 2, 24],
+            [note_type.normal, 4, 28],
+            [note_type.normal, 2, 32],
+            [note_type.normal, 3, 32],
+            [note_type.normal, 1, 36],
+            [note_type.normal, 4, 36],
+            [note_type.normal, 3, 40],
+            [note_type.normal, 4, 40],
+            [note_type.normal, 2, 44],
+            [note_type.normal, 3, 44],
+            [note_type.hold, 1, 48, 4],
+            [note_type.hold, 2, 48, 4],
+            [note_type.normal, 1, 56],
+            [note_type.normal, 2, 56],
+            [note_type.normal, 2, 60],
+            [note_type.normal, 3, 60],
+            [note_type.normal, 3, 64],
+            [note_type.normal, 4, 64],
+            [note_type.normal, 2, 68],
+            [note_type.normal, 1, 72],
+            [note_type.normal, 4, 72],
+            [note_type.normal, 3, 76],
+            [note_type.normal, 2, 80],
+            [note_type.normal, 4, 80],
+            [note_type.normal, 1, 84],
+            [note_type.normal, 3, 88],
+            [note_type.normal, 4, 88],
+            [note_type.normal, 1, 92],
+            [note_type.normal, 2, 92],
+            [note_type.normal, 2, 96],
+            [note_type.normal, 3, 96],
+            [note_type.normal, 1, 100],
+            [note_type.normal, 4, 104],
+            [note_type.normal, 2, 108],
+            [note_type.hold, 3, 112, 12],
+            [note_type.spam, 1, 120],
+            [note_type.spam, 4, 121],
+            [note_type.spam, 1.6, 122],
+            [note_type.spam, 4, 123],
+            [note_type.spam, 2.4, 124],
+            [note_type.spam, 4, 125],
+            [note_type.spam, 3, 126],
+            [note_type.spam, 4, 127],
+            [note_type.none, 0, 35 + 60000 / 480.76 * 256, 60000 / 480.76],
+            [note_type.hold, 3, 0, 8],
+            [note_type.spam, 3, 1],
+            [note_type.spam, 3, 2],
+            [note_type.spam, 3, 3],
+            [note_type.normal, 2, 4],
+            [note_type.spam, 3, 5],
+            [note_type.spam, 3, 6],
+            [note_type.spam, 3, 7],
+            [note_type.hold, 1, 8, 8],
+            [note_type.spam, 1, 9],
+            [note_type.spam, 1, 10],
+            [note_type.spam, 1, 11],
+            [note_type.normal, 4, 12],
+            [note_type.spam, 1, 13],
+            [note_type.spam, 1, 14],
+            [note_type.spam, 1, 15],
+            [note_type.hold, 2, 16, 8],
+            [note_type.spam, 2, 17],
+            [note_type.spam, 2, 18],
+            [note_type.spam, 2, 19],
+            [note_type.normal, 3, 20],
+            [note_type.spam, 2, 21],
+            [note_type.spam, 2, 22],
+            [note_type.spam, 2, 23],
+            [note_type.hold, 4, 24, 8],
+            [note_type.spam, 4, 25],
+            [note_type.spam, 4, 26],
+            [note_type.spam, 4, 27],
+            [note_type.normal, 1, 28],
+            [note_type.spam, 4, 29],
+            [note_type.spam, 4, 30],
+            [note_type.spam, 4, 31],
+            [note_type.hold, 1, 32, 4],
+            [note_type.spam, 1, 34],
+            [note_type.hold, 2, 36, 4],
+            [note_type.spam, 2, 38],
+            [note_type.hold, 3, 40, 4],
+            [note_type.spam, 3, 42],
+            [note_type.hold, 4, 44, 4],
+            [note_type.spam, 4, 46],
+            [note_type.hold, 1, 48, 4],
+            [note_type.spam, 1, 49],
+            [note_type.spam, 1.2, 50],
+            [note_type.spam, 1.4, 51],
+            [note_type.spam, 1.6, 52],
+            [note_type.spam, 1.8, 53],
+            [note_type.spam, 2.0, 54],
+            [note_type.spam, 2.2, 55],
+            [note_type.spam, 2.4, 56],
+            [note_type.spam, 2.6, 57],
+            [note_type.spam, 2.8, 58],
+            [note_type.spam, 3.0, 59],
+            [note_type.spam, 3.2, 60],
+            [note_type.spam, 3.4, 61],
+            [note_type.spam, 3.6, 62],
+            [note_type.spam, 3.8, 63],
+            [note_type.hold, 2, 64, 8],
+            [note_type.spam, 2, 65],
+            [note_type.spam, 2, 66],
+            [note_type.spam, 2, 67],
+            [note_type.normal, 3, 68],
+            [note_type.spam, 2, 69],
+            [note_type.spam, 2, 70],
+            [note_type.spam, 2, 71],
+            [note_type.hold, 3, 72, 8],
+            [note_type.spam, 3, 73],
+            [note_type.spam, 3, 74],
+            [note_type.spam, 3, 75],
+            [note_type.normal, 2, 76],
+            [note_type.spam, 3, 77],
+            [note_type.spam, 3, 78],
+            [note_type.spam, 3, 79],
+            [note_type.hold, 4, 80, 8],
+            [note_type.spam, 4, 81],
+            [note_type.spam, 4, 82],
+            [note_type.spam, 4, 83],
+            [note_type.normal, 1, 84],
+            [note_type.spam, 4, 85],
+            [note_type.spam, 4, 86],
+            [note_type.spam, 4, 87],
+            [note_type.hold, 1, 88, 4],
+            [note_type.hold, 3, 92, 4],
+            [note_type.hold, 2, 96, 8],
+            [note_type.hold, 4, 104, 2],
+            [note_type.normal, 3, 108],
+            [note_type.normal, 2, 110],
+            [note_type.normal, 3, 112],
+            [note_type.normal, 2, 114],
+            [note_type.normal, 1, 116],
+            [note_type.normal, 4, 118],
+            [note_type.normal, 1, 120],
+            [note_type.normal, 2, 122],
+            [note_type.normal, 3, 124],
+            [note_type.normal, 4, 126],
+            [note_type.none, 0, 35 + 60000 / 480.76 * 384, 60000 / 480.76],
+            [note_type.hold, 3, 0, 4],
+            [note_type.spam, 3, 2],
+            [note_type.spam, 3, 3],
+            [note_type.hold, 2, 4, 4],
+            [note_type.spam, 2, 6],
+            [note_type.spam, 2, 7],
+            [note_type.hold, 3, 8, 4],
+            [note_type.spam, 3, 10],
+            [note_type.spam, 3, 11],
+            [note_type.hold, 2, 12, 4],
+            [note_type.spam, 2, 14],
+            [note_type.spam, 2, 15],
+            [note_type.hold, 4, 16, 4],
+            [note_type.spam, 4, 18],
+            [note_type.spam, 4, 19],
+            [note_type.hold, 1, 20, 4],
+            [note_type.spam, 1, 22],
+            [note_type.spam, 1, 23],
+            [note_type.hold, 4, 24, 4],
+            [note_type.spam, 4, 26],
+            [note_type.spam, 4, 27],
+            [note_type.hold, 1, 28, 4],
+            [note_type.spam, 1, 30],
+            [note_type.spam, 1, 31],
+            [note_type.hold, 2, 32, 4],
+            [note_type.spam, 2, 34],
+            [note_type.spam, 2, 35],
+            [note_type.hold, 1, 36, 4],
+            [note_type.spam, 1, 38],
+            [note_type.spam, 1, 39],
+            [note_type.hold, 3, 40, 4],
+            [note_type.spam, 3, 42],
+            [note_type.spam, 3, 43],
+            [note_type.hold, 4, 44, 4],
+            [note_type.spam, 4, 46],
+            [note_type.spam, 4, 47],
+            [note_type.hold, 3, 48, 4],
+            [note_type.spam, 3, 50],
+            [note_type.spam, 3, 51],
+            [note_type.hold, 2, 52, 4],
+            [note_type.spam, 2, 54],
+            [note_type.spam, 2, 55],
+            [note_type.hold, 3, 56, 4],
+            [note_type.spam, 3, 58],
+            [note_type.spam, 3, 59],
+            [note_type.hold, 2, 60, 4],
+            [note_type.spam, 2, 62],
+            [note_type.spam, 2, 63],
+            [note_type.normal, 4, 64],
+            [note_type.normal, 1, 68],
+            [note_type.normal, 2, 72],
+            [note_type.normal, 3, 76],
+            [note_type.normal, 4, 80],
+            [note_type.normal, 3, 84],
+            [note_type.hold, 4, 88, 8],
+            [note_type.spam, 4, 90],
+            [note_type.spam, 4, 91],
+            [note_type.spam, 4, 92],
+            [note_type.spam, 4, 94],
+            [note_type.spam, 4, 95],
+            [note_type.normal, 3, 96],
+            [note_type.normal, 2, 100],
+            [note_type.normal, 1, 104],
+            [note_type.normal, 2, 108],
+            [note_type.normal, 2, 112],
+            [note_type.normal, 3, 116],
+            [note_type.hold, 4, 120, 8],
+            [note_type.spam, 4, 121],
+            [note_type.spam, 3.9, 122],
+            [note_type.spam, 3.8, 123],
+            [note_type.spam, 3.7, 124],
+            [note_type.spam, 3.6, 125],
+            [note_type.spam, 3.5, 126],
+            [note_type.spam, 3.4, 127],
+            [note_type.none, 0, 35 + 60000 / 480.76 * 512, 60000 / 480.76],
+            [note_type.spam, 3.3, 0],
+            [note_type.spam, 3.2, 1],
+            [note_type.spam, 3.1, 2],
+            [note_type.spam, 3.0, 3],
+            [note_type.spam, 2.9, 4],
+            [note_type.spam, 2.8, 5],
+            [note_type.spam, 2.7, 6],
+            [note_type.spam, 2.6, 7],
+            [note_type.spam, 2.5, 8],
+            [note_type.spam, 2.4, 9],
+            [note_type.spam, 2.3, 10],
+            [note_type.spam, 2.2, 11],
+            [note_type.spam, 2.1, 12],
+            [note_type.spam, 2.0, 13],
+            [note_type.spam, 1.9, 14],
+            [note_type.spam, 1.8, 15],
+            [note_type.hold, 3, 16, 4],
+            [note_type.hold, 4, 16, 4],
+            [note_type.hold, 2, 24, 4],
+            [note_type.hold, 3, 24, 4],
+            [note_type.hold, 1, 32, 4],
+            [note_type.hold, 2, 32, 4],
+            [note_type.normal, 2, 40],
+            [note_type.normal, 3, 40],
+            [note_type.normal, 3, 44],
+            [note_type.normal, 4, 44],
+            [note_type.hold, 4, 48, 4],
+            [note_type.normal, 2, 56],
+            [note_type.normal, 4, 60],
+            [note_type.normal, 3, 64],
+            [note_type.normal, 4, 68],
+            [note_type.normal, 3, 72],
+            [note_type.normal, 2, 76],
+            [note_type.hold, 3, 80, 4],
+            [note_type.normal, 1, 88],
+            [note_type.normal, 3, 92],
+            [note_type.normal, 2, 96],
+            [note_type.normal, 3, 100],
+            [note_type.normal, 2, 104],
+            [note_type.normal, 1, 108],
+            [note_type.hold, 2, 112, 4],
+            [note_type.normal, 1, 120],
+            [note_type.normal, 2, 124],
+            [note_type.none, 0, 35 + 60000 / 480.76 * 640, 60000 / 480.76],
+            [note_type.normal, 3, 0],
+            [note_type.normal, 4, 4],
+            [note_type.normal, 3, 8],
+            [note_type.normal, 2, 12],
+            [note_type.hold, 1, 16, 4],
+            [note_type.normal, 2, 24],
+            [note_type.normal, 3, 28],
+            [note_type.normal, 2, 30],
+            [note_type.hold, 1, 32, 8],
+            [note_type.normal, 4, 44],
+            [note_type.normal, 2, 48],
+            [note_type.normal, 1, 52],
+            [note_type.normal, 3, 56],
+            [note_type.normal, 4, 60],
+            [note_type.normal, 2, 64],
+            [note_type.normal, 1, 68],
+            [note_type.normal, 3, 72],
+            [note_type.normal, 4, 76],
+            [note_type.normal, 2, 80],
+            [note_type.normal, 1, 84],
+            [note_type.normal, 4, 88],
+            [note_type.normal, 3, 92],
+            [note_type.normal, 4, 96],
+            [note_type.normal, 3, 100],
+            [note_type.normal, 2, 102],
+            [note_type.normal, 1, 104],
+            [note_type.hold, 4, 108, 4],
+            [note_type.spam, 4, 109],
+            [note_type.spam, 4, 110],
+            [note_type.spam, 4, 111],
+            [note_type.hold, 2, 112, 16],
+            [note_type.none, 0, 35 + 60000 / 480.76 * 768, 60000 / 480.76],
+            [note_type.hold, 3, 0, 16],
+        ],
+    },
+    beeps: {
+        song: "beeps",
+        notes: [
+            [note_type.none, 0, 2000, 500],
+            // the rest is filled up below
+        ],
+    }
+};
+for (let i = 0; i < 100; i++) {
+    chart_definitions.beeps.notes.push([note_type.hold, i % 4 + 1, i, 0.25]);
+    chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.05]);
+    chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.10]);
+    chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.15]);
+    chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.20]);
+}
+export const charts = {}; // to make... if not memory overload

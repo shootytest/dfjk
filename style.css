@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto+Condensed&display=swap');
+
+html {
+  scroll-behavior: smooth;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background-color: #111111;
+  color: white;
+  font-family: "Roboto Mono";
+  font-size: 14px;
+  text-align: center;
+}
+
+canvas.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+aside {
+  position: fixed;
+  right: 0;
+  top: calc(6.5% + 1px);
+  height: 100%;
+  width: max(18em, 18%);
+  z-index: 2;
+  background-color: #eeeeeebe;
+  border-left: 2px solid #eeeeee;
+}
+
+.dg * {
+  font-family: "Roboto Mono";
+}
+
+.hide {
+  display: none;
+}
+
+.centerbox, box {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  padding: 20px 25px;
+  background-color: #111111;
+  border: 2px solid #eeeeee;
+  max-width: calc(94% - 50px);
+  max-height: calc(90% - 40px);
+  overflow: auto;
+}
+
+table td, table th {
+  padding: 0.3em;
+}
+
+#credits p {
+  text-decoration: none;
+  display: grid;
+  grid-template-columns: auto max-content;
+  align-items: end;
+}
+
+#credits p span:first-child {
+  position: relative;
+  overflow: hidden;
+}
+
+#credits p span:last-child {
+  min-width: 1ch;
+  padding-left: 0.5ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+#credits p l::after {
+  position: absolute;
+  padding-inline-start: .25ch;
+  width: 100px;
+  content: "........................................................................................................................................................................";
+  text-align: right;
+}

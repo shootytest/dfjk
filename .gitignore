@@ -1,0 +1,9 @@
+.vscode/*
+assets/*
+unpublished/*
+.surgeignore
+auto.appcache
+CNAME
+.firebaserc
+firebase.json
+database.rules.json
