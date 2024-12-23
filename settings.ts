@@ -53,7 +53,7 @@ export const songs = [
     id: 3,
     name: "Loneliness",
     types: ["easy", "medium", "hard"],
-    difficulties: [1, -1, -1],
+    difficulties: [6, -1, -1],
     charts: ["loneliness_1", "loneliness_2", "loneliness_3"],
     preview: "loneliness_preview",
     image: "loneliness.jpg",

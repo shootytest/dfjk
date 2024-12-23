@@ -20,7 +20,7 @@ const init = function () {
     key.add_key_listener("Backquote", ui.back);
     key.add_key_listener("Digit1", function () {
         if (Sound.current)
-            Sound.current.element.currentTime = 88.000;
+            Sound.current.element.currentTime = 85.000;
     });
     key.add_key_listener("Backspace", ui.back);
     key.add_key_listener("KeyP", function () {
