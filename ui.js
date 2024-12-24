@@ -228,17 +228,6 @@ export const ui = {
         const x_constrained = size.y >= size.x * 1.6;
         // overall size, everything is scaled by this
         r = x_constrained ? (size.y * 0.8) : (size.x * 0.92);
-        // divider
-        ctx.strokeStyle = color.white;
-        ctx.lineWidth = 2;
-        if (x_constrained) {
-            ctx.line(0, v.y, size.x, v.y);
-        }
-        else {
-            x = v.x - 0.15 * r;
-            ctx.line(x, 0, x, size.y);
-        }
-        ctx.stroke();
         // song index and type
         ui.list.index_circle = math.lerp_circle(ui.list.index_circle, ui.list.index_target, songs.length, 0.1);
         ui.list.index = math.lerp(ui.list.index, ui.list.index_target, 0.1);
@@ -254,13 +243,14 @@ export const ui = {
         ctx.strokeStyle = color.white;
         ctx.fillStyle = color.white;
         ctx.lineWidth = 5;
-        ctx.set_font_mono(r * 0.025);
         ctx.save("draw_list_left");
         ctx.beginPath();
         if (x_constrained)
             ctx.rect(0, 0, size.x, v.y);
-        else
+        else {
+            x = v.x - 0.15 * r;
             ctx.rect(0, 0, x, size.y);
+        }
         ctx.clip();
         const rr = 0.14 * r;
         for (let i = 0; i < 3; i++) {
@@ -276,13 +266,18 @@ export const ui = {
             ctx.rotate(angle);
             const diff = song.difficulties[type_target];
             if (score) {
-                ctx.text("highscore: " + score.value, 0, r * 1.06 + rr);
-                ctx.text("max combo: " + score.max_combo, 0, r * 1.1 + rr);
-                ctx.text("rating: " + (Chart.skill_rate(diff, score.value, score.special)).toFixed(2), 0, r * 1.144 + rr);
+                ctx.fillStyle = color["grade_" + Chart.grade(score.value)];
+                ctx.set_font_mono(r * 0.04);
+                ctx.text("" + score.value, 0, r * 1.04 + rr);
+                ctx.fillStyle = color.white;
+                ctx.set_font_mono(r * 0.025);
+                // ctx.text("max combo: " + score.max_combo, 0, r * 1.1 + rr);
+                ctx.text("rating: " + score.skill.toFixed(2), 0, r * 1.088 + rr);
                 ctx.strokeStyle = color["grade_" + Chart.grade(score.value)];
             }
             else {
                 ctx.fillStyle = diff < 0 ? color.red : color.yellow;
+                ctx.set_font_mono(r * 0.025);
                 ctx.text(diff < 0 ? "unavailable" : "not played yet", 0, r * 1.06 + rr);
                 ctx.strokeStyle = color.grade_Z;
             }
@@ -313,6 +308,17 @@ export const ui = {
             ctx.clip();
         }
         ctx.restore("draw_list_left");
+        // divider
+        ctx.strokeStyle = color.white;
+        ctx.lineWidth = 2;
+        if (x_constrained) {
+            ctx.line(0, v.y, size.x, v.y);
+        }
+        else {
+            x = v.x - 0.15 * r;
+            ctx.line(x, 0, x, size.y);
+        }
+        ctx.stroke();
         if (x_constrained) {
             x = v.x;
             y = v.y * 1.5;
@@ -878,7 +884,7 @@ export const ui = {
             total += score.skill;
         }
         document.getElementById("totalskill").textContent = total.toFixed(3);
-        console.log(scores.list);
+        // console.log(scores.list);
         if (changed)
             scores.save();
         if (ui.mobile)

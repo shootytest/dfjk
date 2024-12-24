@@ -36,7 +36,7 @@ const firebaseConfig = {
   projectId: "examp13",
   storageBucket: "examp13.firebasestorage.app",
   messagingSenderId: "492299880282",
-  appId: "1:492299880282:web:04384022e86b98517bd563"
+  appId: "1:492299880282:web:04384022e86b98517bd563",
 };
 
 const app = initializeApp(firebaseConfig);
