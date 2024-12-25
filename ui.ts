@@ -910,6 +910,7 @@ export const ui = {
     `;
     const table = document.getElementById("chair")!;
     let changed = false;
+    console.log(scores.list);
     for (const score of scores.list) {
       if (true || !score.skill) { // todo change
         changed = true;
@@ -965,8 +966,11 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.3.5 | 25-12-2024 | 🎶 4  📊 8 </h3>
+      <p> - added medium chart for loneliness </p>
       <h3> 0.3.4 | 24-12-2024 | 🎶 4  📊 7 </h3>
       <p> - added easy chart for loneliness </p>
+      <p> - slightly improved song list ui </p>
       <h3> 0.3.3 | 23-12-2024 | 🎶 4  📊 6 </h3>
       <p> - spent like 3 hours typing this versions list </p>
       <p> - added credits </p>

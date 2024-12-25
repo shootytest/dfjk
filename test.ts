@@ -24,7 +24,7 @@ const init = function() {
   key.add_key_listener("Escape", ui.back);
   key.add_key_listener("Backquote", ui.back);
   key.add_key_listener("Digit1", function() {
-    if (Sound.current) Sound.current.element.currentTime = 40.000;
+    if (Sound.current) Sound.current.element.currentTime = 86.000;
   });
   key.add_key_listener("Backspace", ui.back);
   key.add_key_listener("KeyP", function() {
@@ -34,8 +34,7 @@ const init = function() {
       Sound.current?.pause();
     }
   });
-  /*
-  for (let i = 0; i < 4; i++) {
+  /*for (let i = 0; i < 4; i++) {
     key.add_key_listener("Key" + "DFJK"[i], function() {
       Chart.current?.key_hit(i + 1);
     });
