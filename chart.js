@@ -1,6 +1,6 @@
 import { scores, settings, songs } from "./settings.js";
 import { Sound, sounds } from "./sound.js";
-import { mouse } from "./util/key.js";
+import { key, mouse } from "./util/key.js";
 export class Chart {
     static current;
     static make(chart_metadata) {
@@ -480,6 +480,12 @@ export class Note {
             }
             else { // frac < 0.4
                 lane_pressed = this.chart.check_lane_hit(floored);
+            }
+            if (key.mobile && !lane_pressed) {
+                const w = window.innerWidth;
+                const w2 = key.board_width;
+                const x2 = (w - w2) / 2;
+                lane_pressed = lane_pressed || key.check_touch_x(w / 4 * (this.lane - 0.5), w * 0.33) || key.check_touch_x(x2 + w2 / 4 * (this.lane - 0.5), w2 * 0.33);
             }
             if (lane_pressed) {
                 this.hit_note(t > 40 ? 3 : 4);
@@ -3012,7 +3018,7 @@ export const chart_definitions = {
             [note_type.none, 0, 2000, 500],
             // the rest is filled up below
         ],
-    }
+    },
 };
 for (let i = 0; i < 100; i++) {
     chart_definitions.beeps.notes.push([note_type.hold, i % 4 + 1, i, 0.25]);
@@ -3021,4 +3027,4 @@ for (let i = 0; i < 100; i++) {
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.15]);
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.20]);
 }
-export const charts = {}; // to make... if not memory overload
+export const charts = {}; // to make... if not memory overload? (hmmm)
