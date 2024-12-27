@@ -153,6 +153,9 @@ export class Chart {
     static special_grade(result) {
         return Chart.special_grades[Chart.special_grade_number(result)];
     }
+    static count_notes_from_result(result) {
+        return result[0] + result[1] + result[2] + result[3] + result[4];
+    }
     static skill_rate_data = (function () {
         const raw = `
       1010000	✪	1	2.05	0
@@ -364,7 +367,7 @@ export class Chart {
         if (this.finished)
             return;
         this.finished = true;
-        const special = Chart.special_grade_number(this.result);
+        const special = (this.notes_played === this.total_notes) ? (Chart.special_grade_number(this.result)) : 0;
         const skill = Chart.skill_rate(this.difficulty_number, this.score, special);
         if ((Sound.current?.element?.playbackRate ?? 0) >= 1) {
             scores.add({
