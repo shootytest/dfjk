@@ -447,7 +447,7 @@ export const ui = {
 
       const special = Chart.special_grades[score?.special ?? 0];
       ctx.fillStyle = color["special_" + special];
-      ctx.translate(w / 2, - h / 2);
+      ctx.translate(w * 0.475, - h / 2);
       ctx.rotate(Math.PI * 0.1);
       ctx.strokeText(special, 0, 0);
       ctx.text(special, 0, 0);
@@ -967,6 +967,7 @@ export const ui = {
       <div style="text-align: left;">
       <h3> 0.3.6 | 26-12-2024 | 🎶 4  📊 8 </h3>
       <p> - fixed sync issue for loneliness </p>
+      <p> - very slightly moved FC/AP indicators in song list </p>
       <h3> 0.3.5 | 25-12-2024 | 🎶 4  📊 8 </h3>
       <p> - added medium chart for loneliness </p>
       <p> - added mobile finger sliding control support </p>
