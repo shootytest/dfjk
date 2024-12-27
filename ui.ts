@@ -965,9 +965,11 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.3.7 | 27-12-2024 | 🎶 4  📊 8 </h3>
+      <p> - fixed Z AP+ issue (i hope) </p>
+      <p> - very slightly moved FC/AP indicators in song list </p>
       <h3> 0.3.6 | 26-12-2024 | 🎶 4  📊 8 </h3>
       <p> - fixed sync issue for loneliness </p>
-      <p> - very slightly moved FC/AP indicators in song list </p>
       <h3> 0.3.5 | 25-12-2024 | 🎶 4  📊 8 </h3>
       <p> - added medium chart for loneliness </p>
       <p> - added mobile finger sliding control support </p>
