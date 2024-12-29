@@ -122,6 +122,7 @@ export class Chart {
   }
 
   static special_grades = ["", "FC", "FC+", "AP", "AP+"];
+  static special_skill_rates = [0, 0.1, 0.15, 0.2, 0.2];
   static special_grade(result: number[]): string {
     return Chart.special_grades[Chart.special_grade_number(result)];
   }
@@ -132,24 +133,24 @@ export class Chart {
   
   static skill_rate_data = (function() {
     const raw = `
-      1010000	✪	1	2.05	0
-      1009500	✸	500	2.04	0.01
-      1009000	★★	500	2.03	0.01
-      1008000	★	1000	2	0.03
-      1004000	✦✦	4000	1.8	0.2
-      1000000	✦	4000	1.6	0.2
-      995000	SS+	5000	1.45	0.15
-      990000	SS	5000	1.3	0.15
-      985000	S+	5000	1.15	0.15
-      980000	S	5000	1	0.15
+      1010000	✪	1	1.8	0
+      1009500	✸	500	1.795	0.005
+      1009000	★★	500	1.78	0.015
+      1008000	★	1000	1.75	0.03
+      1004000	✦✦	4000	1.65	0.1
+      1000000	✦	4000	1.5	0.15
+      995000	SS+	5000	1.36	0.14
+      990000	SS	5000	1.23	0.13
+      985000	S+	5000	1.11	0.12
+      980000	S	5000	1	0.11
       965000	AA+	15000	0.9090909091	0.09090909091
       950000	AA	15000	0.8333333333	0.07575757576
       925000	A+	25000	0.7407407407	0.09259259259
       900000	A	25000	0.6666666667	0.07407407407
       875000	B+	25000	0.6060606061	0.06060606061
       850000	B	25000	0.5555555556	0.05050505051
-      800000	C+	50000	0.5	0.05555555556
-      750000	C	50000	0.44	0.06
+      800000	C+	50000	0.49	0.06555555556
+      750000	C	50000	0.44	0.05
       650000	D+	100000	0.35	0.09
       500000	D	150000	0.25	0.1
       250000	E	250000	0.125	0.125
@@ -178,7 +179,7 @@ export class Chart {
     let result = difficulty;
     for (const a of Chart.skill_rate_data) {
       if (a.score <= score) {
-        const mult = a.mult + ((score - a.score) / a.d_score * a.d_mult) + special * 0.05;
+        const mult = a.mult + ((score - a.score) / a.d_score * a.d_mult) + Chart.special_skill_rates[special];
         return difficulty * mult; // runs once
       }
     }

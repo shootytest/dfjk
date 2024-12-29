@@ -965,6 +965,8 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.3.8 | 29-12-2024 | 🎶 4  📊 8 </h3>
+      <p> - changed skill rate system: scores above 980000, especially APs, are not so good now </p>
       <h3> 0.3.7 | 27-12-2024 | 🎶 4  📊 8 </h3>
       <p> - fixed Z AP+ issue (i hope) </p>
       <p> - very slightly moved FC/AP indicators in song list </p>
