@@ -52,6 +52,7 @@ onAuthStateChanged(auth, (u) => {
   firebase.user = u;
   firebase.signed_in = !!u;
   ui.make_account();
+  firebase.update_scores();
 });
 
 const color = {
@@ -269,6 +270,18 @@ export const firebase = {
       }
     }
     return scores.map;
+  },
+
+  update_scores: function(fn = () => {}) {
+    const uid = firebase.user?.uid;
+    if (!firebase.signed_in || !uid) return;
+    firebase.get(`/scores/${uid}/`, (other_map) => {
+      firebase.merge_scores(other_map);
+      firebase.save_scores(uid).then(() => {
+        display_result("updated scores!", color.green);
+        fn();
+      }).catch(console.error);
+    });
   },
 
   get_scores: function(chart_name, fn) {

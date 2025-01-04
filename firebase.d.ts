@@ -29,6 +29,7 @@ export declare namespace firebase {
 
   function save_scores(uid: string): Promise<void>;
   function merge_scores(other_map: { [key: string]: Score[] }): { [key: string]: Score[] };
+  function update_scores(fn: () => void = () => {}): void;
   function get_scores(chart_name: string, fn: (scores: { uid: string, username: string, userskill: number, score: Score, }[]) => void): void;
   function get_leaderboard(fn: (leaderboard: { uid: string, username: string, peak: number, skill: number, }[]) => void): void;
 

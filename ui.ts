@@ -1151,6 +1151,7 @@ export const ui = {
       <div style="text-align: left;">
       <h3> 0.4.1 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added a leaderboard for each chart! </p>
+      <p> - added automatic and manual score updating! </p>
       <p> - even more exclamation marks! </p>
       <h3> 0.4.0 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added accounts! </p>
@@ -1253,6 +1254,7 @@ export const ui = {
       ` : `
       <h3> account </h3>
       <p>username: <input id="change_input" type="text" pattern="[a-zA-Z0-9_]*" maxlength="20"> <button id="change_button"> change </button></p>
+      <p><button id="update_button"> update scores </button></p>
       <p><button id="logout_button"> log out </button> <button id="logout_clear_button" style="font-size: 0.6em;"> log out and clear progress </button></p>
       <p id="result"></p>
     `;
@@ -1266,20 +1268,34 @@ export const ui = {
       const change_button = document.getElementById("change_button") as HTMLButtonElement;
       const change_input = document.getElementById("change_input") as HTMLInputElement;
       change_input.value = firebase.username;
+      change_input.addEventListener("click", function(event) {
+        event.stopPropagation();
+      });
       change_input.addEventListener("input", function(event) {
+        event.stopPropagation();
         if (change_input.validity.valid) change_button.removeAttribute("disabled");
         else change_button.setAttribute("disabled", "true");
       });
       change_button.addEventListener("click", function(event) {
+        event.stopPropagation();
         firebase.change_username(change_input.value);
       });
+      document.getElementById("update_button")?.addEventListener("click", function(event) {
+        event.stopPropagation();
+        firebase.update_scores();
+      });
       document.getElementById("logout_button")?.addEventListener("click", function(event) {
+        event.stopPropagation();
         firebase.logout_user(false);
       });
       document.getElementById("logout_clear_button")?.addEventListener("click", function(event) {
+        event.stopPropagation();
         firebase.logout_user(true);
       });
     }
+    if (ui.mobile) main.addEventListener("click", function() {
+      ui.hide_box("account");
+    });
     if (!was_open) ui.hide_box("account");
     else firebase.redisplay_result();
   },
