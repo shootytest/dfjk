@@ -1,4 +1,4 @@
-import { init_canvas } from "./util/canvas.js";
+import { canvas, init_canvas } from "./util/canvas.js";
 import { key, mouse } from "./util/key.js";
 import { Chart, charts } from "./chart.js";
 import { Sound, sounds } from "./sound.js";

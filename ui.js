@@ -1,4 +1,5 @@
 import { canvas, ctx } from "./util/canvas.js";
+import { vector } from "./util/vector.js";
 import { Chart, note_type } from "./chart.js";
 import { Sound, sounds } from "./sound.js";
 import dat from "./dat.js";
@@ -149,12 +150,25 @@ export const ui = {
             if (hover_f)
                 hover_f();
             if (mouse.down_buttons[0] && ctx.point_in_path_v(mouse.down_position[0])) {
+                ui.cancel_click();
                 click_f();
             }
         }
     },
     draw: function () {
         ctx.clear(color.black);
+        if (ui.is_box_open()) {
+            canvas.style.filter = "blur(3px)";
+            ctx.beginPath();
+            ctx.rect(0, 0, ui.width, ui.height);
+            ui.check_click(() => {
+                if (ui.is_box_open())
+                    ui.close_boxes();
+            });
+        }
+        else {
+            canvas.style.filter = "";
+        }
         const v = { x: this.width / 2, y: this.height / 2, };
         if (ui.menu === "main") {
             this.draw_main(v);
@@ -948,6 +962,7 @@ export const ui = {
         // console.log(scores.list);
         if (ui.mobile)
             main.addEventListener("click", function () {
+                ui.cancel_click();
                 ui.hide_box("toplist");
             });
         ui.hide_box("toplist");
@@ -1080,6 +1095,7 @@ export const ui = {
         });
         if (ui.mobile)
             main.addEventListener("click", function () {
+                ui.cancel_click();
                 ui.hide_box("leaderboard");
             });
         ui.hide_box("leaderboard");
@@ -1107,6 +1123,8 @@ export const ui = {
       <h3> 0.4.1 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added a leaderboard for each chart! </p>
       <p> - added automatic and manual score updating! </p>
+      <p> - added blurred background for pop-ups! </p>
+      <p> - you can also cancel pop-ups by clicking on the background! </p>
       <p> - even more exclamation marks! </p>
       <h3> 0.4.0 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added accounts! </p>
@@ -1186,6 +1204,7 @@ export const ui = {
         });
         if (ui.mobile)
             main.addEventListener("click", function () {
+                ui.cancel_click();
                 ui.hide_box("credits");
             });
         ui.hide_box("credits");
@@ -1253,6 +1272,7 @@ export const ui = {
         }
         if (ui.mobile)
             main.addEventListener("click", function () {
+                ui.cancel_click();
                 ui.hide_box("account");
             });
         if (!was_open)
@@ -1286,6 +1306,13 @@ export const ui = {
     },
     hide_box: function (id) {
         document?.getElementById(id)?.classList?.add("hide");
+    },
+    cancel_click: function () {
+        mouse.buttons[0] = false;
+        mouse.down_buttons[0] = false;
+        mouse.up_buttons[0] = false;
+        mouse.down_position[0] = vector.create(-1000, -1000);
+        mouse.touch_vectors = [];
     },
     resize: function () {
         ui.width = window.innerWidth;
