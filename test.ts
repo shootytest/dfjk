@@ -4,6 +4,7 @@ import { Chart, charts } from "./chart.js";
 import { Sound, sounds } from "./sound.js";
 import { ui } from "./ui.js";
 import { scores, settings } from "./settings.js";
+import { firebase } from "./firebase.js";
 
 const main = function() {
 
@@ -14,19 +15,31 @@ const main = function() {
 
 const init = function() {
 
+  firebase.increment("/test/pageviews/", 1);
   init_canvas();
   scores.init();
   key.init();
   ui.init();
-  key.add_key_listener("Space", ui.enter);
+  key.add_key_listener("Space", function() {
+    if (document.activeElement?.tagName.toLowerCase() === "input") return;
+    ui.enter();
+  });
   key.add_key_listener("Enter", ui.enter);
-  key.add_key_listener("KeyR", ui.restart);
+  key.add_key_listener("ShiftLeft", ui.shift);
+  key.add_key_listener("ShiftRight", ui.shift);
+  key.add_key_listener("KeyR", function() {
+    if (document.activeElement?.tagName.toLowerCase() === "input") return;
+    ui.restart();
+  });
   key.add_key_listener("Escape", ui.back);
   key.add_key_listener("Backquote", ui.back);
   key.add_key_listener("Digit1", function() {
     if (Sound.current) Sound.current.element.currentTime = 36.000;
   });
-  key.add_key_listener("Backspace", ui.back);
+  key.add_key_listener("Backspace", function() {
+    if (document.activeElement?.tagName.toLowerCase() === "input") return;
+    ui.back();
+  });
   key.add_key_listener("KeyP", function() {
     if (Sound.current?.paused) {
       Sound.current?.play();

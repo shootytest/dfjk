@@ -2,6 +2,7 @@ import { canvas, ctx } from "./util/canvas.js";
 import { Chart, note_type } from "./chart.js";
 import { Sound, sounds } from "./sound.js";
 import dat from "./dat.js";
+import { firebase } from "./firebase.js";
 import { math } from "./util/math.js";
 import { key, mouse } from "./util/key.js";
 import { scores, settings, songs, chart_map } from "./settings.js";
@@ -16,8 +17,8 @@ export const color = {
     red: "#db6353",
     yellow: "#cfc04c",
     green: "#54f088",
-    blue: "#7a8eff", // "#4c75cf",
-    purple: "#9c7aff", // "#664ccf",
+    blue: "#7a8eff",
+    purple: "#9c7aff",
     ["difficulty_easy"]: "#73f586",
     ["difficulty_medium"]: "#e8e864",
     ["difficulty_hard"]: "#f59c73",
@@ -62,9 +63,9 @@ export const ui = {
     main: {
         index: 0,
         index_target: 0,
-        svg: ["play", "chart", "settings", "about"],
-        text: ["play!", "top performance", "settings", "info"],
-        color: ["green", "blue", "purple", "white"],
+        svg: ["play", "toplist", "leaderboard", "about", "account"],
+        text: ["play!", "top performance", "leaderboard", "info", "account"],
+        color: ["green", "blue", "yellow", "white", "purple"],
     },
     list: {
         index: 0,
@@ -73,6 +74,15 @@ export const ui = {
         type: 0,
         type_target: 0,
         playing: sounds.beeps_preview,
+        get song() {
+            return songs[ui.list.index_target];
+        },
+        get type_real() {
+            return Math.min(ui.list.type_target, ui.list.song.charts.length - 1);
+        },
+        get chart() {
+            return ui.list.song.charts[ui.list.type_real];
+        },
     },
     game: {
         tilt: 0,
@@ -121,9 +131,10 @@ export const ui = {
             ui.images[song.image] = image;
         }
         ui.make_toplist();
-        ui.hide_box("toplist");
+        ui.make_leaderboard();
         ui.make_credits();
-        ui.hide_box("credits");
+        ui.make_account();
+        ui.close_boxes();
     },
     tick: function () {
         ui.time++;
@@ -179,7 +190,7 @@ export const ui = {
         ctx.set_font_mono(r * 0.2);
         ctx.text(ui.main.text[mi], v.x, v.y);
         ctx.strokeStyle = color[ui.main.color[mi]];
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = r * 0.005;
         ctx.strokeText(ui.main.text[mi], v.x, v.y);
         ctx.save("main_menu");
         ctx.strokeStyle = color.white;
@@ -218,9 +229,13 @@ export const ui = {
             ui.show_box("toplist");
         }
         else if (i === 2) {
+            ui.show_box("leaderboard");
         }
         else if (i === 3) {
             ui.show_box("credits");
+        }
+        else if (i === 4) {
+            ui.show_box("account");
         }
     },
     draw_list: function (v) {
@@ -239,6 +254,7 @@ export const ui = {
         }
         ui.list.type = math.lerp(ui.list.type, ui.list.type_target, 0.1);
         const type = ui.list.type;
+        let index_target_change = 0;
         // circles
         ctx.strokeStyle = color.white;
         ctx.fillStyle = color.white;
@@ -257,7 +273,7 @@ export const ui = {
             const ii = indices[i];
             const song = songs[ii];
             const type_target = Math.min(ui.list.type_target, song.types.length - 1);
-            const score = scores.map[song.charts[type_target]];
+            const score = scores.map[song.charts[type_target]]?.[0];
             const angle = 0.32 * -((Math.round(index_circle) - index_circle) - 1 + i);
             if (x_constrained)
                 ctx.translate(v.x, v.y / 2 - r * 1.05);
@@ -289,7 +305,7 @@ export const ui = {
                 ui.check_click(ui.list_enter, () => { rotato = true; });
             else
                 ui.check_click(() => {
-                    ui.list_change_index(ii - ui.list.index_target);
+                    index_target_change = ii - ui.list.index_target;
                 });
             ctx.clip();
             ctx.translate(0, r);
@@ -340,7 +356,7 @@ export const ui = {
         for (let i = 0; i < songs.length; i++) {
             const song = songs[i];
             const type_target = Math.min(ui.list.type_target, song.types.length - 1);
-            const score = scores.map[song.charts[type_target]];
+            const score = scores.map[song.charts[type_target]]?.[0];
             const angle = 0.2 * (i - index);
             ctx.translate(x, y + Math.sin(angle) * r / 2);
             ctx.scale(1, Math.cos(angle));
@@ -421,26 +437,43 @@ export const ui = {
             ctx.globalAlpha = 0.5;
             ctx.svg("back", w, w, w * 0.8);
             ui.check_click(() => {
-                if (ui.game.backing <= 0)
-                    ui.game.backing = ui.time;
-                else
-                    ui.back();
+                index_target_change = 0;
+                /*if (ui.game.backing <= 0) ui.game.backing = ui.time;
+                else ui.back();*/
+                ui.back();
             });
             if (ui.game.backing && ui.time - ui.game.backing > 120) {
                 ui.game.backing = 0;
             }
+            ctx.fillStyle = ui.game.restarting > 0 ? color.red : color.yellow;
+            ctx.beginPath();
+            ctx.round_rect(size.x - w * 1.5, w * 0.5, w, w, w * 0.2);
+            ctx.fill();
+            ctx.globalAlpha = 0.5;
+            ctx.svg("chart", size.x - w, w, w * 0.8);
+            ui.check_click(() => {
+                index_target_change = 0;
+                /*if (ui.game.restarting <= 0) ui.game.restarting = ui.time;
+                else { ui.game.restarting = 0; ui.shift(); }*/
+                ui.shift();
+            });
+            if (ui.game.restarting && ui.time - ui.game.restarting > 120) {
+                ui.game.restarting = 0;
+            }
             ctx.globalAlpha = 1;
         }
+        if (index_target_change)
+            ui.list_change_index(index_target_change);
     },
     list_change_index: function (delta) {
         if (ui.menu !== "list")
             return;
-        ui.list.index_target += delta + songs.length;
-        ui.list.index_target %= songs.length;
-        const song = songs[ui.list.index_target];
+        ui.list.playing = sounds[songs[ui.list.index_target].preview];
         ui.list.playing.pause();
         ui.list.playing.reset();
-        ui.list.playing = sounds[song.preview];
+        ui.list.index_target += delta + songs.length;
+        ui.list.index_target %= songs.length;
+        ui.list.playing = sounds[songs[ui.list.index_target].preview];
         ui.list.playing.reset();
         ui.list.playing.play();
     },
@@ -492,6 +525,16 @@ export const ui = {
             Sound.current = undefined;
         }
     },
+    shift: function () {
+        if (ui.menu === "list") {
+            if (ui.check_box("toplist_chart")) {
+                ui.hide_box("toplist_chart");
+            }
+            else {
+                ui.make_toplist_chart(ui.list.chart);
+            }
+        }
+    },
     restart: function () {
         if (ui.menu === "game" && Sound.current && Sound.current?.play_timestamp > -1) {
             ui.game.restarting = 0;
@@ -509,6 +552,8 @@ export const ui = {
             ui.main.index_target = 0;
             ui.list.playing.pause();
             ui.list.playing.reset();
+            ui.make_toplist(); // hmmm reload toplist and such
+            ui.make_leaderboard();
         }
         else if (ui.menu === "game") {
             ui.menu = "list";
@@ -523,6 +568,8 @@ export const ui = {
         }
     },
     up: function () {
+        if (ui.is_box_open())
+            return;
         if (ui.menu === "main") {
             ui.main.index_target += ui.main.svg.length - 1;
             ui.main.index_target %= ui.main.svg.length;
@@ -532,6 +579,8 @@ export const ui = {
         }
     },
     down: function () {
+        if (ui.is_box_open())
+            return;
         if (ui.menu === "main") {
             ui.main.index_target += 1;
             ui.main.index_target %= ui.main.svg.length;
@@ -541,6 +590,8 @@ export const ui = {
         }
     },
     left: function () {
+        if (ui.is_box_open())
+            return;
         if (ui.menu === "main") {
             ui.main.index_target += ui.main.svg.length - 1;
             ui.main.index_target %= ui.main.svg.length;
@@ -550,6 +601,8 @@ export const ui = {
         }
     },
     right: function () {
+        if (ui.is_box_open())
+            return;
         if (ui.menu === "main") {
             ui.main.index_target += 1;
             ui.main.index_target %= ui.main.svg.length;
@@ -842,35 +895,39 @@ export const ui = {
     },
     make_toplist: function () {
         if (document.getElementById("toplist")) {
-            document.removeChild(document.getElementById("toplist"));
+            document.body.removeChild(document.getElementById("toplist"));
         }
         const main = document.createElement("div");
         main.id = "toplist";
         main.classList.add("centerbox");
         document.body.appendChild(main);
         main.innerHTML = `
-      <p><b>total skill: <span id="totalskill"></span></b></p>
-      <table id="chair">
-        <tr><th>#</th><th>name</th><th colspan="2">diff</th><th>score</th><th colspan="2">grade</th><th>skill</th></tr>
+      <h3><b>total skill: <span id="totalskill"></span></b></h3>
+      <table id="chair" style="margin: 0 auto;">
+        <tr><th>#</th><th>name</th><th colspan="2">diff</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
       </table>
     `;
         const table = document.getElementById("chair");
+        /*
         let changed = false;
-        for (const score of scores.list) {
-            if (true || !score.skill) { // todo change
-                changed = true;
-                const diff = chart_map[score.chart].song_difficulty;
-                score.skill = Chart.skill_rate(diff, score.value, score.special);
-            }
+        for (const score of scores.get_list()) {
+          if (true || !score.skill) { // todo change
+            changed = true;
+            const diff = chart_map[score.chart].song_difficulty;
+            score.skill = Chart.skill_rate(diff, score.value, score.special);
+          }
         }
-        scores.list.sort((s1, s2) => (s2.skill - s1.skill));
+        if (changed) scores.save();
+        */
+        const list = scores.get_list();
         let total = 0;
-        for (let i = 0; i < scores.list.length; i++) {
-            const score = scores.list[i];
+        for (let i = 0; i < list.length; i++) {
+            const score = list[i];
             const chart = chart_map[score.chart];
             const tr = document.createElement("tr");
             const gr = Chart.grade(score.value);
             const sp = Chart.special_grades[score.special];
+            const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
             tr.innerHTML = `
         <td>${i + 1}</td>
         <td>${songs[chart.song_id].name}</td>
@@ -879,22 +936,107 @@ export const ui = {
         <td style="color: ${color["grade_" + gr]};">${score.value}</td>
         <td style="color: ${color["grade_" + gr]};">${gr}</td>
         <td style="color: ${color["special_" + sp]};">${sp}</td>
-        <td title="${score.skill}">${score.skill.toFixed(2)}</td>`;
+        <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+        <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+      `;
             table.appendChild(tr);
             total += score.skill;
         }
-        document.getElementById("totalskill").textContent = total.toFixed(3);
+        const span_skill = document.getElementById("totalskill");
+        span_skill.textContent = total.toFixed(3);
+        span_skill.title = "" + total;
         // console.log(scores.list);
-        if (changed)
-            scores.save();
         if (ui.mobile)
             main.addEventListener("click", function () {
                 ui.hide_box("toplist");
             });
+        ui.hide_box("toplist");
+    },
+    make_toplist_chart: function (chart_name) {
+        if (document.getElementById("toplist_chart")) {
+            document.body.removeChild(document.getElementById("toplist_chart"));
+        }
+        const main = document.createElement("div");
+        main.id = "toplist_chart";
+        main.classList.add("centerbox");
+        document.body.appendChild(main);
+        const list = scores.map[chart_name];
+        if (!list || list.length === 0) {
+            main.innerHTML = `<p> not played yet </p>`;
+        }
+        else {
+            list?.sort(scores.compare_fn);
+            const chart = chart_map[chart_name];
+            const song = songs[chart.song_id];
+            main.innerHTML = `
+        <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
+        <table id="chair_chart" style="margin-left: auto; margin-right: auto;">
+          <tr><th>#</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
+        </table>
+      `;
+            const table = document.getElementById("chair_chart");
+            for (let i = 0; i < list.length; i++) {
+                const score = list[i];
+                const tr = document.createElement("tr");
+                const gr = Chart.grade(score.value);
+                const sp = Chart.special_grades[score.special];
+                const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+                tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td style="color: ${color["grade_" + gr]};">${score.value}</td>
+          <td style="color: ${color["grade_" + gr]};">${gr}</td>
+          <td style="color: ${color["special_" + sp]};">${sp}</td>
+          <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+          <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+        `;
+                table.appendChild(tr);
+            }
+        }
+        if (ui.mobile)
+            main.addEventListener("click", function () {
+                ui.hide_box("toplist_chart");
+            });
+    },
+    make_leaderboard: function () {
+        if (document.getElementById("leaderboard")) {
+            document.body.removeChild(document.getElementById("leaderboard"));
+        }
+        const main = document.createElement("div");
+        main.id = "leaderboard";
+        main.classList.add("centerbox");
+        document.body.appendChild(main);
+        main.innerHTML = "loading leaderboard...";
+        firebase.get_leaderboard((leaderboard) => {
+            main.innerHTML = `
+        <h3> leaderboard </h3>
+        <table id="choir" style="margin-left: auto; margin-right: auto;">
+          <tr><th>#</th><th>username</th><th>peak skill</th><th>total skill</th></tr>
+        </table>
+      `;
+            const table = document.getElementById("choir");
+            for (let i = 0; i < leaderboard.length; i++) {
+                const entry = leaderboard[i];
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${entry.username}</td>
+          <td>${(entry.peak ?? 0).toFixed(3)}</td>
+          <td>${(entry.skill ?? 0).toFixed(3)}</td>
+        `;
+                if (firebase.user?.uid === entry.uid)
+                    tr.style.color = color.green;
+                table.appendChild(tr);
+            }
+        });
+        if (ui.mobile)
+            main.addEventListener("click", function () {
+                ui.hide_box("leaderboard");
+            });
+        ui.hide_box("leaderboard");
     },
     make_credits: function () {
         if (document.getElementById("credits")) {
-            document.removeChild(document.getElementById("credits"));
+            document.body.removeChild(document.getElementById("credits"));
         }
         const main = document.createElement("div");
         main.id = "credits";
@@ -912,7 +1054,13 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
-      <h3> 0.3.7 | 29-12-2024 | 🎶 4  📊 8 </h3>
+      <h3> 0.4.0 | 04-01-2025 | 🎶 4  📊 8 </h3>
+      <p> - added accounts! </p>
+      <p> - added total skill leaderboard! </p>
+      <p> - 10 highscores are saved for each chart! (press shift) </p>
+      <p> - timestamps for scores! </p>
+      <h3> 0.3.8 | 29-12-2024 | 🎶 4  📊 8 </h3>
+      <p> - preparing for accounts... coming soon i hope </p>
       <p> - changed skill rate system: scores above 980000, especially APs, are not so good now </p>
       <h3> 0.3.7 | 27-12-2024 | 🎶 4  📊 8 </h3>
       <p> - fixed Z AP+ issue (i hope) </p>
@@ -973,22 +1121,89 @@ export const ui = {
       <p> - started working on this </p>
       <h3> 0.0.0 | 09-12-2024 | 🎶 0  📊 0 </h3>
       <p> - site created! </p>
+      <p> <button id="store_data"> store data </button> </p>
       </div> 
     `;
+        document.getElementById("store_data")?.addEventListener("click", function (event) {
+            firebase.set("/test/data/", localStorage.getItem("scores"));
+        });
         if (ui.mobile)
             main.addEventListener("click", function () {
                 ui.hide_box("credits");
             });
+        ui.hide_box("credits");
+    },
+    make_account: function () {
+        const was_open = ui.check_box("account");
+        if (document.getElementById("account")) {
+            document.body.removeChild(document.getElementById("account"));
+        }
+        const main = document.createElement("div");
+        main.id = "account";
+        main.classList.add("centerbox");
+        document.body.appendChild(main);
+        main.innerHTML = (!firebase.signed_in) ? `
+      <h3> log in! </h3>
+      <style>.abcRioButton{border-radius:1px;box-shadow:0 2px 4px 0 rgba(0,0,0,.25);-moz-box-sizing:border-box;box-sizing:border-box;-webkit-transition:background-color .218s,border-color .218s,box-shadow .218s;transition:background-color .218s,border-color .218s,box-shadow .218s;user-select:none;-webkit-user-select:none;appearance:none;-webkit-appearance:none;background-color:#fff;background-image:none;color:#262626;cursor:pointer;outline:none;overflow:hidden;position:relative;text-align:center;vertical-align:middle;white-space:nowrap;width:auto}.abcRioButton:hover{box-shadow:0 0 3px 3px rgba(66,133,244,.3)}.abcRioButtonBlue{background-color:#4285f4;border:none;color:#fff}.abcRioButtonBlue:hover{background-color:#4285f4}.abcRioButtonBlue:active{background-color:#3367d6}.abcRioButtonLightBlue{background-color:#fff;color:#757575}.abcRioButtonLightBlue:active{background-color:#eee;color:#6d6d6d}.abcRioButtonIcon{float:left}.abcRioButtonBlue .abcRioButtonIcon{background-color:#fff;border-radius:1px}.abcRioButtonSvg{display:block}.abcRioButtonContents{font-family:Roboto,arial,sans-serif;font-size:14px;font-weight:500;letter-spacing:.21px;margin-left:6px;margin-right:6px;vertical-align:top}.abcRioButtonContentWrapper{height:100%;width:100%}.abcRioButtonBlue .abcRioButtonContentWrapper{border:1px solid transparent}.abcRioButtonErrorWrapper,.abcRioButtonWorkingWrapper{display:none;height:100%;width:100%}.abcRioButtonErrorIcon,.abcRioButtonWorkingIcon{margin-left:auto;margin-right:auto}.abcRioButtonErrorState,.abcRioButtonWorkingState{border:1px solid #d5d5d5;border:1px solid rgba(0,0,0,.17);box-shadow:0 1px 0 rgba(0,0,0,.05);color:#262626}.abcRioButtonErrorState:hover,.abcRioButtonWorkingState:hover{border:1px solid #aaa;border:1px solid rgba(0,0,0,.25);box-shadow:0 1px 0 rgba(0,0,0,.1)}.abcRioButtonErrorState:active,.abcRioButtonWorkingState:active{border:1px solid #aaa;border:1px solid rgba(0,0,0,.25);box-shadow:inset 0 1px 0 #ddd;color:#262626}.abcRioButtonWorkingState,.abcRioButtonWorkingState:hover{background-color:#f5f5f5}.abcRioButtonWorkingState:active{background-color:#e5e5e5}.abcRioButtonErrorState,.abcRioButtonErrorState:hover{background-color:#fff}.abcRioButtonErrorState:active{background-color:#e5e5e5}.abcRioButtonErrorState .abcRioButtonErrorWrapper,.abcRioButtonWorkingState .abcRioButtonWorkingWrapper{display:block}.abcRioButtonErrorState .abcRioButtonContentWrapper,.abcRioButtonErrorState .abcRioButtonWorkingWrapper,.abcRioButtonWorkingState .abcRioButtonContentWrapper{display:none} @keyframes abcRioButtonWorkingIconPathSpinKeyframes {0% {-webkit-transform: rotate(0deg)}}</style>
+      <div id="goggle" class="googly" style="text-align: center; padding: 1em 5em; cursor: pointer;">
+      <div style="height:50px;width:240px;" class="abcRioButton abcRioButtonBlue"><div class="abcRioButtonContentWrapper"><div class="abcRioButtonIcon" style="padding:15px;"><div style="width:18px;height:18px;" class="abcRioButtonSvgImageWithFallback abcRioButtonIconImage abcRioButtonIconImage18"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 48 48" class="abcRioButtonSvg"><g><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path><path fill="none" d="M0 0h48v48H0z"></path></g></svg></div></div><span style="font-size:16px;line-height:48px;" class="abcRioButtonContents"><span id="sign_in_text">Sign in with Google</span></span></div></div>
+      </div>
+      <p id="result"></p>
+      ` : `
+      <h3> account </h3>
+      <p>username: <input id="change_input" type="text" pattern="[a-zA-Z0-9_]*" maxlength="20"> <button id="change_button"> change </button></p>
+      <p><button id="logout_button"> log out </button> <button id="logout_clear_button" style="font-size: 0.6em;"> log out and clear progress </button></p>
+      <p id="result"></p>
+    `;
+        if (!firebase.signed_in) {
+            document.getElementById("sign_in_text").innerHTML = "sign in with goggle";
+            const goggle = document.getElementById("goggle");
+            goggle?.addEventListener("click", function (_) {
+                firebase.login_goggle_user("");
+            });
+        }
+        else {
+            const change_button = document.getElementById("change_button");
+            const change_input = document.getElementById("change_input");
+            change_input.value = firebase.username;
+            change_input.addEventListener("input", function (event) {
+                if (change_input.validity.valid)
+                    change_button.removeAttribute("disabled");
+                else
+                    change_button.setAttribute("disabled", "true");
+            });
+            change_button.addEventListener("click", function (event) {
+                firebase.change_username(change_input.value);
+            });
+            document.getElementById("logout_button")?.addEventListener("click", function (event) {
+                firebase.logout_user(false);
+            });
+            document.getElementById("logout_clear_button")?.addEventListener("click", function (event) {
+                firebase.logout_user(true);
+            });
+        }
+        if (!was_open)
+            ui.hide_box("account");
+        else
+            firebase.redisplay_result();
     },
     close_boxes() {
         let closed = false;
-        for (const id of ["toplist", "credits"]) {
+        for (const id of ["toplist", "toplist_chart", "leaderboard", "credits", "account"]) {
             if (ui.check_box(id)) {
                 ui.hide_box(id);
                 closed = true;
             }
         }
         return closed;
+    },
+    is_box_open() {
+        for (const id of ["toplist", "toplist_chart", "leaderboard", "credits", "account"]) {
+            if (ui.check_box(id)) {
+                return true;
+            }
+        }
+        return false;
     },
     check_box: function (id) {
         return document?.getElementById(id)?.classList?.contains("hide") === false;

@@ -28,7 +28,7 @@ export const songs = [
         id: 1,
         name: "piano_music_01.mp3",
         types: ["easy", "medium", "hard"],
-        difficulties: [3, 6, 13],
+        difficulties: [3, 6, 15],
         charts: ["saloon_1", "saloon_2", "saloon_3"],
         preview: "saloon_preview",
         image: "saloon.png",
@@ -37,7 +37,7 @@ export const songs = [
         id: 2,
         name: "Deep Under",
         types: ["easy", "medium", "hard"],
-        difficulties: [5, -1, 11],
+        difficulties: [5, -1, 12],
         charts: ["deepunder_1", "deepunder_2", "deepunder_3"],
         preview: "deepunder_preview",
         image: "deepunder.png",
@@ -67,51 +67,163 @@ for (const song of songs) {
         };
     }
 }
+export const skill_rate_data = (function () {
+    const raw = `
+    1010000	✪	1	1.8	0
+    1009500	✸	500	1.795	0.005
+    1009000	★★	500	1.78	0.015
+    1008000	★	1000	1.75	0.03
+    1004000	✦✦	4000	1.65	0.1
+    1000000	✦	4000	1.5	0.15
+    995000	SS+	5000	1.36	0.14
+    990000	SS	5000	1.23	0.13
+    985000	S+	5000	1.11	0.12
+    980000	S	5000	1	0.11
+    965000	AA+	15000	0.9090909091	0.09090909091
+    950000	AA	15000	0.8333333333	0.07575757576
+    925000	A+	25000	0.7407407407	0.09259259259
+    900000	A	25000	0.6666666667	0.07407407407
+    875000	B+	25000	0.6060606061	0.06060606061
+    850000	B	25000	0.5555555556	0.05050505051
+    800000	C+	50000	0.49	0.06555555556
+    750000	C	50000	0.44	0.05
+    650000	D+	100000	0.35	0.09
+    500000	D	150000	0.25	0.1
+    250000	E	250000	0.125	0.125
+    1	F	249999	0	0.125
+    0	Z	1	0	0
+  `;
+    const result = [];
+    for (const line of raw.trim().split("\n")) {
+        const [s, r, ds, m, dm] = line.trim().split("\t");
+        const s_ = parseInt(s);
+        const ds_ = parseInt(ds);
+        const m_ = parseFloat(m);
+        const dm_ = parseFloat(dm);
+        result.push({
+            score: s_,
+            rank: r,
+            d_score: ds_,
+            mult: m_,
+            d_mult: dm_,
+        });
+    }
+    return result;
+})();
+export const special_skill_rate_data = [0, 0.1, 0.15, 0.2, 0.2];
+export const skill_rate = function (score) {
+    let result = chart_map[score.chart].song_difficulty;
+    const value = score.value;
+    const special = score.special;
+    for (const a of skill_rate_data) {
+        if (a.score <= value) {
+            const mult = a.mult + ((value - a.score) / a.d_score * a.d_mult) + special_skill_rate_data[special];
+            return result * mult; // runs once
+        }
+    }
+    return result;
+};
 ;
 export const scores = {
     list: [],
     map: {},
+    peak_skill: 0,
+    total_skill: 0,
     load: () => {
         const raw = localStorage.getItem("scores");
         if (raw) {
-            scores.list = zipson.parse(raw);
-            scores.load_map();
+            const o = zipson.parse(raw);
+            if (Array.isArray(o)) {
+                scores.list = o;
+                scores.load_map_from_list();
+            }
+            else {
+                scores.map = zipson.parse(raw);
+            }
             // console.log(scores.map);
         }
         else {
             scores.save();
         }
+        scores.recalculate_skills();
     },
     save: () => {
-        localStorage.setItem("scores", zipson.stringify(scores.list));
+        localStorage.setItem("scores", zipson.stringify(scores.map));
+    },
+    clear: () => {
+        scores.list = [];
+        scores.map = {};
+        scores.total_skill = 0;
+        scores.save();
     },
     add: (score) => {
-        const difficulty_number = songs[score.song_id].difficulties[score.song_type];
+        const difficulty_number = chart_map[score.chart].song_difficulty;
         const old = scores.map[score.chart];
         if (old == undefined) {
             scores.list.push(score);
-            scores.map[score.chart] = score;
+            scores.map[score.chart] = [score];
         }
         else {
-            if (score.value > old.value)
-                old.value = score.value;
-            if (score.max_combo > old.max_combo)
-                old.max_combo = score.max_combo;
-            if (score.special > old.special)
-                old.special = score.special;
-            if (score.skill > old.skill)
-                old.skill = score.skill;
+            old.push(score);
+            old.sort(scores.compare_fn);
+            if (old.length > 10) {
+                old.length = 10;
+            }
         }
-        scores.save();
+        // scores.save();
     },
-    load_map: () => {
+    load_map_from_list: () => {
         for (const k in scores.map) {
             delete scores.map[k];
         }
         scores.map = {};
         for (const score of scores.list) {
-            scores.map[score.chart] = score;
+            if (!scores.map[score.chart])
+                scores.map[score.chart] = [];
+            scores.map[score.chart].push(score);
         }
+        for (const scorelist of Object.values(scores.map)) {
+            scorelist.sort(scores.compare_fn);
+        }
+    },
+    compare_fn: (a, b) => {
+        return b.skill - a.skill;
+    },
+    check_same: (a, b) => {
+        return a.chart === b.chart && a.max_combo === b.max_combo && a.special === b.special && a.value === b.value && a.time === b.time;
+    },
+    check_contains: (sl, b) => {
+        for (const a of sl) {
+            if (scores.check_same(a, b))
+                return true;
+        }
+        return false;
+    },
+    get_list: () => {
+        const result = [];
+        for (const scorelist of Object.values(scores.map)) {
+            result.push(scorelist[0]);
+        }
+        result.sort(scores.compare_fn);
+        return result;
+    },
+    recalculate_skills: () => {
+        scores.peak_skill = 0;
+        scores.total_skill = 0;
+        for (const k in scores.map) {
+            const scorelist = scores.map[k];
+            for (const score of scorelist) {
+                score.skill = skill_rate(score);
+            }
+            scorelist.sort(scores.compare_fn);
+            if (scorelist[0]) {
+                const s = scorelist[0].skill;
+                scores.total_skill += s;
+                if (s > scores.peak_skill)
+                    scores.peak_skill = s;
+            }
+        }
+        scores.save();
     },
     init: () => {
         scores.load();
