@@ -273,13 +273,20 @@ export const firebase = {
 
   get_scores: function(chart_name, fn) {
     firebase.get("/scores/", (all_scores) => {
-      const result = [];
-      for (const uid in all_scores) {
-        const s = all_scores[uid][chart_name]?.[0];
-        if (s) result.push(s);
-      }
-      result.sort(scores.compare_fn);
-      fn(result);
+      firebase.get("/users/", (all_users) => {
+        const result = [];
+        for (const uid in all_scores) {
+          const s = all_scores[uid][chart_name]?.[0];
+          if (s) result.push({
+            uid: uid,
+            username: all_users[uid].username,
+            userskill: all_users[uid].skill,
+            score: s,
+          });
+        }
+        result.sort(scores.compare_fn);
+        fn(result);
+      });
     });
   },
 

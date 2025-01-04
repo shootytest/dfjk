@@ -70,6 +70,11 @@ table td, table th {
   padding: 0.3em;
 }
 
+table th {
+  vertical-align: bottom;
+  padding-bottom: 10px;
+}
+
 #real_credits p a {
   text-decoration: none;
   display: grid;

@@ -952,7 +952,7 @@ export const ui = {
             });
         ui.hide_box("toplist");
     },
-    make_toplist_chart: function (chart_name) {
+    make_toplist_chart: function (chart_name, leaderboard = false) {
         if (document.getElementById("toplist_chart")) {
             document.body.removeChild(document.getElementById("toplist_chart"));
         }
@@ -960,36 +960,86 @@ export const ui = {
         main.id = "toplist_chart";
         main.classList.add("centerbox");
         document.body.appendChild(main);
-        const list = scores.map[chart_name];
-        if (!list || list.length === 0) {
-            main.innerHTML = `<p> not played yet </p>`;
+        const chart = chart_map[chart_name];
+        const song = songs[chart.song_id];
+        if (leaderboard) {
+            main.innerHTML = `<p> loading leaderboard... </p>`;
+            firebase.get_scores(chart_name, (leaderboard) => {
+                if (!leaderboard || leaderboard.length === 0) {
+                    main.innerHTML = `<p> not played yet </p>`;
+                }
+                else {
+                    main.innerHTML = `
+            <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: leaderboard </h3>
+            <table id="chair_chart" style="margin-left: auto; margin-right: auto;">
+              <tr><th>#</th><th>username</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
+            </table>
+            <p> <button id="switch"> switch to local scores </button> </p>
+          `;
+                    const table = document.getElementById("chair_chart");
+                    for (let i = 0; i < leaderboard.length; i++) {
+                        const entry = leaderboard[i];
+                        const score = entry.score;
+                        const tr = document.createElement("tr");
+                        const gr = Chart.grade(score.value);
+                        const sp = Chart.special_grades[score.special];
+                        const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+                        tr.innerHTML = `
+              <td>${i + 1}</td>
+              <td title="skill: ${entry.userskill}">${entry.username}</td>
+              <td style="color: ${color["grade_" + gr]};">${score.value}</td>
+              <td style="color: ${color["grade_" + gr]};">${gr}</td>
+              <td style="color: ${color["special_" + sp]};">${sp}</td>
+              <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+              <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+            `;
+                        if (firebase.user?.uid === entry.uid)
+                            tr.style.color = color.green;
+                        table.appendChild(tr);
+                    }
+                    document.getElementById("switch")?.addEventListener("click", function (event) {
+                        event.stopPropagation();
+                        ui.make_toplist_chart(chart_name, false);
+                    });
+                }
+            });
         }
         else {
-            list?.sort(scores.compare_fn);
-            const chart = chart_map[chart_name];
-            const song = songs[chart.song_id];
-            main.innerHTML = `
-        <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
-        <table id="chair_chart" style="margin-left: auto; margin-right: auto;">
-          <tr><th>#</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
-        </table>
-      `;
-            const table = document.getElementById("chair_chart");
-            for (let i = 0; i < list.length; i++) {
-                const score = list[i];
-                const tr = document.createElement("tr");
-                const gr = Chart.grade(score.value);
-                const sp = Chart.special_grades[score.special];
-                const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
-                tr.innerHTML = `
-          <td>${i + 1}</td>
-          <td style="color: ${color["grade_" + gr]};">${score.value}</td>
-          <td style="color: ${color["grade_" + gr]};">${gr}</td>
-          <td style="color: ${color["special_" + sp]};">${sp}</td>
-          <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
-          <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+            const list = scores.map[chart_name];
+            if (!list || list.length === 0) {
+                main.innerHTML = `<p> not played yet </p>`;
+            }
+            else {
+                list?.sort(scores.compare_fn);
+                main.innerHTML = `
+          <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
+          <table id="chair_chart" style="margin-left: auto; margin-right: auto;">
+            <tr><th>#</th><th>score</th><th colspan="2">grade</th><th>max<br>combo</th><th>skill</th><th>date</th></tr>
+          </table>
+          <p> <button id="switch"> switch to leaderboard </button> </p>
         `;
-                table.appendChild(tr);
+                const table = document.getElementById("chair_chart");
+                for (let i = 0; i < list.length; i++) {
+                    const score = list[i];
+                    const tr = document.createElement("tr");
+                    const gr = Chart.grade(score.value);
+                    const sp = Chart.special_grades[score.special];
+                    const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+                    tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td style="color: ${color["grade_" + gr]};">${score.value}</td>
+            <td style="color: ${color["grade_" + gr]};">${gr}</td>
+            <td style="color: ${color["special_" + sp]};">${sp}</td>
+            <td style="color: ${color["special_" + sp]};">${score.max_combo}</td>
+            <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+            <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+          `;
+                    table.appendChild(tr);
+                }
+                document.getElementById("switch")?.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    ui.make_toplist_chart(chart_name, true);
+                });
             }
         }
         if (ui.mobile)
@@ -1054,11 +1104,16 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.1 | 04-01-2025 | 🎶 4  📊 8 </h3>
+      <p> - added a leaderboard for each chart! </p>
+      <p> - even more exclamation marks! </p>
       <h3> 0.4.0 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added accounts! </p>
-      <p> - added total skill leaderboard! </p>
+      <p> - added a leaderboard! </p>
       <p> - 10 highscores are saved for each chart! (press shift) </p>
       <p> - timestamps for scores! </p>
+      <h3> 0.3.9 | 01-01-2025 | 🎶 4  📊 8 </h3>
+      <p> - hi 2025 </p>
       <h3> 0.3.8 | 29-12-2024 | 🎶 4  📊 8 </h3>
       <p> - preparing for accounts... coming soon i hope </p>
       <p> - changed skill rate system: scores above 980000, especially APs, are not so good now </p>
@@ -1125,6 +1180,7 @@ export const ui = {
       </div> 
     `;
         document.getElementById("store_data")?.addEventListener("click", function (event) {
+            event.stopPropagation();
             firebase.set("/test/data/", localStorage.getItem("scores"));
         });
         if (ui.mobile)
