@@ -21,6 +21,7 @@ const init = function () {
         ui.enter();
     });
     key.add_key_listener("Enter", ui.enter);
+    key.add_key_listener("Tab", ui.shift);
     key.add_key_listener("ShiftLeft", ui.shift);
     key.add_key_listener("ShiftRight", ui.shift);
     key.add_key_listener("KeyR", function () {
@@ -99,6 +100,24 @@ const init = function () {
     });
     key.add_key_listener("KeyD", function () {
         ui.right();
+    });
+    document.addEventListener("visibilitychange", () => {
+        if (ui.menu === "list") {
+            if (document.hidden) {
+                ui.list.playing.pause();
+            }
+            else {
+                ui.list.playing.play();
+            }
+        }
+        else if (ui.menu === "game") {
+            if (document.hidden) {
+                Sound.current?.pause();
+            }
+            else {
+                Sound.current?.play();
+            }
+        }
     });
 };
 const tick = function (time) {

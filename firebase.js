@@ -334,6 +334,7 @@ export const firebase = {
       displayName: new_username,
     }).then(() => {
       firebase.set(`/users/${firebase.user.uid}/username/`, new_username).then(() => {
+        ui.make_leaderboard();
         display_result(`updated to <b>${firebase.username}</b>!`, color.green);
         document.getElementById("change_input").value = firebase.username;
       }).catch((e) => {

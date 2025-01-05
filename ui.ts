@@ -174,11 +174,10 @@ export const ui = {
     }
   },
 
-  check_click: function(click_f: () => void, hover_f?: () => void) {
+  check_click: function(click_f: () => void, hover_f: () => void = () => {}) {
     if (ctx.point_in_path_v(mouse)) {
       if (hover_f) hover_f();
       if (mouse.down_buttons[0] && ctx.point_in_path_v(mouse.down_position[0])) {
-        ui.cancel_click();
         click_f();
       }
     }
@@ -193,6 +192,7 @@ export const ui = {
       ctx.beginPath();
       ctx.rect(0, 0, ui.width, ui.height);
       ui.check_click(() => {
+        ui.cancel_click();
         if (ui.is_box_open()) ui.close_boxes();
       });
     } else {
@@ -354,7 +354,9 @@ export const ui = {
       let rotato = false;
       if (i === 1) ui.check_click(ui.list_enter, () => { rotato = true; });
       else ui.check_click(() => {
-        index_target_change = ii - ui.list.index_target;
+        if (true && (x_constrained && mouse.down_position[0].y < v.y) || (!x_constrained && mouse.down_position[0].x < v.x - 0.15 * r)) {
+          index_target_change = ii - ui.list.index_target;
+        }
       });
       ctx.clip();
 
@@ -450,7 +452,9 @@ export const ui = {
       ctx.globalAlpha = 0.1;
       ctx.beginPath();
       ctx.round_rectangle(h / 2 - w / 2, 0, h, h, h * 0.1);
-      ui.check_click(() => ui.list_change_type(1), () => ctx.globalAlpha = 0.2);
+      ui.check_click(() => {
+        ui.list_change_type(1);
+      }, () => ctx.globalAlpha = 0.2);
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.set_font_mono(h * 0.4);
@@ -999,7 +1003,7 @@ export const ui = {
         <td style="color: ${color["grade_" + gr]};">${score.value}</td>
         <td style="color: ${color["grade_" + gr]};">${gr}</td>
         <td style="color: ${color["special_" + sp]};">${sp}</td>
-        <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+        <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
         <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
       `;
       table.appendChild(tr);
@@ -1049,11 +1053,11 @@ export const ui = {
             const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
             tr.innerHTML = `
               <td>${i + 1}</td>
-              <td title="skill: ${entry.userskill}">${entry.username}</td>
+              <td title="skill: ${entry.userskill.toFixed(3)}">${entry.username}</td>
               <td style="color: ${color["grade_" + gr]};">${score.value}</td>
               <td style="color: ${color["grade_" + gr]};">${gr}</td>
               <td style="color: ${color["special_" + sp]};">${sp}</td>
-              <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+              <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
               <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
             `;
             if (firebase.user?.uid === entry.uid) tr.style.color = color.green;
@@ -1091,7 +1095,7 @@ export const ui = {
             <td style="color: ${color["grade_" + gr]};">${gr}</td>
             <td style="color: ${color["special_" + sp]};">${sp}</td>
             <td style="color: ${color["special_" + sp]};">${score.max_combo}</td>
-            <td title="${score.skill}"><b>${score.skill.toFixed(3)}</b></td>
+            <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
             <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
           `;
           table.appendChild(tr);
@@ -1122,6 +1126,7 @@ export const ui = {
         <table id="choir" style="margin-left: auto; margin-right: auto;">
           <tr><th>#</th><th>username</th><th>peak skill</th><th>total skill</th></tr>
         </table>
+        <p><button id="leaderboard_refresh"> refresh </button></p>
       `;
       const table = document.getElementById("choir")!;
       for (let i = 0; i < leaderboard.length; i++) {
@@ -1129,13 +1134,18 @@ export const ui = {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${i + 1}</td>
-          <td>${entry.username}</td>
-          <td>${(entry.peak ?? 0).toFixed(3)}</td>
-          <td>${(entry.skill ?? 0).toFixed(3)}</td>
+          <td title="${entry.uid}">${entry.username}</td>
+          <td title="${parseFloat(entry.peak.toPrecision(15))}">${(entry.peak ?? 0).toFixed(3)}</td>
+          <td title="${parseFloat(entry.skill.toPrecision(15))}">${(entry.skill ?? 0).toFixed(3)}</td>
         `;
         if (firebase.user?.uid === entry.uid) tr.style.color = color.green;
         table.appendChild(tr);
       }
+      document.getElementById("leaderboard_refresh")?.addEventListener("click", function(event) {
+        event.stopPropagation();
+        ui.make_leaderboard();
+        ui.show_box("leaderboard");
+      });
     });
     if (ui.mobile) main.addEventListener("click", function() {
       ui.cancel_click();
@@ -1164,6 +1174,10 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.2 | 05-01-2025 | 🎶 4  📊 8 </h3>
+      <p> - music will no longer play in the background (like when screen is off) </p>
+      <p> - added refresh button to leaderboard </p>
+      <p> </p>
       <h3> 0.4.1 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added a leaderboard for each chart! </p>
       <p> - added automatic and manual score updating! </p>
@@ -1356,7 +1370,6 @@ export const ui = {
     mouse.down_buttons[0] = false;
     mouse.up_buttons[0] = false;
     mouse.down_position[0] = vector.create(-1000, -1000);
-    mouse.touch_vectors = [];
   },
 
 
