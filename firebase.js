@@ -297,7 +297,7 @@ export const firebase = {
             score: s,
           });
         }
-        result.sort(scores.compare_fn);
+        result.sort((a, b) => b.score.skill - a.score.skill);
         fn(result);
       });
     });

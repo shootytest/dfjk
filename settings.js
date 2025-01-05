@@ -27,9 +27,9 @@ export const songs = [
     {
         id: 1,
         name: "piano_music_01.mp3",
-        types: ["easy", "medium", "hard"],
-        difficulties: [3, 6, 15],
-        charts: ["saloon_1", "saloon_2", "saloon_3"],
+        types: ["easy", "medium", "hard", "extreme"],
+        difficulties: [3, 6, 15, 0],
+        charts: ["saloon_1", "saloon_2", "saloon_3", "saloon_4"],
         preview: "saloon_preview",
         image: "saloon.png",
     },
@@ -112,7 +112,7 @@ export const skill_rate_data = (function () {
 })();
 export const special_skill_rate_data = [0, 0.1, 0.15, 0.2, 0.2];
 export const skill_rate = function (score) {
-    let result = chart_map[score.chart].song_difficulty;
+    let result = chart_map[score.chart]?.song_difficulty ?? 0;
     const value = score.value;
     const special = score.special;
     for (const a of skill_rate_data) {

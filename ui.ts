@@ -29,6 +29,7 @@ export const color: { [key: string]: string } = {
   ["difficulty_medium"]: "#e8e864",
   ["difficulty_hard"]: "#f59c73",
   ["difficulty_expert"]: "#e864aa",
+  ["difficulty_extreme"]: "#c564e8",
   ["difficulty_special"]: "#b17cf7",
   ["difficulty_calibration"]: "#cccccc",
 
@@ -1072,7 +1073,11 @@ export const ui = {
     } else {
       const list = scores.map[chart_name];
       if (!list || list.length === 0) {
-        main.innerHTML = `<p> not played yet </p>`;
+        main.innerHTML = `
+          <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
+          <br><p> not played yet </p><br>
+          <p> <button id="switch"> switch to leaderboard </button> </p>
+        `;
       } else {
         list?.sort(scores.compare_fn);
         main.innerHTML = `
@@ -1100,11 +1105,11 @@ export const ui = {
           `;
           table.appendChild(tr);
         }
-        document.getElementById("switch")?.addEventListener("click", function(event) {
-          event.stopPropagation();
-          ui.make_toplist_chart(chart_name, true);
-        });
       }
+      document.getElementById("switch")?.addEventListener("click", function(event) {
+        event.stopPropagation();
+        ui.make_toplist_chart(chart_name, true);
+      });
     }
     if (ui.mobile) main.addEventListener("click", function() {
       ui.hide_box("toplist_chart");
@@ -1177,7 +1182,6 @@ export const ui = {
       <h3> 0.4.2 | 05-01-2025 | 🎶 4  📊 8 </h3>
       <p> - music will no longer play in the background (like when screen is off) </p>
       <p> - added refresh button to leaderboard </p>
-      <p> </p>
       <h3> 0.4.1 | 04-01-2025 | 🎶 4  📊 8 </h3>
       <p> - added a leaderboard for each chart! </p>
       <p> - added automatic and manual score updating! </p>
@@ -1285,9 +1289,12 @@ export const ui = {
       <p id="result"></p>
       ` : `
       <h3> account </h3>
-      <p>username: <input id="change_input" type="text" pattern="[a-zA-Z0-9_]*" maxlength="20"> <button id="change_button"> change </button></p>
+      <p>name: <input id="change_input" placeholder="name" type="text" pattern="[a-zA-Z0-9 ._-]*" maxlength="20"><button id="change_button"> change </button></p>
       <p><button id="update_button"> update scores </button></p>
-      <p><button id="logout_button"> log out </button> <button id="logout_clear_button" style="font-size: 0.6em;"> log out and clear progress </button></p>
+      <p>
+        <button id="logout_clear_button"> log out </button>
+        <!-- <button id="logout_button" style="font-size: 0.6em;"> log out and keep progress </button> -->
+      </p>
       <p id="result"></p>
     `;
     if (!firebase.signed_in) {

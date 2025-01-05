@@ -54,7 +54,7 @@ export class Sound {
       if (this.play_timestamp > 0 && !this.playing_delay) {
         this.pause_timestamp = -1;
         this.pause_time_total += performance.now() - this.pause_timestamp;
-      } else {
+      } else if (this.play_timestamp > 0) {
         this.play_timestamp = performance.now();
       }
       this.playing_delay = false;
@@ -92,7 +92,7 @@ export class Sound {
   }
 
   play() {
-    if (this.playing) return;
+    if (this.playing || document.hidden) return;
     // play!
     if (this.ctx.state === "suspended") {
       this.ctx.resume();
