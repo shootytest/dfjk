@@ -12,7 +12,7 @@ export declare namespace firebase {
   let stored_username: string;
 
   function listen(path: string, listener: (o: any) => void, error_function: (e: Error | null) => void): void;
-  function get(path: string, getter_function: (o: any) => void, error_function: (e: Error | null) => void): void;
+  function get(path: string, getter_function: (o: any) => void, error_function: (e: Error | null) => void = (e: Error | null) => {}): void;
   async function promise_get(path: string, getter_function: (o: any) => void, error_function: (e: Error | null) => void): void;
   function set(path: string, value: any): Promise<void>;
   function update(updates: { [key: string]: any }): Promise<void>;

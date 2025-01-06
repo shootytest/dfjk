@@ -18,8 +18,8 @@ export const color = {
     red: "#db6353",
     yellow: "#cfc04c",
     green: "#54f088",
-    blue: "#7a8eff",
-    purple: "#9c7aff",
+    blue: "#7a8eff", // "#4c75cf",
+    purple: "#9c7aff", // "#664ccf",
     ["difficulty_easy"]: "#73f586",
     ["difficulty_medium"]: "#e8e864",
     ["difficulty_hard"]: "#f59c73",
@@ -1213,12 +1213,26 @@ export const ui = {
       <p> - started working on this </p>
       <h3> 0.0.0 | 09-12-2024 | 🎶 0  📊 0 </h3>
       <p> - site created! </p>
-      <p> <button id="store_data"> store data </button> </p>
+      <h3> 0.0.-1 | 09-12-2024 | 🎶 -1  📊 -1 </h3>
+      <p> - actually created in version 4.1.0 or something </p>
+      <p> <button id="store_data"> save data </button> </p>
+      <p> <button id="load_data"> load data </button> </p>
+      <p> <button id="clear_data"> clear data </button> </p>
+      <p id="debug_result"> </p>
       </div> 
     `;
+        const debug_p = document.getElementById("debug_result");
         document.getElementById("store_data")?.addEventListener("click", function (event) {
             event.stopPropagation();
             firebase.set("/test/data/", localStorage.getItem("scores"));
+        });
+        document.getElementById("load_data")?.addEventListener("click", function (event) {
+            event.stopPropagation();
+            firebase.get("/test/data/", (s) => localStorage.setItem("scores", s));
+        });
+        document.getElementById("clear_data")?.addEventListener("click", function (event) {
+            event.stopPropagation();
+            firebase.set("/test/data/", "");
         });
         if (ui.mobile)
             main.addEventListener("click", function () {

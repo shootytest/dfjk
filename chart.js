@@ -1,5 +1,5 @@
 import { firebase } from "./firebase.js";
-import { scores, settings, songs } from "./settings.js";
+import { scores, settings, songs, skill_rate_data, special_skill_rate_data } from "./settings.js";
 import { Sound, sounds } from "./sound.js";
 import { key, mouse } from "./util/key.js";
 export class Chart {
@@ -151,61 +151,17 @@ export class Chart {
         return special;
     }
     static special_grades = ["", "FC", "FC+", "AP", "AP+"];
-    static special_skill_rates = [0, 0.1, 0.15, 0.2, 0.2];
     static special_grade(result) {
         return Chart.special_grades[Chart.special_grade_number(result)];
     }
     static count_notes_from_result(result) {
         return result[0] + result[1] + result[2] + result[3] + result[4];
     }
-    static skill_rate_data = (function () {
-        const raw = `
-      1010000	✪	1	1.8	0
-      1009500	✸	500	1.795	0.005
-      1009000	★★	500	1.78	0.015
-      1008000	★	1000	1.75	0.03
-      1004000	✦✦	4000	1.65	0.1
-      1000000	✦	4000	1.5	0.15
-      995000	SS+	5000	1.36	0.14
-      990000	SS	5000	1.23	0.13
-      985000	S+	5000	1.11	0.12
-      980000	S	5000	1	0.11
-      965000	AA+	15000	0.9090909091	0.09090909091
-      950000	AA	15000	0.8333333333	0.07575757576
-      925000	A+	25000	0.7407407407	0.09259259259
-      900000	A	25000	0.6666666667	0.07407407407
-      875000	B+	25000	0.6060606061	0.06060606061
-      850000	B	25000	0.5555555556	0.05050505051
-      800000	C+	50000	0.49	0.06555555556
-      750000	C	50000	0.44	0.05
-      650000	D+	100000	0.35	0.09
-      500000	D	150000	0.25	0.1
-      250000	E	250000	0.125	0.125
-      1	F	249999	0	0.125
-      0	Z	1	0	0
-    `;
-        const result = [];
-        for (const line of raw.trim().split("\n")) {
-            const [s, r, ds, m, dm] = line.trim().split("\t");
-            const s_ = parseInt(s);
-            const ds_ = parseInt(ds);
-            const m_ = parseFloat(m);
-            const dm_ = parseFloat(dm);
-            result.push({
-                score: s_,
-                rank: r,
-                d_score: ds_,
-                mult: m_,
-                d_mult: dm_,
-            });
-        }
-        return result;
-    })();
     static skill_rate(difficulty, score, special) {
         let result = difficulty;
-        for (const a of Chart.skill_rate_data) {
+        for (const a of skill_rate_data) {
             if (a.score <= score) {
-                const mult = a.mult + ((score - a.score) / a.d_score * a.d_mult) + Chart.special_skill_rates[special];
+                const mult = a.mult + ((score - a.score) / a.d_score * a.d_mult) + special_skill_rate_data[special];
                 return difficulty * mult; // runs once
             }
         }
@@ -802,7 +758,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 30],
             [note_type.normal, 3, 32],
             [note_type.normal, 4, 33],
-            [note_type.normal, 3, 35.5],
+            [note_type.normal, 3, 35.5], // weird
             [note_type.hold, 2, 39, 4],
             [note_type.normal, 3, 41],
             [note_type.normal, 4, 44],
@@ -826,7 +782,7 @@ export const chart_definitions = {
             [note_type.normal, 3, 77],
             [note_type.normal, 2, 79],
             [note_type.normal, 4, 79],
-            [note_type.normal, 2, 81.5],
+            [note_type.normal, 2, 81.5], // weird too
             [note_type.normal, 3, 81.5],
             [note_type.normal, 4, 85],
             [note_type.hold, 1, 86, 6],
@@ -1070,7 +1026,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 18],
             [note_type.hold, 2, 21, 3],
             [note_type.normal, 1, 24],
-            [note_type.normal, 4, 3],
+            [note_type.normal, 4, 3], // this line is different from above!
             [note_type.normal, 3, 5],
             [note_type.normal, 4, 6],
             [note_type.normal, 4, 8],
@@ -1108,7 +1064,7 @@ export const chart_definitions = {
             [note_type.normal, 1, 3],
             [note_type.normal, 2, 3],
             [note_type.normal, 3, 3],
-            [note_type.normal, 4, 3],
+            [note_type.normal, 4, 3], // end of first 4 notes
             [note_type.normal, 1, 5],
             [note_type.normal, 2, 5],
             [note_type.normal, 2, 6],
@@ -1116,7 +1072,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 8],
             [note_type.normal, 3, 8],
             [note_type.hold, 3, 9, 3],
-            [note_type.hold, 4, 9, 3],
+            [note_type.hold, 4, 9, 3], // end of next 4 notes
             [note_type.normal, 1, 12],
             [note_type.normal, 2, 12],
             [note_type.normal, 1, 14],
@@ -1285,7 +1241,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 18],
             [note_type.hold, 2, 21, 3],
             [note_type.normal, 1, 24],
-            [note_type.normal, 4, 3],
+            [note_type.normal, 4, 3], // this line is different from above!
             [note_type.normal, 3, 5],
             [note_type.normal, 4, 6],
             [note_type.normal, 4, 8],
@@ -2275,7 +2231,7 @@ export const chart_definitions = {
     loneliness_1: {
         song: "loneliness",
         notes: [
-            [note_type.none, 0, 2035, 60000 / 480.76],
+            [note_type.none, 0, 2035, 60000 / 480.76], // oddly specific
             [note_type.hold, 2, 0, 8],
             [note_type.spam, 2, 4],
             [note_type.normal, 4, 8],
@@ -2729,7 +2685,7 @@ export const chart_definitions = {
             [note_type.hold, 3, 112, 8],
             [note_type.hold, 2, 124, 2],
             [note_type.none, 0, 2055 + 60000 / 480.76 * 128, 60000 / 360.57],
-            [note_type.normal, 1, 0],
+            [note_type.normal, 1, 0], // bar 9
             [note_type.normal, 2, 1],
             [note_type.normal, 3, 2],
             [note_type.normal, 1, 3],
@@ -2741,7 +2697,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 9],
             [note_type.normal, 3, 10],
             [note_type.normal, 4, 11],
-            [note_type.normal, 3, 12],
+            [note_type.normal, 3, 12], // bar 10
             [note_type.normal, 2, 13],
             [note_type.normal, 1, 14],
             [note_type.normal, 3, 15],
@@ -2754,7 +2710,7 @@ export const chart_definitions = {
             [note_type.normal, 3, 22],
             [note_type.normal, 2, 23],
             [note_type.none, 0, 2065 + 60000 / 480.76 * 128, 60000 / 360.57],
-            [note_type.hold, 1, 24, 3],
+            [note_type.hold, 1, 24, 3], // bar 11
             [note_type.normal, 2, 25],
             [note_type.normal, 3, 26],
             [note_type.hold, 4, 27, 3],
@@ -2766,7 +2722,7 @@ export const chart_definitions = {
             [note_type.hold, 4, 33, 3],
             [note_type.normal, 3, 34],
             [note_type.normal, 2, 35],
-            [note_type.hold, 1, 36, 5],
+            [note_type.hold, 1, 36, 5], // bar 12
             [note_type.normal, 2, 37],
             [note_type.normal, 3, 38],
             [note_type.normal, 4, 39],
@@ -2778,7 +2734,7 @@ export const chart_definitions = {
             [note_type.hold, 2, 45, 3],
             [note_type.normal, 3, 46],
             [note_type.normal, 4, 47],
-            [note_type.hold, 3, 48, 6],
+            [note_type.hold, 3, 48, 6], // bar 13
             [note_type.normal, 2, 49],
             [note_type.normal, 1, 50],
             [note_type.normal, 4, 51],
@@ -2790,7 +2746,7 @@ export const chart_definitions = {
             [note_type.normal, 1, 57],
             [note_type.normal, 2, 58],
             [note_type.normal, 3, 59],
-            [note_type.hold, 2, 60, 6],
+            [note_type.hold, 2, 60, 6], // bar 14
             [note_type.normal, 3, 61],
             [note_type.normal, 4, 62],
             [note_type.normal, 1, 63],
@@ -2802,18 +2758,18 @@ export const chart_definitions = {
             [note_type.hold, 4, 69, 3],
             [note_type.normal, 3, 70],
             [note_type.normal, 2, 71],
-            [note_type.hold, 1, 72, 11],
+            [note_type.hold, 1, 72, 11], // bar 15
             [note_type.hold, 2, 75, 12],
             [note_type.hold, 4, 78, 9],
             [note_type.hold, 3, 81, 6],
-            [note_type.hold, 1, 84, 3],
+            [note_type.hold, 1, 84, 3], // bar 16
             [note_type.none, 0, 2065 + 60000 / 480.76 * 248, 60000 / 480.76],
-            [note_type.normal, 1, 0],
+            [note_type.normal, 1, 0], // bar 16.5
             [note_type.normal, 2, 2],
             [note_type.normal, 3, 4],
             [note_type.normal, 4, 6],
             [note_type.none, 0, 2080 + 60000 / 480.76 * 256, 60000 / 480.76],
-            [note_type.hold, 3, 0, 8],
+            [note_type.hold, 3, 0, 8], // bar 17
             [note_type.normal, 2, 2],
             [note_type.normal, 1, 4],
             [note_type.normal, 2, 6],
@@ -2821,7 +2777,7 @@ export const chart_definitions = {
             [note_type.normal, 4, 10],
             [note_type.normal, 3, 12],
             [note_type.normal, 4, 14],
-            [note_type.hold, 2, 16, 8],
+            [note_type.hold, 2, 16, 8], // bar 18
             [note_type.normal, 3, 18],
             [note_type.normal, 4, 20],
             [note_type.normal, 3, 22],
@@ -2829,7 +2785,7 @@ export const chart_definitions = {
             [note_type.normal, 1, 26],
             [note_type.normal, 2, 28],
             [note_type.normal, 1, 30],
-            [note_type.hold, 1, 32, 4],
+            [note_type.hold, 1, 32, 4], // bar 19
             [note_type.normal, 4, 34],
             [note_type.hold, 2, 36, 4],
             [note_type.normal, 3, 38],
@@ -2837,7 +2793,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 42],
             [note_type.hold, 4, 44, 4],
             [note_type.normal, 1, 46],
-            [note_type.hold, 1, 48, 2],
+            [note_type.hold, 1, 48, 2], // bar 20
             [note_type.normal, 2, 50],
             [note_type.normal, 3, 52],
             [note_type.normal, 4, 54],
@@ -2845,7 +2801,7 @@ export const chart_definitions = {
             [note_type.normal, 2, 58],
             [note_type.normal, 3, 60],
             [note_type.normal, 4, 62],
-            [note_type.hold, 2, 64, 8],
+            [note_type.hold, 2, 64, 8], // bar 21
             [note_type.normal, 3, 66],
             [note_type.normal, 4, 68],
             [note_type.normal, 3, 70],
@@ -2853,7 +2809,7 @@ export const chart_definitions = {
             [note_type.normal, 1, 74],
             [note_type.normal, 2, 76],
             [note_type.normal, 1, 78],
-            [note_type.hold, 3, 80, 8],
+            [note_type.hold, 3, 80, 8], // bar 22
             [note_type.normal, 2, 82],
             [note_type.normal, 1, 84],
             [note_type.normal, 2, 86],
@@ -2861,14 +2817,14 @@ export const chart_definitions = {
             [note_type.normal, 2, 90],
             [note_type.hold, 3, 92, 4],
             [note_type.normal, 4, 94],
-            [note_type.hold, 2, 96, 2],
+            [note_type.hold, 2, 96, 2], // bar 23
             [note_type.normal, 1, 98],
             [note_type.normal, 2, 100],
             [note_type.normal, 3, 102],
             [note_type.hold, 4, 104, 8],
             [note_type.normal, 3, 108],
             [note_type.normal, 2, 110],
-            [note_type.hold, 3, 112, 8],
+            [note_type.hold, 3, 112, 8], // bar 24
             [note_type.normal, 2, 114],
             [note_type.normal, 1, 116],
             [note_type.normal, 4, 118],
@@ -2877,7 +2833,7 @@ export const chart_definitions = {
             [note_type.normal, 3, 124],
             [note_type.normal, 4, 126],
             [note_type.none, 0, 2135 + 60000 / 480.76 * 384, 60000 / 480.76],
-            [note_type.hold, 3, 0, 1],
+            [note_type.hold, 3, 0, 1], // bar 25
             [note_type.normal, 4, 2],
             [note_type.normal, 3, 3],
             [note_type.hold, 4, 4, 1],
@@ -2949,7 +2905,7 @@ export const chart_definitions = {
             [note_type.normal, 3, 106],
             [note_type.hold, 2, 108, 3],
             [note_type.normal, 4, 110],
-            [note_type.hold, 2, 112, 4],
+            [note_type.hold, 2, 112, 4], // bar 32
             [note_type.normal, 4, 114],
             [note_type.hold, 3, 116, 4],
             [note_type.normal, 1, 118],
@@ -2978,7 +2934,7 @@ export const chart_definitions = {
             [note_type.spam, 2.0, 13],
             [note_type.spam, 1.9, 14],
             [note_type.spam, 1.8, 15],
-            [note_type.hold, 3, 16, 7],
+            [note_type.hold, 3, 16, 7], // bar 34
             [note_type.hold, 4, 16, 7],
             [note_type.normal, 2, 20],
             [note_type.hold, 2, 24, 7],
@@ -2992,7 +2948,7 @@ export const chart_definitions = {
             [note_type.hold, 3, 44, 3],
             [note_type.hold, 4, 44, 3],
             //  [ note_type.none, 0, 2150 + 60000 / 480.76 * 512, 60000 / 480.76 ],
-            [note_type.hold, 4, 48, 1],
+            [note_type.hold, 4, 48, 1], // bar 36
             [note_type.normal, 1, 50],
             [note_type.normal, 2, 52],
             [note_type.normal, 3, 54],
@@ -3008,7 +2964,7 @@ export const chart_definitions = {
             [note_type.normal, 4, 74],
             [note_type.hold, 2, 76, 1],
             [note_type.normal, 4, 78],
-            [note_type.hold, 3, 80, 1],
+            [note_type.hold, 3, 80, 1], // bar 38
             [note_type.normal, 1, 82],
             [note_type.normal, 2, 84],
             [note_type.normal, 4, 86],
@@ -3024,7 +2980,7 @@ export const chart_definitions = {
             [note_type.normal, 3, 106],
             [note_type.hold, 1, 108, 1],
             [note_type.normal, 3, 110],
-            [note_type.hold, 2, 112, 1],
+            [note_type.hold, 2, 112, 1], // bar 40
             [note_type.normal, 1, 114],
             [note_type.normal, 3, 116],
             [note_type.normal, 4, 118],
@@ -3041,7 +2997,7 @@ export const chart_definitions = {
             [note_type.normal, 1, 10],
             [note_type.hold, 2, 12, 1],
             [note_type.normal, 4, 14],
-            [note_type.hold, 1, 16, 1],
+            [note_type.hold, 1, 16, 1], // bar 42
             [note_type.normal, 2, 18],
             [note_type.normal, 3, 20],
             [note_type.normal, 4, 22],
@@ -3049,7 +3005,7 @@ export const chart_definitions = {
             [note_type.normal, 1, 26],
             [note_type.normal, 2, 28],
             [note_type.normal, 3, 30],
-            [note_type.hold, 4, 32, 8],
+            [note_type.hold, 4, 32, 8], // bar 43
             [note_type.normal, 2, 34],
             [note_type.normal, 2, 36],
             [note_type.normal, 2, 38],
@@ -3091,7 +3047,7 @@ export const chart_definitions = {
             [note_type.spam, 3.75, 109],
             [note_type.spam, 3.50, 110],
             [note_type.spam, 3.75, 111],
-            [note_type.normal, 2, 112],
+            [note_type.normal, 2, 112], // bar 103
             [note_type.normal, 1, 113],
             [note_type.normal, 2, 114],
             [note_type.normal, 3, 115],
@@ -3100,7 +3056,7 @@ export const chart_definitions = {
             [note_type.hold, 3, 124, 3.9],
             [note_type.normal, 2, 126],
             [note_type.none, 0, 2055 + 60000 / 480.76 * 768, 60000 / 480.76],
-            [note_type.hold, 4, 0, 16],
+            [note_type.hold, 4, 0, 16], // bar 104
             [note_type.normal, 1, 2],
             [note_type.normal, 2, 4],
             [note_type.normal, 3, 6],
@@ -3108,14 +3064,14 @@ export const chart_definitions = {
             [note_type.normal, 2, 10],
             [note_type.normal, 3, 12],
             [note_type.normal, 1, 14],
-            [note_type.normal, 2, 16],
+            [note_type.normal, 2, 16], // bar 105
             [note_type.normal, 1, 17],
             [note_type.normal, 2, 18],
             [note_type.normal, 3, 19],
             [note_type.hold, 4, 20, 8],
             [note_type.hold, 2, 28, 4],
             [note_type.normal, 3, 30],
-            [note_type.hold, 1, 32, 16],
+            [note_type.hold, 1, 32, 16], // bar 106
             [note_type.normal, 4, 34],
             [note_type.normal, 3, 36],
             [note_type.normal, 2, 38],
@@ -3123,14 +3079,14 @@ export const chart_definitions = {
             [note_type.normal, 3, 42],
             [note_type.normal, 2, 44],
             [note_type.normal, 4, 46],
-            [note_type.normal, 2, 48],
+            [note_type.normal, 2, 48], // bar 107
             [note_type.normal, 1, 49],
             [note_type.normal, 2, 50],
             [note_type.normal, 3, 51],
             [note_type.hold, 4, 52, 8],
             [note_type.hold, 3, 60, 4],
             [note_type.normal, 1, 62],
-            [note_type.hold, 2, 64, 16],
+            [note_type.hold, 2, 64, 16], // bar 108
             [note_type.normal, 4, 66],
             [note_type.normal, 3, 68],
             [note_type.normal, 1, 70],
@@ -3138,7 +3094,7 @@ export const chart_definitions = {
             [note_type.normal, 3, 74],
             [note_type.normal, 1, 76],
             [note_type.normal, 4, 78],
-            [note_type.normal, 3, 80],
+            [note_type.normal, 3, 80], // bar 109
             [note_type.normal, 1, 81],
             [note_type.normal, 3, 82],
             [note_type.normal, 2, 83],
@@ -3214,16 +3170,16 @@ export const chart_definitions = {
             [note_type.hold, 4, 48, 16],
             [note_type.hold, 2, 64, 14],
             [note_type.hold, 1, 64, 14],
-            [note_type.hold, 1, 80, 2],
+            [note_type.hold, 1, 80, 2], // bar 117
             [note_type.hold, 3, 88, 2],
             [note_type.hold, 4, 96, 2],
             [note_type.hold, 2, 104, 2],
-            [note_type.hold, 1, 112, 2],
+            [note_type.hold, 1, 112, 2], // bar 119
             [note_type.hold, 3, 116, 2],
             [note_type.hold, 2, 120, 2],
             [note_type.hold, 1, 124, 2],
             [note_type.none, 0, 2035 + 60000 / 480.76 * 1024, 60000 / 480.76],
-            [note_type.hold, 2, 0, 2],
+            [note_type.hold, 2, 0, 2], // bar 120
             [note_type.hold, 2, 8, 2],
             [note_type.hold, 3, 12, 2],
             [note_type.hold, 4, 16, 30],

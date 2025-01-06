@@ -160,7 +160,7 @@ export const firebase = {
       listener(snapshot.val());
     }, error_function);
   },
-  get: (path, getter_function, error_function) => {
+  get: (path, getter_function, error_function = (e) => console.error) => {
     return onValue(ref(db, path), (snapshot) => {
       getter_function(snapshot.val());
     }, error_function, {
