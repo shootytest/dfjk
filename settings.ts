@@ -216,7 +216,7 @@ export const scores = {
       scorelist.sort(scores.compare_fn);
     }
   },
-  compare_fn: (a: Score, b: Score) => {
+  compare_fn: (a: Score | Object & { skill: number }, b: Score | Object & { skill: number }) => {
     return b.skill - a.skill;
   },
   check_same: (a: Score, b: Score): boolean => {

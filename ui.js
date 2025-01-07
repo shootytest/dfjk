@@ -18,8 +18,8 @@ export const color = {
     red: "#db6353",
     yellow: "#cfc04c",
     green: "#54f088",
-    blue: "#7a8eff", // "#4c75cf",
-    purple: "#9c7aff", // "#664ccf",
+    blue: "#7a8eff",
+    purple: "#9c7aff",
     ["difficulty_easy"]: "#73f586",
     ["difficulty_medium"]: "#e8e864",
     ["difficulty_hard"]: "#f59c73",
@@ -1089,6 +1089,20 @@ export const ui = {
         <p><button id="leaderboard_refresh"> refresh </button></p>
       `;
             const table = document.getElementById("choir");
+            let inside = false;
+            for (const entry of leaderboard) {
+                if (firebase.user?.uid === entry.uid)
+                    inside = true;
+            }
+            if (!inside) {
+                leaderboard.push({
+                    uid: "",
+                    username: "you",
+                    peak: scores.peak_skill,
+                    skill: scores.total_skill,
+                });
+                leaderboard.sort(scores.compare_fn);
+            }
             for (let i = 0; i < leaderboard.length; i++) {
                 const entry = leaderboard[i];
                 const tr = document.createElement("tr");
@@ -1098,7 +1112,7 @@ export const ui = {
           <td title="${parseFloat(entry.peak.toPrecision(15))}">${(entry.peak ?? 0).toFixed(3)}</td>
           <td title="${parseFloat(entry.skill.toPrecision(15))}">${(entry.skill ?? 0).toFixed(3)}</td>
         `;
-                if (firebase.user?.uid === entry.uid)
+                if (firebase.user?.uid === entry.uid || !entry.uid)
                     tr.style.color = color.green;
                 table.appendChild(tr);
             }
@@ -1135,6 +1149,9 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>
+      <p> - accountless users can appear in the leaderboard (only for themselves) </p>
+      <p> - possibly adding a new difficulty (coming soon) </p>
       <h3> 0.4.2 | 05-01-2025 | 🎶 4  📊 8 </h3>
       <p> - music will no longer play in the background (like when screen is off) </p>
       <p> - added refresh button to leaderboard </p>

@@ -125,7 +125,7 @@ export const skill_rate = function (score) {
 };
 ;
 export const scores = {
-    list: [], // don't use
+    list: [],
     map: {},
     peak_skill: 0,
     total_skill: 0,
