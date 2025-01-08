@@ -18,8 +18,8 @@ export const color = {
     red: "#db6353",
     yellow: "#cfc04c",
     green: "#54f088",
-    blue: "#7a8eff",
-    purple: "#9c7aff",
+    blue: "#7a8eff", // "#4c75cf",
+    purple: "#9c7aff", // "#664ccf",
     ["difficulty_easy"]: "#73f586",
     ["difficulty_medium"]: "#e8e864",
     ["difficulty_hard"]: "#f59c73",
@@ -1151,7 +1151,7 @@ export const ui = {
       <div style="text-align: left;">
       <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>
       <p> - accountless users can appear in the leaderboard (only for themselves) </p>
-      <p> - possibly adding a new difficulty (coming soon) </p>
+      <p> - possibly adding a new difficulty type soon </p>
       <h3> 0.4.2 | 05-01-2025 | 🎶 4  📊 8 </h3>
       <p> - music will no longer play in the background (like when screen is off) </p>
       <p> - added refresh button to leaderboard </p>

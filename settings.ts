@@ -35,7 +35,7 @@ export const songs = [
     id: 1,
     name: "piano_music_01.mp3",
     types: ["easy", "medium", "hard", "extreme"],
-    difficulties: [3, 6, 15, 0],
+    difficulties: [3, 6, 15, -1],
     charts: ["saloon_1", "saloon_2", "saloon_3", "saloon_4"],
     preview: "saloon_preview",
     image: "saloon.png",

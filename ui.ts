@@ -1195,7 +1195,7 @@ export const ui = {
       <div style="text-align: left;">
       <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>
       <p> - accountless users can appear in the leaderboard (only for themselves) </p>
-      <p> - possibly adding a new difficulty (coming soon) </p>
+      <p> - possibly adding a new difficulty type soon </p>
       <h3> 0.4.2 | 05-01-2025 | 🎶 4  📊 8 </h3>
       <p> - music will no longer play in the background (like when screen is off) </p>
       <p> - added refresh button to leaderboard </p>
