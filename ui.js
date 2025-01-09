@@ -18,8 +18,8 @@ export const color = {
     red: "#db6353",
     yellow: "#cfc04c",
     green: "#54f088",
-    blue: "#7a8eff", // "#4c75cf",
-    purple: "#9c7aff", // "#664ccf",
+    blue: "#7a8eff",
+    purple: "#9c7aff",
     ["difficulty_easy"]: "#73f586",
     ["difficulty_medium"]: "#e8e864",
     ["difficulty_hard"]: "#f59c73",
@@ -1149,6 +1149,8 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.4 | 09-01-2025 | 🎶 4  📊 9 </h3>
+      <p> - added piano_music_01.mp3 extreme 38 </p>
       <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>
       <p> - accountless users can appear in the leaderboard (only for themselves) </p>
       <p> - possibly adding a new difficulty type soon </p>

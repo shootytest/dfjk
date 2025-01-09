@@ -28,7 +28,7 @@ export const songs = [
         id: 1,
         name: "piano_music_01.mp3",
         types: ["easy", "medium", "hard", "extreme"],
-        difficulties: [3, 6, 15, -1],
+        difficulties: [3, 6, 15, 38],
         charts: ["saloon_1", "saloon_2", "saloon_3", "saloon_4"],
         preview: "saloon_preview",
         image: "saloon.png",
@@ -125,7 +125,7 @@ export const skill_rate = function (score) {
 };
 ;
 export const scores = {
-    list: [], // don't use
+    list: [],
     map: {},
     peak_skill: 0,
     total_skill: 0,

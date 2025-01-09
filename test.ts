@@ -35,7 +35,7 @@ const init = function() {
   key.add_key_listener("Escape", ui.back);
   key.add_key_listener("Backquote", ui.back);
   key.add_key_listener("Digit1", function() {
-    if (Sound.current) Sound.current.element.currentTime = 6.000;
+    if (Sound.current) Sound.current.element.currentTime = 16.000;
   });
   key.add_key_listener("Backspace", function() {
     if (document.activeElement?.tagName.toLowerCase() === "input") return;
