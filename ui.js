@@ -1155,6 +1155,8 @@ export const ui = {
       <h3> 0.4.5 | 11-01-2025 | 🎶 5  📊 10 </h3>
       <p> - added <a href="${config.cdn_v}dusk_approach.mp3" target="_blank">dusk approach</a> </p>
       <p> - added easy chart for dusk approach </p>
+      <p> - fixed occasional audio sync issue </p>
+      <p> - fixed score updating (across devices) </p>
       <h3> 0.4.4 | 09-01-2025 | 🎶 4  📊 9 </h3>
       <p> - added extreme chart for piano_music_01.mp3</p>
       <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>

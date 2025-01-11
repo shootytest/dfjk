@@ -262,7 +262,7 @@ export const firebase = {
           if (scores.check_contains(scorelist, o)) {
 
           } else {
-            scorelist.push(otherlist);
+            scorelist.push(o);
           }
         }
         scorelist.sort(scores.compare_fn);
