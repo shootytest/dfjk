@@ -17,6 +17,11 @@ export const settings = {
 
 };
 
+export const config = {
+  cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1736568215/dfjk/",
+  cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1736571597/dfjk/",
+};
+
 export const main_menu = {
   
 };
@@ -57,6 +62,15 @@ export const songs = [
     charts: ["loneliness_1", "loneliness_2", "loneliness_3"],
     preview: "loneliness_preview",
     image: "loneliness.jpg",
+  },
+  {
+    id: 4,
+    name: "dusk approach",
+    types: ["easy", "medium", "hard"],
+    difficulties: [2, -1, -1],
+    charts: ["dusk_1", "dusk_2", "dusk_3"],
+    preview: "dusk_approach_preview",
+    image: "dusk_approach.jpg",
   },
 ];
 

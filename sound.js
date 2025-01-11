@@ -1,4 +1,4 @@
-import { settings } from "./settings.js";
+import { config, settings } from "./settings.js";
 export class Sound {
     static current;
     static current_time = 0;
@@ -22,7 +22,7 @@ export class Sound {
         this.ctx = new AudioContext();
         this.element = document.createElement("audio");
         this.element.crossOrigin = "anonymous";
-        this.element.src = `https://res.cloudinary.com/dzzjrhgkb/video/upload/v1734967578/dfjk/${path}`;
+        this.element.src = config.cdn_v + path;
         (document.getElementById("audio") ?? document.body).appendChild(this.element);
         this.track = this.ctx.createMediaElementSource(this.element);
         // this.track.connect(this.ctx.destination);
@@ -149,7 +149,9 @@ export const sounds = {
     loneliness: new Sound("loneliness.mp3", 0.7),
     loneliness_preview: new Sound("loneliness.mp3", 0.7, 72300, 96350),
     deepunder: new Sound("deepunder.mp3", 1),
-    deepunder_preview: new Sound("deepunder.mp3", 1, 41950, 64625),
+    deepunder_preview: new Sound("deepunder.mp3", 1, 41950, 64725),
+    dusk_approach: new Sound("dusk_approach.mp3", 1),
+    dusk_approach_preview: new Sound("dusk_approach.mp3", 1, 68631, 115288),
 };
 const sfx_make = {
     hit: "111118CvBfBFjoUuukiKaP7emd7z4u3mbuxJGrb7zny1cJghYj9Ri4puRHguBYi1EEJFExsnakGq55F6MNZZo9Tt5p5QhqC16R6s4Ssj9v2yEbQqptiLtqAo",

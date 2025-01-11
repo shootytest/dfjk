@@ -6,7 +6,7 @@ import dat from "./dat.js";
 import { firebase } from "./firebase.js";
 import { math } from "./util/math.js";
 import { key, mouse } from "./util/key.js";
-import { scores, settings, songs, chart_map } from "./settings.js";
+import { scores, settings, songs, chart_map, config } from "./settings.js";
 
 // globals, why not?
 let x: number, y: number, w: number, h: number;
@@ -151,7 +151,7 @@ export const ui = {
 
     for (const song of songs) {
       const image = document.createElement("img");
-      image.setAttribute("src", "https://res.cloudinary.com/dzzjrhgkb/image/upload/dfjk/" + song.image);
+      image.setAttribute("src", config.cdn_i + song.image);
       ui.images[song.image] = image;
     }
     
@@ -1093,7 +1093,9 @@ export const ui = {
           const tr = document.createElement("tr");
           const gr = Chart.grade(score.value);
           const sp = Chart.special_grades[score.special];
-          const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+          const d = new Date();
+          const dt = new Date(score.time ?? (1735689599999 + d.getTimezoneOffset() * 60000));
+          const tdy = dt.toLocaleDateString("en-SG") === d.toLocaleDateString("en-SG");
           tr.innerHTML = `
             <td>${i + 1}</td>
             <td style="color: ${color["grade_" + gr]};">${score.value}</td>
@@ -1101,7 +1103,7 @@ export const ui = {
             <td style="color: ${color["special_" + sp]};">${sp}</td>
             <td style="color: ${color["special_" + sp]};">${score.max_combo}</td>
             <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
-            <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+            <td title="${dt.toLocaleTimeString("en-SG")}">${tdy ? dt.toLocaleTimeString("en-SG") : dt.toLocaleDateString("en-SG")}</td>
           `;
           table.appendChild(tr);
         }
@@ -1188,13 +1190,17 @@ export const ui = {
         <p style="width: max(40vw, 50ch);"><a href="https://squirkymusic.sourceaudio.com/track/25689665" target="_blank"><span> piano_music_01.mp3 <l></l></span><span> Crispin Merrell </span></a></p>
         <p><a href="https://youtu.be/fCNQMJba86A" target="_blank"><span> Deep Under <l></l></span><span> Whitesand </span></a></p>
         <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
+        <p><a href="https://kadthemusiclad.bandcamp.com/track/dusk-approach" target="_blank"><span> Dusk approach <l></l></span><span> kad </span></a></p>
         <h3 style="text-align: center;"> Images </h3>
-        <p><a href="https://res.cloudinary.com/dzzjrhgkb/image/upload/dfjk/deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
+        <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.5 | 11-01-2025 | 🎶 5  📊 10 </h3>
+      <p> - added <a href="${config.cdn_v}dusk_approach.mp3" target="_blank">dusk approach</a> </p>
+      <p> - added easy chart for dusk approach </p>
       <h3> 0.4.4 | 09-01-2025 | 🎶 4  📊 9 </h3>
-      <p> - added piano_music_01.mp3 extreme 38 </p>
+      <p> - added extreme chart for piano_music_01.mp3</p>
       <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>
       <p> - accountless users can appear in the leaderboard (only for themselves) </p>
       <p> - possibly adding a new difficulty type soon </p>
@@ -1233,7 +1239,7 @@ export const ui = {
       <p> - added credits </p>
       <h3> 0.3.2 | 23-12-2024 | 🎶 4  📊 6 </h3>
       <p> - slightly modified piano_music_01.mp3 hard </p>
-      <p> - finally added 2 seconds of silence in <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/v1734967578/dfjk/loneliness.mp3" target="_blank">Loneliness</a> </p>
+      <p> - finally added 2 seconds of silence in <a href="${config.cdn_v}loneliness.mp3" target="_blank">Loneliness</a> </p>
       <p> - added more back buttons on mobile </p>
       <h3> 0.3.1 | 22-12-2024 | 🎶 4  📊 6 </h3>
       <p> - added song playback speed option in settings </p>
@@ -1245,7 +1251,7 @@ export const ui = {
       <p> - added line offset option in settings </p>
       <p> - improved results screen for mobile </p>
       <h3> 0.2.5 | 16-12-2024 | 🎶 4  📊 6 </h3>
-      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/loneliness.mp3" target="_blank">Loneliness</a> </p>
+      <p> - added <a href="${config.cdn_v}loneliness.mp3" target="_blank">Loneliness</a> </p>
       <p> - added easy chart for Deep Under </p>
       <h3> 0.2.4 | 15-12-2024 | 🎶 3  📊 5 </h3>
       <p> - changed picture of piano_music_01.mp3 </p>
@@ -1261,15 +1267,15 @@ export const ui = {
       <p> - created the song list! </p>
       <p> - added a hard chart for Deep Under </p>
       <h3> 0.1.3 | ??-12-2024 | 🎶 3  📊 4 </h3>
-      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/deepunder.mp3" target="_blank">Deep Under</a> internally </p>
+      <p> - added <a href="${config.cdn_v}deepunder.mp3" target="_blank">Deep Under</a> internally </p>
       <p> - added hard chart and updated easy chart for piano_music_01.mp3 </p>
       <h3> 0.1.2 | ??-12-2024 | 🎶 2  📊 3 </h3>
-      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/beeps.mp3" target="_blank">beeps</a> as calibration for audio offset in settings </p>
+      <p> - added <a href="${config.cdn_v}beeps.mp3" target="_blank">beeps</a> as calibration for audio offset in settings </p>
       <p> - also added easy chart for piano_music_01.mp3 </p>
       <h3> 0.1.1 | ??-12-2024 | 🎶 1  📊 1 </h3>
       <p> - added settings (just the audio offset) </p>
       <h3> 0.1.0 | 10-12-2024 | 🎶 1  📊 1 </h3>
-      <p> - added <a href="https://res.cloudinary.com/dzzjrhgkb/video/upload/dfjk/saloon.mp3" target="_blank">piano_music_01.mp3</a> </p>
+      <p> - added <a href="${config.cdn_v}saloon.mp3" target="_blank">piano_music_01.mp3</a> </p>
       <p> - and made a chart for it (it's now the medium one) </p>
       <p> - this started working </p>
       <h3> 0.0.1 | 09-12-2024 | 🎶 0  📊 0 </h3>
@@ -1322,7 +1328,7 @@ export const ui = {
       <p id="result"></p>
       ` : `
       <h3> account </h3>
-      <p>name: <input id="change_input" placeholder="name" type="text" pattern="[a-zA-Z0-9 ._-]*" maxlength="20"><button id="change_button"> change </button></p>
+      <p>name: <input id="change_input" placeholder="name" type="text" pattern="[a-zA-Z0-9 ._\\-]+" maxlength="20"><button id="change_button"> change </button></p>
       <p><button id="update_button"> update scores </button></p>
       <p>
         <button id="logout_clear_button"> log out </button>
