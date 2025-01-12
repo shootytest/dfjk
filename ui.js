@@ -302,8 +302,8 @@ export const ui = {
                 ctx.text("" + score.value, 0, r * 1.04 + rr);
                 ctx.fillStyle = color.white;
                 ctx.set_font_mono(r * 0.025);
-                // ctx.text("max combo: " + score.max_combo, 0, r * 1.1 + rr);
-                ctx.text("rating: " + score.skill.toFixed(2), 0, r * 1.088 + rr);
+                ctx.text(`combo: ${score.max_combo}/${song.notes[type_target]}`, 0, r * 1.088 + rr);
+                // ctx.text("rating: " + score.skill.toFixed(2), 0, r * 1.088 + rr);
                 ctx.strokeStyle = color["grade_" + Chart.grade(score.value)];
             }
             else {
@@ -985,7 +985,21 @@ export const ui = {
         if (leaderboard) {
             main.innerHTML = `<p> loading leaderboard... </p>`;
             firebase.get_scores(chart_name, (leaderboard) => {
-                if (!leaderboard || leaderboard.length === 0) {
+                if (!leaderboard)
+                    leaderboard = [];
+                if (!firebase.signed_in || !firebase.user) {
+                    // not logged in, add best local score to leaderboard
+                    const list = scores.map[chart_name];
+                    if (list[0])
+                        leaderboard.push({
+                            uid: "",
+                            username: "you",
+                            userskill: scores.total_skill,
+                            score: list[0],
+                        });
+                    leaderboard.sort((a, b) => b.score.skill - a.score.skill);
+                }
+                if (leaderboard.length === 0) {
                     main.innerHTML = `<p> not played yet </p>`;
                 }
                 else {
@@ -1013,7 +1027,7 @@ export const ui = {
               <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
               <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
             `;
-                        if (firebase.user?.uid === entry.uid)
+                        if (firebase.user?.uid === entry.uid || !entry.uid)
                             tr.style.color = color.green;
                         table.appendChild(tr);
                     }
@@ -1152,16 +1166,20 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.6 | 12-01-2025 | 🎶 5  📊 11 </h3>
+      <p> - added medium chart for dusk approach </p>
+      <p> - total number of notes appears in song list </p>
+      <p> - guest users now appear in chart leaderboards (only seen by themselves) </p>
       <h3> 0.4.5 | 11-01-2025 | 🎶 5  📊 10 </h3>
       <p> - added <a href="${config.cdn_v}dusk_approach.mp3" target="_blank">dusk approach</a> </p>
       <p> - added easy chart for dusk approach </p>
       <p> - fixed occasional audio sync issue </p>
       <p> - fixed score updating (across devices) </p>
       <h3> 0.4.4 | 09-01-2025 | 🎶 4  📊 9 </h3>
-      <p> - added extreme chart for piano_music_01.mp3</p>
+      <p> - added extreme chart for piano_music_01.mp3 </p>
       <h3> 0.4.3 | 07-01-2025 | 🎶 4  📊 8 </h3>
-      <p> - accountless users can appear in the leaderboard (only for themselves) </p>
-      <p> - possibly adding a new difficulty type soon </p>
+      <p> - guest users can appear in the main leaderboard (only seen by themselves) </p>
+      <p> - possibly adding a new difficulty type soon... </p>
       <h3> 0.4.2 | 05-01-2025 | 🎶 4  📊 8 </h3>
       <p> - music will no longer play in the background (like when screen is off) </p>
       <p> - added refresh button to leaderboard </p>

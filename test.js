@@ -33,7 +33,7 @@ const init = function () {
     key.add_key_listener("Backquote", ui.back);
     key.add_key_listener("Digit1", function () {
         if (Sound.current)
-            Sound.current.element.currentTime = 30 / 9 * 34;
+            Sound.current.element.currentTime = 30 / 9 * 36;
     });
     key.add_key_listener("Backspace", function () {
         if (document.activeElement?.tagName.toLowerCase() === "input")
