@@ -320,6 +320,18 @@ export const firebase = {
     });
   },
 
+  get_toplist: function(uid, fn) {
+    firebase.get(`/scores/${uid}`, (scores) => {
+      const result = [];
+      for (const chart_name in scores) {
+        const s = scores[chart_name][0];
+        result.push(s);
+      }
+      result.sort(scores.compare_fn);
+      fn(result);
+    });
+  },
+
   get username() {
     return firebase.user?.displayName ?? firebase.user?.providerData[0].displayName;
   },

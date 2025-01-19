@@ -10,6 +10,7 @@ export const settings = {
   line_offset: 0,
   hit_volume: 5,
   play_speed: 1,
+  controls: "dfjk",
 
   get notespeed() {
     return this.NOTESPEED / 20 / settings.play_speed;
@@ -19,7 +20,7 @@ export const settings = {
 
 export const config = {
   cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1736568215/dfjk/",
-  cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1736571597/dfjk/",
+  cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1737163465/dfjk/",
 };
 
 export const main_menu = {
@@ -61,7 +62,7 @@ export const songs = [
     id: 3,
     name: "Loneliness",
     types: ["easy", "medium", "hard"],
-    difficulties: [6, 14, -1],
+    difficulties: [6, 14, -2],
     charts: ["loneliness_1", "loneliness_2", "loneliness_3"],
     notes: [472, 689, 0],
     preview: "loneliness_preview",

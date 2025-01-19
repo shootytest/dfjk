@@ -32,6 +32,7 @@ export declare namespace firebase {
   function update_scores(fn: () => void = () => {}): void;
   function get_scores(chart_name: string, fn: (scores: { uid: string, username: string, userskill: number, score: Score, }[]) => void): void;
   function get_leaderboard(fn: (leaderboard: { uid: string, username: string, peak: number, skill: number, }[]) => void): void;
+  function get_toplist(uid: string, fn: (scores: Score[]) => void): void;
 
   let username: string;
   function change_username(new_username: string): void;

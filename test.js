@@ -3,7 +3,7 @@ import { key, mouse } from "./util/key.js";
 import { Chart } from "./chart.js";
 import { Sound } from "./sound.js";
 import { ui } from "./ui.js";
-import { scores } from "./settings.js";
+import { scores, settings } from "./settings.js";
 import { firebase } from "./firebase.js";
 const main = function () {
     init();
@@ -33,7 +33,7 @@ const init = function () {
     key.add_key_listener("Backquote", ui.back);
     key.add_key_listener("Digit1", function () {
         if (Sound.current)
-            Sound.current.element.currentTime = 30 / 9 * 36;
+            Sound.current.element.currentTime = 15.975 * 4 + 0.1248 * 0;
     });
     key.add_key_listener("Backspace", function () {
         if (document.activeElement?.tagName.toLowerCase() === "input")
@@ -49,7 +49,7 @@ const init = function () {
         }
     });
     /*for (let i = 0; i < 4; i++) {
-      key.add_key_listener("Key" + "DFJK"[i], function() {
+      key.add_key_listener("Key" + settings.controls.toUpperCase()[i], function() {
         Chart.current?.key_hit(i + 1);
       });
     }*/
@@ -57,7 +57,7 @@ const init = function () {
         if (event.repeat)
             return;
         for (let i = 0; i < 4; i++) {
-            if (event.code === "Key" + "DFJK"[i]) {
+            if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
                 Chart.current?.key_hit(i + 1);
             }
         }
@@ -66,7 +66,7 @@ const init = function () {
         if (event.repeat)
             return;
         for (let i = 0; i < 4; i++) {
-            if (event.code === "Key" + "DFJK"[i]) {
+            if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
                 Chart.current?.key_release(i + 1);
             }
         }

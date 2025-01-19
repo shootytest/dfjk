@@ -114,12 +114,23 @@ export const ui = {
         c5.name("hit volume");
         const c6 = gui.add(settings, "play_speed", 0.5, 2, 0.25);
         c6.name("play speed");
-        settings.play_speed = 1;
         c6.updateDisplay();
         c6.onChange(() => {
             for (const sound of Object.values(sounds)) {
                 sound.element.playbackRate = settings.play_speed;
             }
+        });
+        const c7 = gui.add(settings, "controls");
+        c7.name("controls");
+        settings.play_speed = 1;
+        c7.onChange(() => {
+            if (settings.controls.length < 4) {
+                settings.controls = "dfjk";
+            }
+            else {
+                settings.controls = settings.controls.substring(0, 4);
+            }
+            c7.updateDisplay();
         });
         const hidden = gui.addFolder("hidden");
         hidden.add(ui.list, "index_target", 0, songs.length - 1);
@@ -241,9 +252,11 @@ export const ui = {
             ui.list_change_index(0);
         }
         else if (i === 1) {
+            ui.make_toplist();
             ui.show_box("toplist");
         }
         else if (i === 2) {
+            ui.make_leaderboard();
             ui.show_box("leaderboard");
         }
         else if (i === 3) {
@@ -550,7 +563,7 @@ export const ui = {
                 ui.hide_box("toplist_chart");
             }
             else {
-                ui.make_toplist_chart(ui.list.chart);
+                ui.make_toplist_chart(ui.list.chart, true);
             }
         }
     },
@@ -912,7 +925,7 @@ export const ui = {
             ctx.restore("draw_results_special");
         }
     },
-    make_toplist: function () {
+    make_toplist: function (uid, name) {
         if (document.getElementById("toplist")) {
             document.body.removeChild(document.getElementById("toplist"));
         }
@@ -921,7 +934,9 @@ export const ui = {
         main.classList.add("centerbox");
         document.body.appendChild(main);
         main.innerHTML = `
-      <h3><b>total skill: <span id="totalskill"></span></b></h3>
+      ${uid ?
+            `<h3>${name}</h3><h3>total skill: <span id="totalskill"></span></h3><h3 id="toplist-back" style="position: absolute; left: 1.2em; top: 0%;"><a href="#">back</a></h3>` :
+            `<h3>total skill: <span id="totalskill"></span></h3>`}
       <table id="chair" style="margin: 0 auto;">
         <tr><th>#</th><th>name</th><th colspan="2">diff</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
       </table>
@@ -938,39 +953,50 @@ export const ui = {
         }
         if (changed) scores.save();
         */
-        const list = scores.get_list();
-        let total = 0;
-        for (let i = 0; i < list.length; i++) {
-            const score = list[i];
-            const chart = chart_map[score.chart];
-            const tr = document.createElement("tr");
-            const gr = Chart.grade(score.value);
-            const sp = Chart.special_grades[score.special];
-            const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
-            tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${songs[chart.song_id].name}</td>
-        <td style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type}</td>
-        <td style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_difficulty}</td>
-        <td style="color: ${color["grade_" + gr]};">${score.value}</td>
-        <td style="color: ${color["grade_" + gr]};">${gr}</td>
-        <td style="color: ${color["special_" + sp]};">${sp}</td>
-        <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
-        <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
-      `;
-            table.appendChild(tr);
-            total += score.skill;
-        }
-        const span_skill = document.getElementById("totalskill");
-        span_skill.textContent = total.toFixed(3);
-        span_skill.title = "" + total;
-        // console.log(scores.list);
-        if (ui.mobile)
-            main.addEventListener("click", function () {
-                ui.cancel_click();
+        const fn = function (list, others = true) {
+            list.sort(scores.compare_fn);
+            let total = 0;
+            for (let i = 0; i < list.length; i++) {
+                const score = list[i];
+                const chart = chart_map[score.chart];
+                const tr = document.createElement("tr");
+                const gr = Chart.grade(score.value);
+                const sp = Chart.special_grades[score.special];
+                const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+                tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${songs[chart.song_id].name}</td>
+          <td style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type}</td>
+          <td style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_difficulty}</td>
+          <td style="color: ${color["grade_" + gr]};">${score.value}</td>
+          <td style="color: ${color["grade_" + gr]};">${gr}</td>
+          <td style="color: ${color["special_" + sp]};">${sp}</td>
+          <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
+          <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+        `;
+                table.appendChild(tr);
+                total += score.skill;
+            }
+            const span_skill = document.getElementById("totalskill");
+            span_skill.textContent = total.toFixed(3);
+            span_skill.title = "" + total;
+            if (ui.mobile)
+                main.addEventListener("click", function () {
+                    ui.cancel_click();
+                    ui.hide_box("toplist");
+                });
+            if (!others)
                 ui.hide_box("toplist");
-            });
-        ui.hide_box("toplist");
+            else
+                document.getElementById("toplist-back")?.addEventListener("click", function () {
+                    ui.close_boxes();
+                    ui.show_box("leaderboard");
+                });
+        };
+        if (uid)
+            firebase.get_toplist(uid, fn);
+        else
+            fn(scores.get_list(), false);
     },
     make_toplist_chart: function (chart_name, leaderboard = false) {
         if (document.getElementById("toplist_chart")) {
@@ -990,7 +1016,7 @@ export const ui = {
                 if (!firebase.signed_in || !firebase.user) {
                     // not logged in, add best local score to leaderboard
                     const list = scores.map[chart_name];
-                    if (list[0])
+                    if (list && list[0])
                         leaderboard.push({
                             uid: "",
                             username: "you",
@@ -1017,7 +1043,9 @@ export const ui = {
                         const tr = document.createElement("tr");
                         const gr = Chart.grade(score.value);
                         const sp = Chart.special_grades[score.special];
-                        const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+                        const d = new Date();
+                        const dt = new Date(score.time ?? (1735689599999 + d.getTimezoneOffset() * 60000));
+                        const tdy = dt.toLocaleDateString("en-SG") === d.toLocaleDateString("en-SG");
                         tr.innerHTML = `
               <td>${i + 1}</td>
               <td title="skill: ${entry.userskill.toFixed(3)}">${entry.username}</td>
@@ -1025,7 +1053,7 @@ export const ui = {
               <td style="color: ${color["grade_" + gr]};">${gr}</td>
               <td style="color: ${color["special_" + sp]};">${sp}</td>
               <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
-              <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+              <td title="${dt.toLocaleTimeString("en-SG")}">${tdy ? dt.toLocaleTimeString("en-SG") : dt.toLocaleDateString("en-SG")}</td>
             `;
                         if (firebase.user?.uid === entry.uid || !entry.uid)
                             tr.style.color = color.green;
@@ -1124,12 +1152,17 @@ export const ui = {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
           <td>${i + 1}</td>
-          <td title="${entry.uid}">${entry.username}</td>
+          <td title="${entry.uid}"><a href="#">${entry.username}</a></td>
           <td title="${parseFloat(entry.peak.toPrecision(15))}">${(entry.peak ?? 0).toFixed(3)}</td>
           <td title="${parseFloat(entry.skill.toPrecision(15))}">${(entry.skill ?? 0).toFixed(3)}</td>
         `;
                 if (firebase.user?.uid === entry.uid || !entry.uid)
                     tr.style.color = color.green;
+                tr.querySelector("a")?.addEventListener("click", function (event) {
+                    ui.hide_box("leaderboard");
+                    ui.make_toplist(entry.uid, entry.username);
+                    setTimeout(() => ui.show_box("toplist"), 100);
+                });
                 table.appendChild(tr);
             }
             document.getElementById("leaderboard_refresh")?.addEventListener("click", function (event) {
@@ -1166,6 +1199,10 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.7 | 18-01-2025 | 🎶 5  📊 11.5 </h3>
+      <p> - added simple profiles! (just top scores list for now) </p>
+      <p> - added half of the hard chart for loneliness </p>
+      <p> - controls can be changed in settings </p>
       <h3> 0.4.6 | 12-01-2025 | 🎶 5  📊 11 </h3>
       <p> - added medium chart for dusk approach </p>
       <p> - total number of notes appears in song list </p>
