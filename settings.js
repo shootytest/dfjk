@@ -15,8 +15,8 @@ export const settings = {
     },
 };
 export const config = {
-    cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1736568215/dfjk/",
-    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1737163465/dfjk/",
+    cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1737861791/dfjk/",
+    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1737807623/dfjk/",
 };
 export const main_menu = {};
 export const songs = [
@@ -34,7 +34,7 @@ export const songs = [
         id: 1,
         name: "piano_music_01.mp3",
         types: ["easy", "medium", "hard", "extreme"],
-        difficulties: [3, 6, 15, 38],
+        difficulties: [3, 6, 15, 48],
         charts: ["saloon_1", "saloon_2", "saloon_3", "saloon_4"],
         notes: [100, 148, 228, 390],
         preview: "saloon_preview",
@@ -54,9 +54,9 @@ export const songs = [
         id: 3,
         name: "Loneliness",
         types: ["easy", "medium", "hard"],
-        difficulties: [6, 14, -2],
+        difficulties: [6, 14, 32],
         charts: ["loneliness_1", "loneliness_2", "loneliness_3"],
-        notes: [472, 689, 0],
+        notes: [472, 689, 1061],
         preview: "loneliness_preview",
         image: "loneliness.jpg",
     },
@@ -69,6 +69,16 @@ export const songs = [
         notes: [170, 400, 0],
         preview: "dusk_approach_preview",
         image: "dusk_approach.jpg",
+    },
+    {
+        id: 5,
+        name: "⠞⠧⠶⠳⡇⠼⠗",
+        types: ["easy", "medium", "hard"],
+        difficulties: [0, -1, -1],
+        charts: ["tetris_1", "tetris_2", "tetris_3"],
+        notes: [0, 0, 0],
+        preview: "tetris_preview",
+        image: "tetris.png",
     },
 ];
 ;
@@ -98,18 +108,18 @@ export const skill_rate_data = (function () {
     990000	SS	5000	1.23	0.13
     985000	S+	5000	1.11	0.12
     980000	S	5000	1	0.11
-    965000	AA+	15000	0.9090909091	0.09090909091
-    950000	AA	15000	0.8333333333	0.07575757576
-    925000	A+	25000	0.7407407407	0.09259259259
-    900000	A	25000	0.6666666667	0.07407407407
-    875000	B+	25000	0.6060606061	0.06060606061
-    850000	B	25000	0.5555555556	0.05050505051
-    800000	C+	50000	0.49	0.06555555556
-    750000	C	50000	0.44	0.05
-    650000	D+	100000	0.3	0.14
-    500000	D	150000	0.1	0.2
-    250000	E	250000	0.01	0.09
-    1	F	249999	0	0.01
+    965000	AA+	15000	0.9	0.1
+    950000	AA	15000	0.83	0.07
+    925000	A+	25000	0.74	0.09
+    900000	A	25000	0.65	0.09
+    875000	B+	25000	0.56	0.09
+    850000	B	25000	0.47	0.09
+    800000	C+	50000	0.33	0.14
+    750000	C	50000	0.25	0.08
+    650000	D+	100000	0.2	0.05
+    500000	D	150000	0.1	0.1
+    250000	E	250000	0.025	0.075
+    1	F	249999	0	0.025
     0	Z	1	0	0
   `;
     const result = [];

@@ -1194,11 +1194,16 @@ export const ui = {
         <p><a href="https://youtu.be/fCNQMJba86A" target="_blank"><span> Deep Under <l></l></span><span> Whitesand </span></a></p>
         <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
         <p><a href="https://kadthemusiclad.bandcamp.com/track/dusk-approach" target="_blank"><span> Dusk approach <l></l></span><span> kad </span></a></p>
+        <p><a href="https://youtu.be/NmCCQxVBfyM" target="_blank"><span> ⠞⠧⠶⠳⡇⠼⠗ <l></l></span><span> folk song / Hip Tanaka </span></a></p>
         <h3 style="text-align: center;"> Images </h3>
         <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.4.9 | 26-01-2025 | 🎶 6  📊 12 </h3>
+      <p> - added tetris theme (displayed as <a href="${config.cdn_v}tetris.mp3" target="_blank">⠞⠧⠶⠳⡇⠼⠗</a>) </p>
+      <h3> 0.4.8 | 25-01-2025 | 🎶 5  📊 12 </h3>
+      <p> - added the other half of the hard chart for loneliness (it's done!) </p>
       <h3> 0.4.7 | 18-01-2025 | 🎶 5  📊 11.5 </h3>
       <p> - added simple profiles! (just top scores list for now) </p>
       <p> - added half of the hard chart for loneliness </p>
