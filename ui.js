@@ -805,7 +805,9 @@ export const ui = {
             ctx.set_font_mono(h * 0.3, "", "right");
             ctx.text("" + chart.max_combo, x, y + h * 0.6);
         }
+        ctx.restore("tilted");
         if (ui.mobile) {
+            ctx.save("mobile");
             w = ui.width / 4;
             for (let i = 0; i < 4; i++) {
                 ctx.fillStyle = (mouse.lanes[i + 1] ? color.green : color.red);
@@ -815,6 +817,7 @@ export const ui = {
                 ctx.fill();
                 if (i < 3) {
                     ctx.fillStyle = color.white;
+                    ctx.strokeStyle = color.white;
                     ctx.lineWidth = 3;
                     ctx.globalAlpha = 1;
                     ctx.line(i * w + w, ui.height - w, i * w + w, ui.height);
@@ -851,8 +854,8 @@ export const ui = {
             if (ui.game.backing && ui.time - ui.game.backing > 120) {
                 ui.game.backing = 0;
             }
+            ctx.restore("mobile");
         }
-        ctx.restore("tilted");
     },
     draw_note: function (type, x, y, size) {
         if (type === note_type.normal || type === note_type.hold) {

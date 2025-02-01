@@ -870,7 +870,10 @@ export const ui = {
       ctx.text("" + chart.max_combo, x, y + h * 0.6);
     }
     
+    ctx.restore("tilted");
+    
     if (ui.mobile) {
+      ctx.save("mobile");
       w = ui.width / 4;
       for (let i = 0; i < 4; i++) {
         ctx.fillStyle = (mouse.lanes[i + 1] ? color.green : color.red);
@@ -880,6 +883,7 @@ export const ui = {
         ctx.fill();
         if (i < 3) {
           ctx.fillStyle = color.white;
+          ctx.strokeStyle = color.white;
           ctx.lineWidth = 3;
           // ctx.line(i * w + w, ui.height / 2, i * w + w, ui.height - w);
           ctx.globalAlpha = 1;
@@ -914,9 +918,8 @@ export const ui = {
       if (ui.game.backing && ui.time - ui.game.backing > 120) {
         ui.game.backing = 0;
       }
+      ctx.restore("mobile");
     }
-
-    ctx.restore("tilted");
 
   },
 
