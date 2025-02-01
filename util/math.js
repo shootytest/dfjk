@@ -1,6 +1,5 @@
 import { vector } from "./vector.js";
 export const math = {
-    // why???
     sin: Math.sin,
     cos: Math.cos,
     tan: Math.tan,

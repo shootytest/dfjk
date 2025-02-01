@@ -7,7 +7,6 @@ import { firebase } from "./firebase.js";
 import { math } from "./util/math.js";
 import { key, mouse } from "./util/key.js";
 import { scores, settings, songs, chart_map, config } from "./settings.js";
-// globals, why not?
 let x, y, w, h;
 let r, c, size;
 let o;
@@ -108,8 +107,6 @@ export const ui = {
         dat.GUI.TEXT_CLOSED = "close settings";
         const c1 = gui.add(settings, "NOTESPEED", 10, 30, 1);
         c1.name("speed");
-        /*const c2 = gui.add(settings, "CHART_NAME", { easy: "saloon_1", medium: "saloon_2", hard: "saloon_3", calibration: "beeps", });
-        c2.name("difficulty");*/
         const c3 = gui.add(settings, "offset", -200, 400, 10);
         c3.name("offset");
         const c4 = gui.add(settings, "line_offset", -100, 100, 10);
@@ -140,7 +137,6 @@ export const ui = {
         hidden.add(ui.list, "index_target", 0, songs.length - 1);
         hidden.add(ui.list, "type_target", 0, 100);
         gui.__folders.hidden.hide();
-        // gui.show();
         gui.close();
         for (const song of songs) {
             const image = document.createElement("img");
@@ -274,9 +270,7 @@ export const ui = {
     draw_list: function (v) {
         const size = { x: ui.width, y: ui.height };
         const x_constrained = size.y >= size.x * 1.6;
-        // overall size, everything is scaled by this
         r = x_constrained ? (size.y * 0.8) : (size.x * 0.92);
-        // song index and type
         ui.list.index_circle = math.lerp_circle(ui.list.index_circle, ui.list.index_target, songs.length, 0.1);
         ui.list.index = math.lerp(ui.list.index, ui.list.index_target, 0.1);
         const index = ui.list.index;
@@ -288,7 +282,6 @@ export const ui = {
         ui.list.type = math.lerp(ui.list.type, ui.list.type_target, 0.1);
         const type = ui.list.type;
         let index_target_change = 0;
-        // circles
         ctx.strokeStyle = color.white;
         ctx.fillStyle = color.white;
         ctx.lineWidth = 5;
@@ -322,7 +315,6 @@ export const ui = {
                 ctx.set_font_mono(r * 0.025);
                 ctx.text(`bpm: ${song.bpm}`, 0, r * 1.0815 + rr);
                 ctx.text(`combo: ${score.max_combo}/${song.notes[type_target]}`, 0, r * 1.115 + rr);
-                // ctx.text("rating: " + score.skill.toFixed(2), 0, r * 1.088 + rr);
                 ctx.strokeStyle = color["grade_" + Chart.grade(score.value)];
             }
             else {
@@ -353,9 +345,8 @@ export const ui = {
             ctx.clip();
             ctx.translate(0, r);
             if (rotato)
-                ctx.rotate(ui.time * 0.5); // todo better effect lol
+                ctx.rotate(ui.time * 0.5);
             ctx.draw_image(ui.images[songs[ii].image], -0.15 * r, -0.15 * r, 0.3 * r, 0.3 * r);
-            // reset :(
             ctx.resetTransform();
             ctx.restore("draw_list_left");
             ctx.save("draw_list_left");
@@ -367,7 +358,6 @@ export const ui = {
             ctx.clip();
         }
         ctx.restore("draw_list_left");
-        // divider
         ctx.strokeStyle = color.white;
         ctx.lineWidth = 2;
         if (x_constrained) {
@@ -404,7 +394,6 @@ export const ui = {
             ctx.translate(x, y + Math.sin(angle) * r / 2);
             ctx.scale(1, Math.cos(angle));
             if (i === ui.list.index_target) {
-                // ctx.fillStyle = color.green;
                 const grade = Chart.grade(score?.value ?? 0);
                 ctx.fillStyle = color["grade_" + grade];
                 ctx.globalAlpha = 0.2;
@@ -417,7 +406,6 @@ export const ui = {
                 ctx.round_rectangle(0, 0, w, h, h * 0.1);
                 ctx.fill();
             }
-            // check click
             ctx.beginPath();
             ctx.rectangle(0, 0, w, h);
             ui.check_click(() => {
@@ -429,14 +417,8 @@ export const ui = {
                 ctx.fill();
             });
             ctx.set_font_mono(h * 0.3);
-            /*ctx.save("draw_list_right_text");
-            ctx.beginPath();
-            ctx.rectangle(0, 0, w - h * 2, h);
-            ctx.clip();*/
             ctx.fillStyle = color.white;
             ctx.text(song.name, 0, 0);
-            // ctx.restore("draw_list_right_text");
-            // ctx.save("draw_list_right_type");
             ctx.fillStyle = color["difficulty_" + song.types[type_target]];
             ctx.globalAlpha = 0.1;
             ctx.beginPath();
@@ -448,8 +430,6 @@ export const ui = {
             ctx.globalAlpha = 1;
             ctx.set_font_mono(h * 0.4);
             ctx.text("" + Math.floor(song.difficulties[type_target]), h / 2 - w / 2, 0);
-            // ctx.restore("draw_list_right_type");
-            // ctx.save("draw_list_right_score");
             const grade = Chart.grade(score?.value ?? 0);
             ctx.fillStyle = color["grade_" + grade];
             ctx.globalAlpha = 0.1;
@@ -468,7 +448,6 @@ export const ui = {
             ctx.rotate(Math.PI * 0.1);
             ctx.strokeText(special, 0, 0);
             ctx.text(special, 0, 0);
-            // ctx.restore("draw_list_right_score");
             ctx.resetTransform();
         }
         ctx.restore("draw_list_right");
@@ -483,8 +462,6 @@ export const ui = {
             ctx.svg("back", w, w, w * 0.8);
             ui.check_click(() => {
                 index_target_change = 0;
-                /*if (ui.game.backing <= 0) ui.game.backing = ui.time;
-                else ui.back();*/
                 ui.back();
             });
             if (ui.game.backing && ui.time - ui.game.backing > 120) {
@@ -498,8 +475,6 @@ export const ui = {
             ctx.svg("chart", size.x - w, w, w * 0.8);
             ui.check_click(() => {
                 index_target_change = 0;
-                /*if (ui.game.restarting <= 0) ui.game.restarting = ui.time;
-                else { ui.game.restarting = 0; ui.shift(); }*/
                 ui.shift();
             });
             if (ui.game.restarting && ui.time - ui.game.restarting > 120) {
@@ -597,7 +572,7 @@ export const ui = {
             ui.main.index_target = 0;
             ui.list.playing.pause();
             ui.list.playing.reset();
-            ui.make_toplist(); // hmmm reload toplist and such
+            ui.make_toplist();
             ui.make_leaderboard();
         }
         else if (ui.menu === "game") {
@@ -609,7 +584,6 @@ export const ui = {
             Sound.current = undefined;
         }
         else {
-            // can't go back lol
         }
     },
     up: function () {
@@ -736,7 +710,7 @@ export const ui = {
         ctx.rect(xx, yy, size.x, size.y);
         ctx.clip();
         const notespeed = settings.notespeed * size.y / 700;
-        const seems = size.y * (line_offset + 0.2) / notespeed; // see_ms, number of milliseconds the player sees ahead at this notespeed
+        const seems = size.y * (line_offset + 0.2) / notespeed;
         for (const note of Object.values(chart.active_notes)) {
             const time_to = sound.time_to(note.time);
             if (time_to > seems)
@@ -802,7 +776,7 @@ export const ui = {
             x = xx + size.x + (ui.width - size.x) / 4;
             ctx.textAlign = "center";
         }
-        for (let i = 4; i >= 0; i--) { // 5 judgements
+        for (let i = 4; i >= 0; i--) {
             ctx.fillStyle = color[["red", "yellow", "green", "blue", "purple"][i]];
             ctx.text((x_constrained ? "" : (["miss", "bad", "good", "perfect", "perfect+"][i] + ": ")) + result[i], x, y + i * h / 5);
         }
@@ -842,7 +816,6 @@ export const ui = {
                 if (i < 3) {
                     ctx.fillStyle = color.white;
                     ctx.lineWidth = 3;
-                    // ctx.line(i * w + w, ui.height / 2, i * w + w, ui.height - w);
                     ctx.globalAlpha = 1;
                     ctx.line(i * w + w, ui.height - w, i * w + w, ui.height);
                 }
@@ -864,7 +837,6 @@ export const ui = {
                 ui.game.restarting = 0;
             }
             w = Math.min(ui.width, ui.height) * 0.2;
-            // ctx.globalAlpha = 0.3;
             ctx.fillStyle = ui.game.backing > 0 ? color.red : color.yellow;
             ctx.beginPath();
             ctx.round_rect(w * 0.5, w * 0.5, w, w, w * 0.2);
@@ -896,12 +868,10 @@ export const ui = {
         else if (type === note_type.inverse) {
             const r = size.y * 0.025;
             ctx.beginPath();
-            //ctx.circle(x, y, r);
             ctx.strokeStyle = ctx.fillStyle;
             ctx.lineWidth = size.y * 0.01;
             ctx.line(x - r, y - r, x + r, y + r);
             ctx.line(x + r, y - r, x - r, y + r);
-            //ctx.stroke();
         }
     },
     draw_effect: function (e, time_to) {
@@ -943,18 +913,15 @@ export const ui = {
         const old_score = chart.old_score;
         const grade = Chart.grade(score);
         const special = Chart.special_grade(result);
-        // measure text widths
         h = Math.min(200, size.x * 0.6);
         if (x_constrained) {
             h = Math.min(h, ui.width * 0.22);
         }
         ctx.set_font_mono(h * 0.45, "bold", "center");
-        // ctx.text("" + score, v.x + h * 0.625, v.y);
         const w1 = ctx.text_width("" + score);
         ctx.set_font_mono([0, h * 0.75, h * 0.675, h * 0.625][grade.length], "bold", "center");
         const w2 = ctx.text_width(grade);
         w = w1 + w2 + h * 0.375;
-        // draw bounding rectangle
         ctx.fillStyle = color.black;
         ctx.strokeStyle = color.white;
         ctx.lineWidth = 2;
@@ -1001,17 +968,6 @@ export const ui = {
       </table>
     `;
         const table = document.getElementById("chair");
-        /*
-        let changed = false;
-        for (const score of scores.get_list()) {
-          if (true || !score.skill) { // todo change
-            changed = true;
-            const diff = chart_map[score.chart].song_difficulty;
-            score.skill = Chart.skill_rate(diff, score.value, score.special);
-          }
-        }
-        if (changed) scores.save();
-        */
         const fn = function (list, others = true) {
             list.sort(scores.compare_fn);
             let total = 0;
@@ -1075,7 +1031,6 @@ export const ui = {
                 if (!leaderboard)
                     leaderboard = [];
                 if (!firebase.signed_in || !firebase.user) {
-                    // not logged in, add best local score to leaderboard
                     const list = scores.map[chart_name];
                     if (list && list[0])
                         leaderboard.push({
@@ -1255,13 +1210,15 @@ export const ui = {
         <p><a href="https://youtu.be/fCNQMJba86A" target="_blank"><span> Deep Under <l></l></span><span> Whitesand </span></a></p>
         <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
         <p><a href="https://kadthemusiclad.bandcamp.com/track/dusk-approach" target="_blank"><span> Dusk approach <l></l></span><span> kad </span></a></p>
-        <p><a href="https://youtu.be/NmCCQxVBfyM" target="_blank"><span> ⠞⠧⠶⠳⡇⠼⠗ <l></l></span><span> folk song / Hip Tanaka </span></a></p>
+        <p><a href="https://youtu.be/NmCCQxVBfyM" target="_blank"><span> ⠞⠧⠶⠳⡇⠼⠗ <l></l></span><span> folk / Hip Tanaka </span></a></p>
         <h3 style="text-align: center;"> Images </h3>
         <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
       <h3> 0.5.0 | 01-02-2025 | 🎶 6  📊 13 </h3>
+      <p> - added chart effects... you'll see </p>
+      <p> - added easy chart for tetris theme </p>
       <h3> 0.4.9 | 26-01-2025 | 🎶 6  📊 12 </h3>
       <p> - added tetris theme (displayed as <a href="${config.cdn_v}tetris.mp3" target="_blank">⠞⠧⠶⠳⡇⠼⠗</a>) </p>
       <h3> 0.4.8 | 25-01-2025 | 🎶 5  📊 12 </h3>

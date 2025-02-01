@@ -32,7 +32,7 @@ export class Chart {
             return 0;
         }
         else {
-            if (note.type === note_type.hold) { // more lenient
+            if (note.type === note_type.hold) {
                 if (offset > 120)
                     return 2;
                 if (offset > 80)
@@ -53,7 +53,7 @@ export class Chart {
     ;
     static grade(score) {
         if (score >= 1010000) {
-            return "✪"; // ✮
+            return "✪";
         }
         else if (score >= 1009500) {
             return "✸";
@@ -65,13 +65,13 @@ export class Chart {
             return "★";
         }
         else if (score >= 1006000) {
-            return "✦✦"; // +
+            return "✦✦";
         }
         else if (score >= 1004000) {
             return "✦✦";
         }
         else if (score >= 1002000) {
-            return "✦"; // +
+            return "✦";
         }
         else if (score >= 1000000) {
             return "✦";
@@ -162,13 +162,12 @@ export class Chart {
         for (const a of skill_rate_data) {
             if (a.score <= score) {
                 const mult = a.mult + ((score - a.score) / a.d_score * a.d_mult) + special_skill_rate_data[special];
-                return difficulty * mult; // runs once
+                return difficulty * mult;
             }
         }
         return result;
     }
     metadata;
-    // metadata_2: chart_metadata_2;
     effects;
     active_effects;
     notes;
@@ -188,7 +187,6 @@ export class Chart {
     old_score;
     constructor(definition, metadata) {
         this.metadata = metadata;
-        // this.metadata_2 = charts[this.metadata.chart_name];
         this.effects = [];
         this.active_effects = {};
         this.notes = [];
@@ -292,14 +290,14 @@ export class Chart {
         const q = this.queue[lane];
         let to_remove = 0;
         for (const n of q) {
-            const offset = time - n.time; // positive is late, negative is early
+            const offset = time - n.time;
             if (offset > 160) {
                 n.hit_note(0);
                 to_remove++;
                 continue;
             }
             else if ((n.type === note_type.normal && offset < -280) || (n.type === note_type.hold && offset < -160)) {
-                break; // too early for any misses even
+                break;
             }
             else {
                 n.hit_note(Chart.judge(n, offset));
@@ -353,7 +351,7 @@ export class Chart {
             });
             scores.save();
             if (firebase.user?.uid) {
-                firebase.save_scores(firebase.user.uid); // save
+                firebase.save_scores(firebase.user.uid);
                 firebase.increment(`/users/${firebase.user.uid}/plays`, 1);
             }
         }
@@ -372,11 +370,9 @@ export class Chart {
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
         for (const n of this.notes) {
-            // help initialise queue
             if (n.type === note_type.hold || n.type === note_type.normal) {
                 this.queue[Math.round(n.lane)].push(n);
             }
-            // count total notes
             this.total_notes++;
             if (n.type === note_type.hold)
                 this.total_notes++;
@@ -406,14 +402,14 @@ export class Note {
     lane;
     time;
     duration;
-    hit = -1; // -1 = not hit yet, 0 = missed, 1 = bad, 2 = good, 3 = perfect, 4 = perfect+ (temporary names ok) (i guess it's permanent now)
-    hit_time = -1; // -1 = not hit yet, >0 = relative timestamp of hit
+    hit = -1;
+    hit_time = -1;
     release = -1;
     visible = true;
     chart;
     constructor(definition, chart) {
         this.id = Note.cumulative_id++;
-        [this.type, this.lane, this.time, this.duration] = definition; // wow nice
+        [this.type, this.lane, this.time, this.duration] = definition;
         this.chart = chart;
         if (this.type === note_type.spam && this.duration != undefined) {
             this.visible = false;
@@ -425,20 +421,17 @@ export class Note {
     tick() {
         if (!Sound.current)
             return;
-        const t = -Sound.current.time_to(this.time); // t = time after hitting
+        const t = -Sound.current.time_to(this.time);
         if (t < -3000)
-            return; // hopefully this is optimisation
+            return;
         if (this.hit < 0 && t > 160) {
             this.hit_note(0);
-            // console.log("missed " + this.type + " note.");
             return;
         }
         if (this.type === note_type.hold) {
-            const t2 = Sound.current.time_to(this.time + (this.duration ?? 0)); // t2 = time to the end
-            if (t > 0 && t2 > 60 && this.hit > 0 && this.hit_time > 0 && this.release < 0) { // if haven't released yet (why so many conditions???)
-                if (this.chart.lane_pressed[this.lane]) { // this.chart.lane_last_release[this.lane] <= this.hit_time) {
-                    // good, still holding on
-                    // do nothing
+            const t2 = Sound.current.time_to(this.time + (this.duration ?? 0));
+            if (t > 0 && t2 > 60 && this.hit > 0 && this.hit_time > 0 && this.release < 0) {
+                if (this.chart.lane_pressed[this.lane]) {
                 }
                 else {
                     this.release_note((t > 60 && t2 <= 120) ? 2 : 1);
@@ -450,7 +443,6 @@ export class Note {
                 }
                 else if (this.hit === 0) {
                     this.release_note(this.chart.lane_last_hit[this.lane] > this.time ? 1 : 0);
-                    // console.log(this, t, t2, this.chart.lane_last_hit[this.lane], this.chart.lane_last_release[this.lane], "missed release note!");
                 }
             }
             return;
@@ -465,7 +457,7 @@ export class Note {
             else if (frac > 0.6) {
                 lane_pressed = this.chart.check_lane_hit(floored + 1);
             }
-            else { // frac < 0.4
+            else {
                 lane_pressed = this.chart.check_lane_hit(floored);
             }
             if (key.mobile && !lane_pressed) {
@@ -479,7 +471,6 @@ export class Note {
             }
             else if (t > 80) {
                 this.hit_note(0);
-                // console.log("missed spam note...");
             }
         }
         if (this.hit < 0 && this.type === note_type.inverse && t > 0) {
@@ -488,7 +479,7 @@ export class Note {
     }
     hit_note(hit) {
         if (this.hit >= 0)
-            return; // already hit!
+            return;
         this.hit = hit;
         this.hit_time = Sound.current_time;
         this.chart.result[hit]++;
@@ -499,12 +490,11 @@ export class Note {
             this.chart.increase_combo();
             if (settings.hit_volume)
                 Sound.play_sfx("hit" + settings.hit_volume);
-            // Sound.play_sfx("hit"); // to make it louder
         }
     }
     release_note(release) {
         if (this.release >= 0)
-            return; // already released!
+            return;
         this.release = release;
         this.chart.result[release]++;
         if (this.release === 0) {
@@ -563,15 +553,10 @@ export const chart_definitions = {
         song: "saloon",
         notes: [
             [note_type.none, 0, 2100, 60000 / 486],
-            // [ note_type.spam,   1, 0 ],
-            // [ note_type.spam,   2, 1 ],
-            // [ note_type.spam,   3, 2 ],
-            // [ note_type.spam,   4, 3 ],
             [note_type.normal, 1, 5],
             [note_type.spam, 1.5, 6],
             [note_type.normal, 3, 8],
             [note_type.spam, 3.5, 9],
-            // [ note_type.spam,   3, 14 ],
             [note_type.normal, 2, 15],
             [note_type.spam, 1.5, 17],
             [note_type.normal, 4, 20],
@@ -588,12 +573,10 @@ export const chart_definitions = {
             [note_type.spam, 1.5, 53],
             [note_type.normal, 3, 55],
             [note_type.spam, 3.5, 56],
-            // [ note_type.spam,   3, 61 ],
             [note_type.normal, 2, 62],
             [note_type.spam, 1.5, 64],
             [note_type.normal, 4, 67],
             [note_type.spam, 3.5, 69.9],
-            // [ note_type.spam,   4, 73 ],
             [note_type.normal, 1, 74],
             [note_type.spam, 1.5, 77],
             [note_type.normal, 3, 79],
@@ -601,10 +584,6 @@ export const chart_definitions = {
             [note_type.hold, 2, 86, 9],
             [note_type.spam, 2, 89],
             [note_type.spam, 2, 92],
-            // [ note_type.spam,   4, 95 ],
-            // [ note_type.spam,   3, 96 ],
-            // [ note_type.spam,   2, 97 ],
-            // [ note_type.spam,   1, 98 ],
             [note_type.hold, 1, 100, 3],
             [note_type.normal, 3, 100, 3],
             [note_type.spam, 2.5, 103],
@@ -640,25 +619,17 @@ export const chart_definitions = {
             [note_type.spam, 3.57, 145.3, 4.7],
             [note_type.none, 0, 21500, 60000 / 486],
             [note_type.normal, 1, 3],
-            // [ note_type.spam, 1.5, 5 ],
             [note_type.normal, 3, 6],
-            // [ note_type.spam, 3.5, 8 ],
             [note_type.normal, 4, 9],
-            // [ note_type.spam, 3.5, 11 ],
             [note_type.normal, 2, 12],
-            // [ note_type.spam, 1.5, 14 ],
             [note_type.normal, 1, 15],
             [note_type.spam, 1.5, 17],
             [note_type.hold, 3, 20, 5],
             [note_type.none, 0, 24462.963, 60000 / 486],
             [note_type.normal, 1, 3],
-            // [ note_type.spam, 1.5, 5 ],
             [note_type.normal, 3, 6],
-            // [ note_type.spam, 3.5, 8 ],
             [note_type.normal, 4, 9],
-            // [ note_type.spam, 3.5, 11 ],
             [note_type.normal, 2, 12],
-            // [ note_type.spam, 1.5, 14 ],
             [note_type.normal, 1, 15],
             [note_type.spam, 1.5, 17],
             [note_type.hold, 4, 20, 5],
@@ -746,25 +717,17 @@ export const chart_definitions = {
             [note_type.spam, 3.57, 145.3, 4.7],
             [note_type.none, 0, 21490, 60000 / 486],
             [note_type.normal, 1, 3],
-            // [ note_type.spam, 1.5, 5 ],
             [note_type.normal, 3, 6],
-            // [ note_type.spam, 3.5, 8 ],
             [note_type.normal, 4, 9],
-            // [ note_type.spam, 3.5, 11 ],
             [note_type.normal, 2, 12],
-            // [ note_type.spam, 1.5, 14 ],
             [note_type.normal, 1, 15],
             [note_type.normal, 2, 17],
             [note_type.hold, 3, 20, 5],
             [note_type.none, 0, 24352.963, 60000 / 486],
             [note_type.normal, 1, 3],
-            // [ note_type.spam, 1.5, 5 ],
             [note_type.normal, 3, 6],
-            // [ note_type.spam, 3.5, 8 ],
             [note_type.normal, 4, 9],
-            // [ note_type.spam, 3.5, 11 ],
             [note_type.normal, 2, 12],
-            // [ note_type.spam, 1.5, 14 ],
             [note_type.normal, 1, 15],
             [note_type.normal, 2, 17],
             [note_type.hold, 4, 20, 5],
@@ -782,12 +745,6 @@ export const chart_definitions = {
     saloon_2: {
         song: "saloon",
         notes: [
-            /*
-            [ note_type.hold,   4, 1000, 500 ],*/
-            /*
-           [ note_type.spam,   1, -1500 ],
-           [ note_type.spam,   2, -1500 ],
-           [ note_type.spam,   3, -1500 ],*/
             [note_type.none, 0, 2100, 60000 / 486],
             [note_type.normal, 1, 0],
             [note_type.normal, 2, 1],
@@ -797,8 +754,6 @@ export const chart_definitions = {
             [note_type.normal, 2, 6],
             [note_type.normal, 3, 8],
             [note_type.hold, 4, 9, 3],
-            // [ note_type.spam,   4, 10, 1 ],
-            // [ note_type.spam,   4, 11, 1 ],
             [note_type.normal, 3, 14],
             [note_type.hold, 4, 15, 2],
             [note_type.normal, 3, 17],
@@ -908,7 +863,6 @@ export const chart_definitions = {
             [note_type.hold, 2, 58.5, 9],
             [note_type.hold, 3, 58.8, 8.7],
             [note_type.hold, 4, 59.1, 8.4],
-            // [ note_type.none,   0, 30000, 60000 / 486 ],
             [note_type.hold, 1, 69, 11],
             [note_type.hold, 2, 69.3, 10.7],
             [note_type.hold, 3, 69.6, 10.4],
@@ -944,7 +898,6 @@ export const chart_definitions = {
             [note_type.hold, 3, 23, 1.5],
             [note_type.normal, 3, 26],
             [note_type.normal, 2, 27],
-            // [ note_type.normal, 4, 28 ],
             [note_type.normal, 1, 29],
             [note_type.normal, 2, 30],
             [note_type.hold, 3, 30, 2],
@@ -952,13 +905,6 @@ export const chart_definitions = {
             [note_type.hold, 1, 33, 1],
             [note_type.normal, 3, 33],
             [note_type.normal, 4, 35.5],
-            // [ note_type.spam,   3.6, 35.65 ],
-            // [ note_type.spam,   3.2, 35.8 ],
-            // [ note_type.spam,   2.8, 35.95 ],
-            // [ note_type.spam,   2.4, 36.1 ],
-            // [ note_type.spam,   2.0, 36.25 ],
-            // [ note_type.spam,   1.6, 36.4 ],
-            // [ note_type.spam,   1.2, 36.55 ],
             [note_type.hold, 1, 39, 8],
             [note_type.normal, 2, 39,],
             [note_type.normal, 3, 39,],
@@ -993,7 +939,6 @@ export const chart_definitions = {
             [note_type.normal, 1, 79],
             [note_type.normal, 2, 79],
             [note_type.normal, 4, 79],
-            // [ note_type.spam,   2, 80 ],
             [note_type.normal, 1, 81.5],
             [note_type.normal, 3, 81.5],
             [note_type.normal, 4, 81.5],
@@ -1145,7 +1090,6 @@ export const chart_definitions = {
             [note_type.normal, 3, 26],
             [note_type.normal, 3, 27],
             [note_type.normal, 2, 27],
-            // [ note_type.normal, 4, 28 ],
             [note_type.normal, 1, 29],
             [note_type.normal, 2, 29],
             [note_type.normal, 2, 30],
@@ -1156,13 +1100,6 @@ export const chart_definitions = {
             [note_type.hold, 4, 33, 5],
             [note_type.normal, 1, 35.5],
             [note_type.normal, 2, 35.5],
-            // [ note_type.spam,   3.6, 35.65 ],
-            // [ note_type.spam,   3.2, 35.8 ],
-            // [ note_type.spam,   2.8, 35.95 ],
-            // [ note_type.spam,   2.4, 36.1 ],
-            // [ note_type.spam,   2.0, 36.25 ],
-            // [ note_type.spam,   1.6, 36.4 ],
-            // [ note_type.spam,   1.2, 36.55 ],
             [note_type.normal, 1, 39,],
             [note_type.normal, 2, 39,],
             [note_type.hold, 3, 39, 4,],
@@ -1215,7 +1152,6 @@ export const chart_definitions = {
             [note_type.normal, 2, 79.2],
             [note_type.normal, 1, 79.4],
             [note_type.normal, 4, 80],
-            // [ note_type.spam,   2, 80 ],
             [note_type.normal, 1, 81.2],
             [note_type.normal, 2, 81.4],
             [note_type.normal, 3, 81.6],
@@ -1303,10 +1239,6 @@ export const chart_definitions = {
             [note_type.normal, 4, 141.5],
             [note_type.normal, 3, 142.0],
             [note_type.normal, 4, 142.5],
-            //[ note_type.normal, 1, 143.0 ],
-            //[ note_type.normal, 2, 143.5 ],
-            //[ note_type.normal, 3, 143.9 ],
-            //[ note_type.normal, 4, 144.3 ],
             [note_type.normal, 1, 144.0],
             [note_type.normal, 2, 144.5],
             [note_type.normal, 1, 145.0],
@@ -1330,13 +1262,6 @@ export const chart_definitions = {
             [note_type.normal, 3, 3],
             [note_type.normal, 2, 3],
             [note_type.normal, 1, 3, 2],
-            /*[ note_type.normal, 2, 6 ],
-            [ note_type.hold,   2, 9, 3 ],
-            [ note_type.normal, 1, 12 ],
-            [ note_type.hold,   1, 15, 3 ],
-            [ note_type.normal, 2, 18 ],
-            [ note_type.hold,   2, 21, 3 ],
-            [ note_type.normal, 1, 24 ],*/
             [note_type.normal, 3, 5],
             [note_type.normal, 4, 5],
             [note_type.normal, 1, 6],
@@ -1379,13 +1304,6 @@ export const chart_definitions = {
             [note_type.normal, 2, 3],
             [note_type.normal, 3, 3],
             [note_type.normal, 4, 3, 2],
-            /*[ note_type.normal, 2, 6 ],
-            [ note_type.hold,   2, 9, 3 ],
-            [ note_type.normal, 1, 12 ],
-            [ note_type.hold,   1, 15, 3 ],
-            [ note_type.normal, 2, 18 ],
-            [ note_type.hold,   2, 21, 3 ],
-            [ note_type.normal, 1, 24 ],*/
             [note_type.normal, 2, 5],
             [note_type.normal, 1, 5],
             [note_type.normal, 4, 6],
@@ -1618,22 +1536,18 @@ export const chart_definitions = {
             [note_type.spam, 3, 12],
             [note_type.normal, 1, 14],
             [note_type.hold, 4, 16, 1.5],
-            //[ note_type.normal, 3, 16 ],
             [note_type.spam, 4, 17],
             [note_type.hold, 1, 18, 1.5],
             [note_type.spam, 1, 19],
             [note_type.hold, 4, 20, 1.5],
-            // [ note_type.normal, 3, 20 ],
             [note_type.spam, 4, 21],
             [note_type.hold, 1, 22, 1.5],
             [note_type.spam, 1, 23],
             [note_type.hold, 4, 24, 1.5],
-            // [ note_type.normal, 3, 24 ],
             [note_type.spam, 4, 25],
             [note_type.hold, 1, 26, 1.5],
             [note_type.spam, 1, 27],
             [note_type.hold, 4, 28, 1.5],
-            // [ note_type.normal, 3, 28 ],
             [note_type.spam, 4, 29],
             [note_type.hold, 2, 30, 1.5],
             [note_type.none, 0, 3900 + 60000 / 252 * 256, 60000 / 252],
@@ -1674,7 +1588,6 @@ export const chart_definitions = {
             [note_type.spam, 3, 12],
             [note_type.normal, 1, 14],
             [note_type.hold, 4, 16, 1.5],
-            // [ note_type.normal, 2, 16 ],
             [note_type.spam, 4, 17],
             [note_type.hold, 1, 18, 1.5],
             [note_type.spam, 1, 19],
@@ -1749,7 +1662,6 @@ export const chart_definitions = {
             [note_type.normal, 4, 12],
             [note_type.spam, 1, 13],
             [note_type.hold, 3, 14, 2],
-            // [ note_type.normal, 2, 14 ],
             [note_type.hold, 4, 16, 12],
             [note_type.normal, 2, 18],
             [note_type.normal, 3, 20],
@@ -2086,7 +1998,6 @@ export const chart_definitions = {
             [note_type.normal, 2, 5],
             [note_type.normal, 1, 6],
             [note_type.normal, 2, 7],
-            // [ note_type.normal, 1, 8 ],
             [note_type.normal, 4, 8],
             [note_type.spam, 3, 8],
             [note_type.normal, 2, 9],
@@ -2165,7 +2076,6 @@ export const chart_definitions = {
             [note_type.normal, 2, 5],
             [note_type.normal, 1, 6],
             [note_type.normal, 2, 7],
-            // [ note_type.normal, 1, 8 ],
             [note_type.normal, 4, 8],
             [note_type.spam, 3, 8],
             [note_type.normal, 2, 9],
@@ -2496,14 +2406,6 @@ export const chart_definitions = {
             [note_type.normal, 4, 104],
             [note_type.normal, 2, 108],
             [note_type.hold, 3, 112, 12],
-            /*[ note_type.spam,   1, 120 ],
-            [ note_type.spam,   4, 121 ],
-            [ note_type.spam,   1.6, 122 ],
-            [ note_type.spam,   4, 123 ],
-            [ note_type.spam,   2.4, 124 ],
-            [ note_type.spam,   4, 125 ],
-            [ note_type.spam,   3, 126 ],
-            [ note_type.spam,   4, 127 ],*/
             [note_type.none, 0, 2080 + 60000 / 480.76 * 256, 60000 / 480.76],
             [note_type.hold, 3, 0, 8],
             [note_type.spam, 3, 1],
@@ -2562,29 +2464,17 @@ export const chart_definitions = {
             [note_type.spam, 3.6, 62],
             [note_type.spam, 3.8, 63],
             [note_type.hold, 2, 64, 8],
-            // [ note_type.spam,   2, 65 ],
             [note_type.spam, 2, 66],
-            // [ note_type.spam,   2, 67 ],
             [note_type.normal, 3, 68],
-            // [ note_type.spam,   2, 69 ],
             [note_type.spam, 2, 70],
-            // [ note_type.spam,   2, 71 ],
             [note_type.hold, 3, 72, 8],
-            // [ note_type.spam,   3, 73 ],
             [note_type.spam, 3, 74],
-            // [ note_type.spam,   3, 75 ],
             [note_type.normal, 2, 76],
-            // [ note_type.spam,   3, 77 ],
             [note_type.spam, 3, 78],
-            // [ note_type.spam,   3, 79 ],
             [note_type.hold, 4, 80, 8],
-            // [ note_type.spam,   4, 81 ],
             [note_type.spam, 4, 82],
-            // [ note_type.spam,   4, 83 ],
             [note_type.normal, 1, 84],
-            // [ note_type.spam,   4, 85 ],
             [note_type.spam, 4, 86],
-            // [ note_type.spam,   4, 87 ],
             [note_type.hold, 1, 88, 4],
             [note_type.spam, 1, 90],
             [note_type.hold, 3, 92, 4],
@@ -3138,7 +3028,6 @@ export const chart_definitions = {
             [note_type.hold, 3, 40, 3],
             [note_type.hold, 3, 44, 3],
             [note_type.hold, 4, 44, 3],
-            //  [ note_type.none, 0, 2150 + 60000 / 480.76 * 512, 60000 / 480.76 ],
             [note_type.hold, 4, 48, 1],
             [note_type.normal, 1, 50],
             [note_type.normal, 2, 52],
@@ -3842,14 +3731,10 @@ export const chart_definitions = {
             [note_type.hold, 1, 40, 4],
             [note_type.hold, 3, 40, 4],
             [note_type.normal, 2, 42],
-            //[ note_type.normal, 4, 42 ],
             [note_type.hold, 2, 44, 4],
             [note_type.hold, 4, 44, 3],
-            //[ note_type.normal, 1, 46 ],
             [note_type.normal, 3, 46],
-            //  [ note_type.none, 0, 2150 + 60000 / 480.76 * 512, 60000 / 480.76 ],
             [note_type.hold, 4, 48, 8],
-            // [ note_type.normal, 1, 48 ],
             [note_type.normal, 3, 49],
             [note_type.normal, 1, 50],
             [note_type.normal, 2, 51],
@@ -3858,12 +3743,10 @@ export const chart_definitions = {
             [note_type.normal, 3, 54],
             [note_type.normal, 2, 55],
             [note_type.hold, 1, 56, 4],
-            //[ note_type.normal, 3, 56 ],
             [note_type.normal, 2, 57],
             [note_type.normal, 4, 58],
             [note_type.normal, 3, 59],
             [note_type.hold, 4, 60, 4],
-            //[ note_type.normal, 2, 60 ],
             [note_type.normal, 1, 61],
             [note_type.normal, 3, 62],
             [note_type.normal, 2, 63],
@@ -3884,7 +3767,6 @@ export const chart_definitions = {
             [note_type.normal, 3, 78],
             [note_type.normal, 4, 79],
             [note_type.hold, 3, 80, 8],
-            // [ note_type.normal, 1, 80 ],
             [note_type.normal, 4, 81],
             [note_type.normal, 1, 82],
             [note_type.normal, 2, 83],
@@ -4302,7 +4184,6 @@ export const chart_definitions = {
             [note_type.normal, 4, 108],
             [note_type.hold, 3, 112, 16],
             [note_type.normal, 1, 116],
-            // [ note_type.normal, 1, 118 ],
             [note_type.normal, 1, 126],
             [note_type.none, 0, 2000 + 3000 / 9 * 160, 60000 / 288],
             [note_type.hold, 2, 0, 8],
@@ -4720,11 +4601,6 @@ export const chart_definitions = {
     tetris_1: {
         song: "tetris",
         notes: [
-            [note_type.none, 0, 1111, 1],
-            [note_type.inverse, 1, 0],
-            [note_type.inverse, 2, 0],
-            [note_type.inverse, 3, 0],
-            [note_type.inverse, 4, 0],
             [note_type.none, 0, 2020, 60000 / BPMs.tetris],
             [note_type.normal, 4, 0],
             [note_type.normal, 1, 2],
@@ -4843,6 +4719,8 @@ export const chart_definitions = {
             [note_type.hold, 3, 24, 4],
             ["tilt+", 180, 25, 2],
             ["scale_x", -1, 25, 2],
+            [note_type.inverse, 3, 29.5],
+            [note_type.inverse, 3, 31.5],
             [note_type.none, 0, 2020 + 60000 / BPMs.tetris * 192, 60000 / BPMs.tetris],
             [note_type.normal, 4, 0],
             [note_type.normal, 1, 2],
@@ -4923,13 +4801,16 @@ export const chart_definitions = {
             [note_type.normal, 3, 24],
             [note_type.normal, 1, 26],
             [note_type.normal, 1, 28],
+            [note_type.inverse, 1, 30],
+            [note_type.inverse, 2, 30],
+            [note_type.inverse, 3, 30],
+            [note_type.inverse, 4, 30],
         ],
     },
     beeps: {
         song: "beeps",
         notes: [
             [note_type.none, 0, 2000, 500],
-            // the rest is filled up below
         ],
     },
 };
@@ -4940,4 +4821,4 @@ for (let i = 0; i < 100; i++) {
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.15]);
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.20]);
 }
-export const charts = {}; // to make... if not memory overload? (hmmm)
+export const charts = {};

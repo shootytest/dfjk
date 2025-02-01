@@ -5,7 +5,7 @@ export const settings = {
         song_id: 0,
         song_type: 0,
     },
-    offset: 160,
+    offset: 0,
     line_offset: 0,
     hit_volume: 5,
     play_speed: 1,
@@ -80,7 +80,7 @@ export const songs = [
         name: "⠞⠧⠶⠳⡇⠼⠗",
         bpm: 74.63,
         types: ["easy", "medium", "hard"],
-        difficulties: [0, -1, -1],
+        difficulties: [3, -1, -1],
         charts: ["tetris_1", "tetris_2", "tetris_3"],
         notes: [0, 0, 0],
         preview: "tetris_preview",
@@ -153,7 +153,7 @@ export const skill_rate = function (score) {
     for (const a of skill_rate_data) {
         if (a.score <= value) {
             const mult = a.mult + ((value - a.score) / a.d_score * a.d_mult) + special_skill_rate_data[special];
-            return result * mult; // runs once
+            return result * mult;
         }
     }
     return result;
@@ -175,7 +175,6 @@ export const scores = {
             else {
                 scores.map = zipson.parse(raw);
             }
-            // console.log(scores.map);
         }
         else {
             scores.save();
@@ -205,7 +204,6 @@ export const scores = {
                 old.length = 10;
             }
         }
-        // scores.save();
     },
     load_map_from_list: () => {
         for (const k in scores.map) {

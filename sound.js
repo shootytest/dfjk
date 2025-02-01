@@ -13,7 +13,7 @@ export class Sound {
     track;
     playing = false;
     playing_delay = false;
-    play_timestamp = -1; // negative = haven't started playing yet
+    play_timestamp = -1;
     pause_timestamp = -1;
     pause_time_total = 0;
     options = {};
@@ -25,14 +25,12 @@ export class Sound {
         this.element.src = config.cdn_v + path;
         (document.getElementById("audio") ?? document.body).appendChild(this.element);
         this.track = this.ctx.createMediaElementSource(this.element);
-        // this.track.connect(this.ctx.destination);
         const gain = this.ctx.createGain();
         this.track.connect(gain).connect(this.ctx.destination);
         gain.gain.value = volume;
         this.element.playbackRate = settings.play_speed;
         this.element.addEventListener("play", () => {
             this.playing = true;
-            // time stuff
             if (this.play_timestamp > 0 && !this.playing_delay) {
                 this.pause_timestamp = -1;
                 this.pause_time_total += performance.now() - this.pause_timestamp;
@@ -70,11 +68,10 @@ export class Sound {
     play() {
         if (this.playing || document.hidden)
             return;
-        // play!
         if (this.ctx.state === "suspended") {
             this.ctx.resume();
         }
-        this.element.play(); // trigger #play event
+        this.element.play();
         this.make_interval();
     }
     make_interval() {
@@ -96,7 +93,7 @@ export class Sound {
     pause() {
         if (!this.playing)
             return;
-        this.element.pause(); // trigger #pause event
+        this.element.pause();
         this.clear_interval();
     }
     reset() {
@@ -107,7 +104,6 @@ export class Sound {
         this.element.currentTime = (this.options.start ?? 0) / 1000;
         clearTimeout(this.options.timeout);
         clearInterval(this.options.interval);
-        // this.element.pause();
     }
     restart() {
         this.reset();
@@ -116,28 +112,27 @@ export class Sound {
     get time() {
         return this.element.currentTime * 1000 - settings.offset * settings.play_speed;
         if (this.play_timestamp < 0) {
-            return -1000; // todo replace with play delay
+            return -1000;
         }
         else if (this.pause_timestamp < 0) {
             return this.element.currentTime * 1000;
             const now = performance.now();
             return now - this.play_timestamp - this.pause_time_total;
         }
-        else { // in a pause right now
+        else {
             return this.pause_timestamp - this.play_timestamp - this.pause_time_total;
         }
     }
     get paused() {
         return this.pause_timestamp > 0;
     }
-    // measures the time to another event (in this sound's coordinates)
     time_to(other_timestamp) {
         return other_timestamp - this.time;
     }
     time_of(timestamp) {
         if (this.pause_timestamp > 0) {
         }
-        return timestamp - this.play_timestamp; // todo
+        return timestamp - this.play_timestamp;
     }
 }
 ;

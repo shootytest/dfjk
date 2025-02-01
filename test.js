@@ -34,8 +34,7 @@ const init = function () {
     key.add_key_listener("Digit1", function () {
         if (Sound.current) {
             ui.restart();
-            // Sound.current.element.currentTime = 15.975 * 0 + 0.1248 * 0; // loneliness
-            Sound.current.element.currentTime = 6.442953 * 8 + 0.201342 * 0; // tetris
+            Sound.current.element.currentTime = 6.442953 * 8 + 0.201342 * 0;
         }
     });
     key.add_key_listener("Backspace", function () {
@@ -51,11 +50,6 @@ const init = function () {
             Sound.current?.pause();
         }
     });
-    /*for (let i = 0; i < 4; i++) {
-      key.add_key_listener("Key" + settings.controls.toUpperCase()[i], function() {
-        Chart.current?.key_hit(i + 1);
-      });
-    }*/
     key.add_keydown_listener(function (event) {
         if (event.repeat)
             return;

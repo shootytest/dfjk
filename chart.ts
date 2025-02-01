@@ -4752,11 +4752,6 @@ export const chart_definitions: { [key: string]: chart_def } = {
   tetris_1: {
     song: "tetris",
     notes: [
-      [ note_type.none,   0, 1111, 1 ],
-      [ note_type.inverse, 1, 0 ],
-      [ note_type.inverse, 2, 0 ],
-      [ note_type.inverse, 3, 0 ],
-      [ note_type.inverse, 4, 0 ],
       [ note_type.none,   0, 2020, 60000 / BPMs.tetris ],
       [ note_type.normal, 4, 0 ],
       [ note_type.normal, 1, 2 ],
@@ -4875,6 +4870,8 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.hold,   3, 24, 4 ],
       [ "tilt+",          180, 25, 2 ],
       [ "scale_x",        -1, 25, 2 ],
+      [ note_type.inverse, 3, 29.5 ],
+      [ note_type.inverse, 3, 31.5 ],
       [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 192, 60000 / BPMs.tetris ],
       [ note_type.normal, 4, 0 ],
       [ note_type.normal, 1, 2 ],
@@ -4955,6 +4952,10 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 3, 24 ],
       [ note_type.normal, 1, 26 ],
       [ note_type.normal, 1, 28 ],
+      [ note_type.inverse, 1, 30 ],
+      [ note_type.inverse, 2, 30 ],
+      [ note_type.inverse, 3, 30 ],
+      [ note_type.inverse, 4, 30 ],
     ],
   },
 
