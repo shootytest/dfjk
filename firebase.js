@@ -8,7 +8,7 @@ import { ui } from "./ui.js";
 window.fire = {
   
   initializeApp: initializeApp,
-
+  
   getDatabase: getDatabase,
   ref: ref,
   set: set,
@@ -19,7 +19,7 @@ window.fire = {
   update: update,
   runTransaction: runTransaction,
   onValue: onValue,
-
+  
   getAuth: getAuth,
   onAuthStateChanged: onAuthStateChanged,
   updateEmail: updateEmail,
@@ -28,7 +28,7 @@ window.fire = {
   EmailAuthProvider: EmailAuthProvider,
   reauthenticateWithCredential: reauthenticateWithCredential,
   reauthenticateWithPopup: reauthenticateWithPopup,
-
+  
 };
 */
 

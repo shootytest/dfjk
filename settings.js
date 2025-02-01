@@ -23,6 +23,7 @@ export const songs = [
     {
         id: 0,
         name: "beep beep",
+        bpm: 120,
         types: ["calibration"],
         difficulties: [1],
         charts: ["beeps"],
@@ -33,6 +34,7 @@ export const songs = [
     {
         id: 1,
         name: "piano_music_01.mp3",
+        bpm: 121.5,
         types: ["easy", "medium", "hard", "extreme"],
         difficulties: [3, 6, 15, 48],
         charts: ["saloon_1", "saloon_2", "saloon_3", "saloon_4"],
@@ -43,6 +45,7 @@ export const songs = [
     {
         id: 2,
         name: "Deep Under",
+        bpm: 63,
         types: ["easy", "medium", "hard"],
         difficulties: [5, -1, 12],
         charts: ["deepunder_1", "deepunder_2", "deepunder_3"],
@@ -53,6 +56,7 @@ export const songs = [
     {
         id: 3,
         name: "Loneliness",
+        bpm: 120.2,
         types: ["easy", "medium", "hard"],
         difficulties: [6, 14, 32],
         charts: ["loneliness_1", "loneliness_2", "loneliness_3"],
@@ -63,8 +67,9 @@ export const songs = [
     {
         id: 4,
         name: "dusk approach",
+        bpm: 90,
         types: ["easy", "medium", "hard"],
-        difficulties: [2, 7, -1],
+        difficulties: [2, 8, -1],
         charts: ["dusk_1", "dusk_2", "dusk_3"],
         notes: [170, 400, 0],
         preview: "dusk_approach_preview",
@@ -73,6 +78,7 @@ export const songs = [
     {
         id: 5,
         name: "⠞⠧⠶⠳⡇⠼⠗",
+        bpm: 74.63,
         types: ["easy", "medium", "hard"],
         difficulties: [0, -1, -1],
         charts: ["tetris_1", "tetris_2", "tetris_3"],

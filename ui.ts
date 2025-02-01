@@ -1,6 +1,6 @@
 import { canvas, ctx } from "./util/canvas.js";
 import { vector } from "./util/vector.js";
-import { Chart, note_type } from "./chart.js";
+import { Chart, Effect, note_type } from "./chart.js";
 import { Sound, sounds } from "./sound.js";
 import dat from "./dat.js";
 import { firebase } from "./firebase.js";
@@ -103,6 +103,10 @@ export const ui = {
 
   game: {
     tilt: 0,
+    tilt_: 0,
+    offset: vector.create(0, 0),
+    offset_: vector.create(0, 0),
+    scale: vector.create(1, 1),
     backing: 0,
     restarting: 0,
   },
@@ -219,7 +223,8 @@ export const ui = {
       h = Math.min(this.width * 0.7 / 0.5, this.height * 0.8);
       const x_constrained = (h >= this.width * 1.2);
       const size = { x: h * 0.5, y: h };
-      this.draw_board(v, size, x_constrained);
+      const offset = vector.add(v, vector.add(ui.game.offset, ui.game.offset_));
+      this.draw_board(offset, size, x_constrained);
       if (Chart.current?.sound.finished) {
         this.draw_results(v, size, x_constrained);
       }
@@ -351,13 +356,20 @@ export const ui = {
         ctx.text("" + score.value, 0, r * 1.04 + rr);
         ctx.fillStyle = color.white;
         ctx.set_font_mono(r * 0.025);
-        ctx.text(`combo: ${score.max_combo}/${song.notes[type_target]}`, 0, r * 1.088 + rr);
+        ctx.text(`bpm: ${song.bpm}`, 0, r * 1.0815 + rr);
+        ctx.text(`combo: ${score.max_combo}/${song.notes[type_target]}`, 0, r * 1.115 + rr);
         // ctx.text("rating: " + score.skill.toFixed(2), 0, r * 1.088 + rr);
         ctx.strokeStyle = color["grade_" + Chart.grade(score.value)];
       } else {
         ctx.fillStyle = diff < 0 ? color.red : color.yellow;
         ctx.set_font_mono(r * 0.025);
-        ctx.text(diff < 0 ? "unavailable" : "not played yet", 0, r * 1.06 + rr);
+        if (diff >= 0) {
+          ctx.text("not played yet", 0, r * 1.04 + rr);
+          ctx.text(`bpm: ${song.bpm}`, 0, r * 1.0765 + rr);
+          ctx.text(`notes: ${song.notes[type_target]}`, 0, r * 1.11 + rr);
+        } else {
+          ctx.text("unavailable", 0, r * 1.06 + rr);
+        }
         ctx.strokeStyle = color.grade_Z;
       }
 
@@ -727,10 +739,12 @@ export const ui = {
 
     const tilt = (chart.lane_pressed[1] ? -2 : 0) + (chart.lane_pressed[2] ? -1 : 0) + (chart.lane_pressed[3] ? 1 : 0) + (chart.lane_pressed[4] ? 2 : 0);
     ui.game.tilt += tilt * 0.001;
-    ui.game.tilt *= 0.9;
+    ui.game.tilt *= 0.90909090909090909;
+    ui.game.offset = vector.mult(ui.game.offset, 0.90909090909090909);
     ctx.save("tilted");
     ctx.translate(v.x, v.y);
-    ctx.rotate(ui.game.tilt);
+    ctx.rotate(ui.game.tilt + ui.game.tilt_);
+    ctx.scale(ui.game.scale.x, ui.game.scale.y);
     ctx.translate(-v.x, -v.y);
 
     let xx = v.x - size.x / 2;
@@ -799,6 +813,18 @@ export const ui = {
         ctx.fillStyle = color.white;
         ui.draw_note(note.type, xx + (note.lane - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, size);
         continue;
+      }
+    }
+    
+    for (const effect of Object.values(chart.active_effects)) {
+      const time_to = sound.time_to(effect.time);
+      if (time_to > seems) continue;
+      if (time_to <= 0) {
+        ui.draw_effect(effect, time_to);
+        const time_to_2 = sound.time_to(effect.time2);
+        if (time_to_2 <= 0) {
+          chart.deactivate_effect(effect);
+        }
       }
     }
 
@@ -905,9 +931,38 @@ export const ui = {
       ctx.circle(x, y, size.y * 0.025);
       ctx.fill();
     } else if (type === note_type.inverse) {
+      const r = size.y * 0.025;
       ctx.beginPath();
-      ctx.circle(x, y, size.y * 0.025);
-      ctx.fill();
+      //ctx.circle(x, y, r);
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = size.y * 0.01;
+      ctx.line(x - r, y - r, x + r, y + r);
+      ctx.line(x + r, y - r, x - r, y + r);
+      //ctx.stroke();
+    }
+
+  },
+
+  draw_effect: function(e: Effect, time_to: number) {
+    
+    const type = e.type;
+
+    if (type === "tilt") {
+      ui.game.tilt += vector.deg_to_rad(e.a);
+    } else if (type === "tilt+") {
+      ui.game.tilt_ = vector.deg_to_rad(e.a) * e.ratio(-time_to);
+    } else if (type === "x") {
+      ui.game.offset.x += e.a;
+    } else if (type === "y") {
+      ui.game.offset.y += e.a;
+    } else if (type === "x+") {
+      ui.game.offset_.x = e.a * e.ratio(-time_to);
+    } else if (type === "y+") {
+      ui.game.offset_.y = e.a * e.ratio(-time_to);
+    } else if (type === "scale_x") {
+      ui.game.scale.x = 1 + (e.a - 1) * e.ratio(-time_to);
+    } else if (type === "scale_y") {
+      ui.game.scale.y = 1 + (e.a - 1) * e.ratio(-time_to);
     }
 
   },
@@ -1010,7 +1065,9 @@ export const ui = {
         const tr = document.createElement("tr");
         const gr = Chart.grade(score.value);
         const sp = Chart.special_grades[score.special];
-        const dt = new Date(score.time ?? (1735689599999 + new Date().getTimezoneOffset() * 60000));
+        const d = new Date();
+        const dt = new Date(score.time ?? (1735689599999 + d.getTimezoneOffset() * 60000));
+        const tdy = dt.toLocaleDateString("en-SG") === d.toLocaleDateString("en-SG");
         tr.innerHTML = `
           <td>${i + 1}</td>
           <td>${songs[chart.song_id].name}</td>
@@ -1020,7 +1077,7 @@ export const ui = {
           <td style="color: ${color["grade_" + gr]};">${gr}</td>
           <td style="color: ${color["special_" + sp]};">${sp}</td>
           <td title="${parseFloat(score.skill.toPrecision(15))}"><b>${score.skill.toFixed(3)}</b></td>
-          <td title="${dt.toLocaleTimeString("en-SG")}">${dt.toLocaleDateString("en-SG")}</td>
+          <td title="${dt.toLocaleTimeString("en-SG")}">${tdy ? dt.toLocaleTimeString("en-SG") : dt.toLocaleDateString("en-SG")}</td>
         `;
         table.appendChild(tr);
         total += score.skill;
@@ -1237,6 +1294,7 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.0 | 01-02-2025 | 🎶 6  📊 13 </h3>
       <h3> 0.4.9 | 26-01-2025 | 🎶 6  📊 12 </h3>
       <p> - added tetris theme (displayed as <a href="${config.cdn_v}tetris.mp3" target="_blank">⠞⠧⠶⠳⡇⠼⠗</a>) </p>
       <h3> 0.4.8 | 25-01-2025 | 🎶 5  📊 12 </h3>

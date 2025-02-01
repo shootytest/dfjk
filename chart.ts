@@ -144,6 +144,8 @@ export class Chart {
 
   metadata: chart_metadata;
   // metadata_2: chart_metadata_2;
+  effects: Effect[];
+  active_effects: { [key: number]: Effect };
   notes: Note[];
   queue: Note[][];
   active_notes: { [key: number]: Note };
@@ -165,6 +167,8 @@ export class Chart {
 
     this.metadata = metadata;
     // this.metadata_2 = charts[this.metadata.chart_name];
+    this.effects = [];
+    this.active_effects = {};
     this.notes = [];
     this.active_notes = {};
     this.queue = [[], [], [], [], []];
@@ -199,10 +203,15 @@ export class Chart {
             nd[3] = d * nd[3];
           }
         }
-        this.notes.push(new Note(nd, this));
+        if (nd[0] in note_type) {
+          this.notes.push(new Note(nd as note_def, this));
+        } else {
+          this.effects.push(new Effect(nd as effect_def, this));
+        }
       }
     }
     this.notes.sort((n1, n2) => n1.time - n2.time);
+    this.effects.sort((e1, e2) => e1.time - e2.time);
 
     this.reset();
 
@@ -294,6 +303,10 @@ export class Chart {
     delete this.active_notes[note.id];
   }
 
+  deactivate_effect(effect: Effect) {
+    delete this.active_effects[effect.id];
+  }
+
   increase_combo() {
     this.combo++;
     if (this.combo > this.max_combo) {
@@ -359,6 +372,14 @@ export class Chart {
     for (const n of this.notes) {
       n.reset();
       this.active_notes[n.id] = n;
+    }
+
+    for (const k in this.active_effects) {
+      delete this.active_effects[k];
+    }
+    this.active_effects = {};
+    for (const n of this.effects) {
+      this.active_effects[n.id] = n;
     }
 
   }
@@ -484,9 +505,40 @@ export class Note {
 
 };
 
+export class Effect {
+
+  static cumulative_id = 0;
+
+  id: number;
+  type: string;
+  a: number;
+  time: number;
+  duration: number;
+
+  chart: Chart;
+
+  constructor(definition: effect_def, chart: Chart) {
+    this.id = Note.cumulative_id++;
+    [this.type, this.a, this.time, this.duration] = definition;
+    this.chart = chart;
+  }
+
+  get time2() {
+    return this.time + (this.duration ?? 0);
+  }
+
+  ratio(time_to: number): number {
+    if (this.duration === 0) return 1;
+    else {
+      return Math.min(Math.max(time_to / this.duration, 0), 1);
+    }
+  }
+
+}
+
 export type chart_def = {
   song: string;
-  notes: note_def[];
+  notes: (note_def | effect_def)[];
 };
 
 export type note_def = [
@@ -498,6 +550,15 @@ export type note_def = [
 
 ];
 
+export type effect_def = [
+  
+  string, // effect type
+  number, // effect strength / change
+  number, // time
+  number, // duration
+
+];
+
 export enum note_type {
   none = "none",
   normal = "normal",
@@ -505,6 +566,10 @@ export enum note_type {
   spam = "spam",
   fake = "fake",
   inverse = "inverse",
+};
+
+export const BPMs: { [key: string]: number } = {
+  tetris: 298.5,
 };
 
 export const chart_definitions: { [key: string]: chart_def } = {
@@ -4687,7 +4752,12 @@ export const chart_definitions: { [key: string]: chart_def } = {
   tetris_1: {
     song: "tetris",
     notes: [
-      [ note_type.none,   0, 2020, 60000 / 298 ],
+      [ note_type.none,   0, 1111, 1 ],
+      [ note_type.inverse, 1, 0 ],
+      [ note_type.inverse, 2, 0 ],
+      [ note_type.inverse, 3, 0 ],
+      [ note_type.inverse, 4, 0 ],
+      [ note_type.none,   0, 2020, 60000 / BPMs.tetris ],
       [ note_type.normal, 4, 0 ],
       [ note_type.normal, 1, 2 ],
       [ note_type.normal, 2, 3 ],
@@ -4707,11 +4777,184 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 3, 24 ],
       [ note_type.normal, 1, 26 ],
       [ note_type.normal, 1, 28 ],
-      [ note_type.none,   0, 2020 + 60000 / 298 * 32, 60000 / 298 ],
-      [ note_type.normal, 1, 0 ],
-      [ note_type.normal, 2, 2 ],
-      [ note_type.normal, 4, 3 ],
-      [ note_type.normal, 4, 5 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 32, 60000 / BPMs.tetris ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.normal, 2, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 64, 60000 / BPMs.tetris ],
+      [ "tilt", 1, 0, 32 ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.normal, 1, 2 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 4, 6 ],
+      [ note_type.normal, 3, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 3, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 96, 60000 / BPMs.tetris ],
+      [ "tilt", -1, 0, 32 ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.normal, 2, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 128, 60000 / BPMs.tetris ],
+      [ note_type.hold,   4, 0, 4 ],
+      [ "x",              8, 0, 4 ],
+      [ note_type.hold,   2, 4, 4 ],
+      [ "y",              -4, 4, 4 ],
+      [ note_type.hold,   3, 8, 4 ],
+      [ "x",              -8, 8, 4 ],
+      [ note_type.hold,   1, 12, 4 ],
+      [ "y",              4, 12, 4 ],
+      [ note_type.hold,   2, 16, 4 ],
+      [ "y",              -4, 16, 4 ],
+      [ note_type.hold,   4, 20, 4 ],
+      [ "x",              8, 20, 4 ],
+      [ note_type.hold,   1, 24, 4 ],
+      [ "y",              4, 24, 4 ],
+      [ note_type.hold,   3, 28, 1.25 ],
+      [ "x",              -8, 28, 4 ],
+      [ note_type.inverse, 3, 30 ],
+      [ note_type.inverse, 3, 31 ],
+      [ note_type.inverse, 3, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 160, 60000 / BPMs.tetris ],
+      [ note_type.hold,   4, 0, 4 ],
+      [ "x",              8, 0, 4 ],
+      [ note_type.hold,   2, 4, 4 ],
+      [ "y",              -4, 4, 4 ],
+      [ note_type.hold,   3, 8, 4 ],
+      [ "x",              -8, 8, 4 ],
+      [ note_type.hold,   1, 12, 4 ],
+      [ "y",              4, 12, 4 ],
+      [ note_type.hold,   2, 16, 2 ],
+      [ "x",              3, 16, 8 ],
+      [ note_type.hold,   3, 18, 2 ],
+      [ "x",              3, 18, 6 ],
+      [ note_type.hold,   4, 20, 4 ],
+      [ "x",              3, 20, 4 ],
+      [ note_type.hold,   3, 24, 4 ],
+      [ "tilt+",          180, 25, 2 ],
+      [ "scale_x",        -1, 25, 2 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 192, 60000 / BPMs.tetris ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.normal, 1, 2 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 4, 6 ],
+      [ note_type.normal, 3, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 3, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 224, 60000 / BPMs.tetris ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.normal, 2, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ "tilt+",          360, 28.5, 1.5 ],
+      [ "scale_x",        1, 28.75, 1 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 256, 60000 / BPMs.tetris ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.normal, 1, 2 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 4, 6 ],
+      [ note_type.normal, 3, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 3, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 288, 60000 / BPMs.tetris ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.normal, 2, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
     ],
   },
 
