@@ -88,7 +88,7 @@ export const songs = [
     name: "⠞⠧⠶⠳⡇⠼⠗",
     bpm: 74.63,
     types: ["easy", "medium", "hard"],
-    difficulties: [3, -1, -1],
+    difficulties: [5, -1, -1],
     charts: ["tetris_1", "tetris_2", "tetris_3"],
     notes: [0, 0, 0],
     preview: "tetris_preview",
