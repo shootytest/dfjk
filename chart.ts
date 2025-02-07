@@ -159,6 +159,7 @@ export class Chart {
   total_offset: number;
   number_offset: number;
   sound: Sound;
+  viewing: boolean;
   finished: boolean;
 
   old_score: number;
@@ -182,6 +183,7 @@ export class Chart {
     this.total_offset = 0;
     this.number_offset = 0;
     this.sound = sounds[definition.song];
+    this.viewing = settings.practice_mode;
     this.finished = false;
     this.old_score = this.score_obj?.value ?? 0;
 
@@ -264,7 +266,7 @@ export class Chart {
 
   key_hit(lane: number) {
     if (!mouse.lanes[0]) this.lane_pressed[lane] = true;
-    if (Sound.current?.paused) return;
+    if (this.viewing || Sound.current?.paused) return;
     const time = Sound.current_time;
     if (time - this.lane_last_release[lane] === 0) return;
     this.lane_last_hit[lane] = time;
@@ -300,10 +302,12 @@ export class Chart {
   }
 
   deactivate_note(note: Note) {
+    if (this.viewing) return;
     delete this.active_notes[note.id];
   }
 
   deactivate_effect(effect: Effect) {
+    if (this.viewing) return;
     delete this.active_effects[effect.id];
   }
 
@@ -352,8 +356,11 @@ export class Chart {
     this.max_combo = 0;
     this.total_offset = 0;
     this.number_offset = 0;
+    this.viewing = settings.practice_mode;
     this.finished = false;
     this.old_score = this.score_obj?.value ?? 0;
+
+    this.sound.visible = settings.practice_mode;
 
     for (const n of this.notes) {
       // help initialise queue
@@ -417,6 +424,7 @@ export class Note {
 
   tick() {
     if (!Sound.current) return;
+    if (this.chart.viewing) return;
     const t = -Sound.current.time_to(this.time); // t = time after hitting
     if (t < -3000) return; // hopefully this is optimisation
     if (this.hit < 0 && t > 160) {

@@ -87,15 +87,23 @@ const init = function () {
         ui.right();
     });
     key.add_key_listener("KeyW", function () {
+        if (ui.menu === "game")
+            return;
         ui.up();
     });
     key.add_key_listener("KeyS", function () {
+        if (ui.menu === "game")
+            return;
         ui.down();
     });
     key.add_key_listener("KeyA", function () {
+        if (ui.menu === "game")
+            return;
         ui.left();
     });
     key.add_key_listener("KeyD", function () {
+        if (ui.menu === "game")
+            return;
         ui.right();
     });
     document.addEventListener("visibilitychange", () => {

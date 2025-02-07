@@ -29,7 +29,8 @@ export class Sound {
         this.track.connect(gain).connect(this.ctx.destination);
         gain.gain.value = volume;
         this.element.playbackRate = settings.play_speed;
-        this.element.addEventListener("play", () => {
+        this.element.addEventListener("play", (event) => {
+            this.element.blur();
             this.playing = true;
             if (this.play_timestamp > 0 && !this.playing_delay) {
                 this.pause_timestamp = -1;
@@ -40,14 +41,18 @@ export class Sound {
             }
             this.playing_delay = false;
         });
-        this.element.addEventListener("pause", () => {
+        this.element.addEventListener("pause", (event) => {
+            this.element.blur();
             this.playing = false;
             this.pause_timestamp = performance.now();
         });
-        this.element.addEventListener("ended", () => {
+        this.element.addEventListener("ended", (event) => {
             this.finished = true;
             this.pause();
             this.element.currentTime = 0;
+        });
+        this.element.addEventListener("seeked", (event) => {
+            this.element.blur();
         });
         if (end) {
             this.element.loop = true;
@@ -96,6 +101,14 @@ export class Sound {
         this.element.pause();
         this.clear_interval();
     }
+    toggle() {
+        if (this.playing) {
+            this.pause();
+        }
+        else {
+            this.play();
+        }
+    }
     reset() {
         this.finished = false;
         this.play_timestamp = -1;
@@ -133,6 +146,21 @@ export class Sound {
         if (this.pause_timestamp > 0) {
         }
         return timestamp - this.play_timestamp;
+    }
+    get visible() {
+        return this.element.hasAttribute("controls");
+    }
+    set visible(visible) {
+        if (visible)
+            this.show();
+        else
+            this.hide();
+    }
+    show() {
+        this.element.setAttribute("controls", "true");
+    }
+    hide() {
+        this.element.removeAttribute("controls");
     }
 }
 ;

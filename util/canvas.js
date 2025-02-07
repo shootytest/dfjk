@@ -2,7 +2,7 @@ import { Context } from "./draw.js";
 export const canvas = document.createElement("canvas");
 export const ctx = new Context(canvas.getContext("2d", { alpha: false }));
 canvas.classList.add("canvas");
-document.body.appendChild(canvas);
+document.getElementById("main")?.appendChild(canvas);
 export const view = {
     x: 0,
     y: 0,

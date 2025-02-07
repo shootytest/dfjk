@@ -121,6 +121,8 @@ export const ui = {
                 sound.element.playbackRate = settings.play_speed;
             }
         });
+        const c8 = gui.add(settings, "practice_mode");
+        c8.name("practice mode?");
         const c7 = gui.add(settings, "controls");
         c7.name("controls");
         settings.play_speed = 1;
@@ -194,7 +196,7 @@ export const ui = {
             const size = { x: h * 0.5, y: h };
             const offset = vector.add(v, vector.add(ui.game.offset, ui.game.offset_));
             this.draw_board(offset, size, x_constrained);
-            if (Chart.current?.sound.finished) {
+            if (Chart.current?.sound.finished && !settings.practice_mode) {
                 this.draw_results(v, size, x_constrained);
             }
         }
@@ -519,6 +521,11 @@ export const ui = {
         ui.menu = "game";
         ui.game.backing = 0;
         ui.game.restarting = 0;
+        ui.game.offset = vector.create();
+        ui.game.offset_ = vector.create();
+        ui.game.scale = vector.create(1, 1);
+        ui.game.tilt = 0;
+        ui.game.tilt_ = 0;
     },
     enter: function () {
         if (ui.close_boxes())
@@ -539,10 +546,11 @@ export const ui = {
             const sound = sfxr.generate("pickupCoin");
             sfxr.play(sound);
         }
+        else if (ui.menu === "game" && settings.practice_mode) {
+            Sound.current?.toggle();
+        }
         else if (ui.menu === "game" && Sound.current?.finished) {
-            ui.menu = "list";
-            ui.list_change_index(0);
-            Sound.current = undefined;
+            ui.back();
         }
     },
     shift: function () {
@@ -581,6 +589,7 @@ export const ui = {
             Sound.current?.pause();
             Sound.current?.reset();
             Chart.current?.reset();
+            Sound.current?.hide();
             Sound.current = undefined;
         }
         else {
@@ -618,6 +627,11 @@ export const ui = {
         else if (ui.menu === "list") {
             ui.list_change_type(-1);
         }
+        else if (ui.menu === "game") {
+            if (settings.practice_mode && Sound.current) {
+                Sound.current.element.currentTime -= 5;
+            }
+        }
     },
     right: function () {
         if (ui.is_box_open())
@@ -628,6 +642,11 @@ export const ui = {
         }
         else if (ui.menu === "list") {
             ui.list_change_type(1);
+        }
+        else if (ui.menu === "game") {
+            if (settings.practice_mode && Sound.current) {
+                Sound.current.element.currentTime += 5;
+            }
         }
     },
     draw_board: function (v, size, x_constrained = false) {
@@ -1219,6 +1238,8 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.1 | 07-02-2025 | 🎶 6  📊 13 </h3>
+      <p> - added experimental chart viewer ("practice mode" in settings) </p>
       <h3> 0.5.0 | 01-02-2025 | 🎶 6  📊 13 </h3>
       <p> - added chart effects... you'll see </p>
       <p> - added easy chart for tetris theme </p>

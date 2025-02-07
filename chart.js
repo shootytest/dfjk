@@ -183,6 +183,7 @@ export class Chart {
     total_offset;
     number_offset;
     sound;
+    viewing;
     finished;
     old_score;
     constructor(definition, metadata) {
@@ -202,6 +203,7 @@ export class Chart {
         this.total_offset = 0;
         this.number_offset = 0;
         this.sound = sounds[definition.song];
+        this.viewing = settings.practice_mode;
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
         let t = 0, d = 0;
@@ -281,7 +283,7 @@ export class Chart {
     key_hit(lane) {
         if (!mouse.lanes[0])
             this.lane_pressed[lane] = true;
-        if (Sound.current?.paused)
+        if (this.viewing || Sound.current?.paused)
             return;
         const time = Sound.current_time;
         if (time - this.lane_last_release[lane] === 0)
@@ -320,9 +322,13 @@ export class Chart {
         this.lane_last_release[lane] = time;
     }
     deactivate_note(note) {
+        if (this.viewing)
+            return;
         delete this.active_notes[note.id];
     }
     deactivate_effect(effect) {
+        if (this.viewing)
+            return;
         delete this.active_effects[effect.id];
     }
     increase_combo() {
@@ -367,8 +373,10 @@ export class Chart {
         this.max_combo = 0;
         this.total_offset = 0;
         this.number_offset = 0;
+        this.viewing = settings.practice_mode;
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
+        this.sound.visible = settings.practice_mode;
         for (const n of this.notes) {
             if (n.type === note_type.hold || n.type === note_type.normal) {
                 this.queue[Math.round(n.lane)].push(n);
@@ -420,6 +428,8 @@ export class Note {
     }
     tick() {
         if (!Sound.current)
+            return;
+        if (this.chart.viewing)
             return;
         const t = -Sound.current.time_to(this.time);
         if (t < -3000)

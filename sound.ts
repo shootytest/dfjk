@@ -48,7 +48,8 @@ export class Sound {
     
     this.element.playbackRate = settings.play_speed;
 
-    this.element.addEventListener("play", () => { // #play event
+    this.element.addEventListener("play", (event) => { // #play event
+      this.element.blur();
       this.playing = true;
       // time stuff
       if (this.play_timestamp > 0 && !this.playing_delay) {
@@ -60,15 +61,20 @@ export class Sound {
       this.playing_delay = false;
     });
 
-    this.element.addEventListener("pause", () => { // #pause event
+    this.element.addEventListener("pause", (event) => { // #pause event
+      this.element.blur();
       this.playing = false;
       this.pause_timestamp = performance.now();
     });
 
-    this.element.addEventListener("ended", () => { // #ended event
+    this.element.addEventListener("ended", (event) => { // #ended event
       this.finished = true;
       this.pause();
       this.element.currentTime = 0;
+    });
+
+    this.element.addEventListener("seeked", (event) => {
+      this.element.blur();
     });
 
     if (end) {
@@ -122,6 +128,14 @@ export class Sound {
     this.clear_interval();
   }
 
+  toggle() {
+    if (this.playing) {
+      this.pause();
+    } else {
+      this.play();
+    }
+  }
+
   reset() {
     this.finished = false;
     this.play_timestamp = -1;
@@ -165,6 +179,23 @@ export class Sound {
 
     }
     return timestamp - this.play_timestamp; // todo
+  }
+
+  get visible(): boolean {
+    return this.element.hasAttribute("controls");
+  }
+
+  set visible(visible: boolean) {
+    if (visible) this.show();
+    else this.hide();
+  }
+
+  show() {
+    this.element.setAttribute("controls", "true");
+  }
+
+  hide() {
+    this.element.removeAttribute("controls");
   }
 
 };

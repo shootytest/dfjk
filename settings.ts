@@ -10,6 +10,7 @@ export const settings = {
   line_offset: 0,
   hit_volume: 5,
   play_speed: 1,
+  practice_mode: false,
   controls: "dfjk",
 
   get notespeed() {
@@ -90,7 +91,7 @@ export const songs = [
     types: ["easy", "medium", "hard"],
     difficulties: [5, -1, -1],
     charts: ["tetris_1", "tetris_2", "tetris_3"],
-    notes: [0, 0, 0],
+    notes: [189, 0, 0],
     preview: "tetris_preview",
     image: "tetris.png",
   },
