@@ -993,10 +993,11 @@ export const ui = {
 
   draw_practice: function() {
     w = this.width - 113.2 - 16 * 2;
-    x = 113.2 + 16;
+    // x = 113.2 + 16;
     y = this.height - 70;
     const checkpoints = Chart.current?.checkpoints || [];
     const length = Sound.current?.length || 0;
+    if (length <= 0 || checkpoints.length <= 0 || !Chart.current || !Sound.current) return;
     for (let i = 0; i <= 9; i++) {
       if (checkpoints[i] < 0) continue;
       x = 113.2 + 16 + w * checkpoints[i] / length;

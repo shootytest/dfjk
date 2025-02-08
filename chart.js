@@ -195,10 +195,10 @@ export class Chart {
         this.active_effects = {};
         this.notes = [];
         this.active_notes = {};
-        this.queue = [[], [], [], [], []];
-        this.lane_pressed = [false, false, false, false, false];
-        this.lane_last_hit = [-1, -1, -1, -1, -1];
-        this.lane_last_release = [-1, -1, -1, -1, -1];
+        this.queue = [[], [], [], [], [], []];
+        this.lane_pressed = [false, false, false, false, false, false];
+        this.lane_last_hit = [-1, -1, -1, -1, -1, -1];
+        this.lane_last_release = [-1, -1, -1, -1, -1, -1];
         this.result = [0, 0, 0, 0, 0];
         this.total_notes = 0;
         this.combo = 0;
@@ -274,14 +274,14 @@ export class Chart {
         return songs[this.metadata.song_id].difficulties[this.metadata.song_type];
     }
     tick() {
-        if (this.practicing && this.sound.seeked) {
+        if ((this.practicing || this.viewing) && this.sound.seeked) {
             this.sound.seeked = false;
             this.reset();
         }
         if (mouse.lanes[0]) {
             this.lane_pressed = [false, false, false, false, false];
         }
-        for (let i = 1; i <= 4; i++) {
+        for (let i = 1; i <= 5; i++) {
             if (mouse.lanes[i])
                 this.lane_pressed[i] = true;
         }
@@ -372,10 +372,10 @@ export class Chart {
         }
     }
     reset() {
-        this.queue = [[], [], [], [], []];
-        this.lane_pressed = [false, false, false, false, false];
-        this.lane_last_hit = [-1, -1, -1, -1, -1];
-        this.lane_last_release = [-1, -1, -1, -1, -1];
+        this.queue = [[], [], [], [], [], []];
+        this.lane_pressed = [false, false, false, false, false, false];
+        this.lane_last_hit = [-1, -1, -1, -1, -1, -1];
+        this.lane_last_release = [-1, -1, -1, -1, -1, -1];
         this.result = [0, 0, 0, 0, 0];
         this.total_notes = 0;
         this.combo = 0;

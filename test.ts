@@ -51,7 +51,7 @@ const init = function() {
       Sound.current?.pause();
     }
   });
-  /*for (let i = 0; i < 4; i++) {
+  /*for (let i = 0; i < 5; i++) {
     key.add_key_listener("Key" + settings.controls.toUpperCase()[i], function() {
       Chart.current?.key_hit(i + 1);
     });
@@ -62,6 +62,9 @@ const init = function() {
       if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
         Chart.current?.key_hit(i + 1);
       }
+    }
+    if (event.code === "Space") {
+      Chart.current?.key_hit(5);
     }
     if (settings.practice_mode && Chart.current && Sound.current) {
       for (let i = 0; i <= 9; i++) {
@@ -81,6 +84,9 @@ const init = function() {
       if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
         Chart.current?.key_release(i + 1);
       }
+    }
+    if (event.code === "Space") {
+      Chart.current?.key_release(5);
     }
   });
   

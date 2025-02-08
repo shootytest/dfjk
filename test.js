@@ -57,6 +57,9 @@ const init = function () {
                 Chart.current?.key_hit(i + 1);
             }
         }
+        if (event.code === "Space") {
+            Chart.current?.key_hit(5);
+        }
         if (settings.practice_mode && Chart.current && Sound.current) {
             for (let i = 0; i <= 9; i++) {
                 if (event.code === "Digit" + i) {
@@ -77,6 +80,9 @@ const init = function () {
             if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
                 Chart.current?.key_release(i + 1);
             }
+        }
+        if (event.code === "Space") {
+            Chart.current?.key_release(5);
         }
     });
     key.add_lane_hit(function (lane) {
