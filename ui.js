@@ -196,6 +196,9 @@ export const ui = {
             const size = { x: h * 0.5, y: h };
             const offset = vector.add(v, vector.add(ui.game.offset, ui.game.offset_));
             this.draw_board(offset, size, x_constrained);
+            if (settings.practice_mode) {
+                this.draw_practice();
+            }
             if (Chart.current?.sound.finished && settings.normal_mode) {
                 this.draw_results(v, size, x_constrained);
             }
@@ -926,6 +929,26 @@ export const ui = {
         ui.game.tilt = 0;
         ui.game.tilt_ = 0;
     },
+    draw_practice: function () {
+        w = this.width - 113.2 - 16 * 2;
+        x = 113.2 + 16;
+        y = this.height - 70;
+        const checkpoints = Chart.current?.checkpoints || [];
+        const length = Sound.current?.length || 0;
+        for (let i = 0; i <= 9; i++) {
+            if (checkpoints[i] < 0)
+                continue;
+            x = 113.2 + 16 + w * checkpoints[i] / length;
+            ctx.beginPath();
+            ctx.circle(x, y, 8);
+            ctx.fillStyle = color.white;
+            ctx.fill();
+            ctx.strokeStyle = color.white;
+            ctx.line(x, y, x, this.height);
+            ctx.set_font_mono(10, "", "center");
+            ctx.text("" + i, x, y - 20);
+        }
+    },
     draw_results: function (v, size, x_constrained = false) {
         const chart = Chart.current;
         const sound = Sound.current;
@@ -1244,6 +1267,7 @@ export const ui = {
       <h3> 0.5.2 | 08-02-2025 | 🎶 6  📊 13 </h3>
       <p> - split the practice mode into view mode and practice mode </p>
       <p> - you can actually practice in practice mode now </p>
+      <p> - added checkpoints in practice mode! (for computer only, use <em>number keys</em> to jump to checkpoints and <em>shift + number keys</em> to set them) </p>
       <h3> 0.5.1 | 07-02-2025 | 🎶 6  📊 13 </h3>
       <p> - added experimental chart viewer ("practice mode" in settings) </p>
       <h3> 0.5.0 | 01-02-2025 | 🎶 6  📊 13 </h3>

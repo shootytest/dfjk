@@ -33,8 +33,7 @@ const init = function() {
     ui.restart();
   });
   key.add_key_listener("Escape", ui.back);
-  key.add_key_listener("Backquote", ui.back);
-  key.add_key_listener("Digit1", function() {
+  key.add_key_listener("Backquote", function() {
     if (Sound.current) {
       ui.restart();
       // Sound.current.element.currentTime = 15.975 * 0 + 0.1248 * 0; // loneliness
@@ -62,6 +61,17 @@ const init = function() {
     for (let i = 0; i < 4; i++) {
       if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
         Chart.current?.key_hit(i + 1);
+      }
+    }
+    if (settings.practice_mode && Chart.current && Sound.current) {
+      for (let i = 0; i <= 9; i++) {
+        if (event.code === "Digit" + i) {
+          if (event.shiftKey) {
+            Chart.current.checkpoints[i] = Math.round(Sound.current.time);
+          } else if (Chart.current.checkpoints[i] >= 0) {
+            Sound.current.element.currentTime = Chart.current.checkpoints[i] / 1000;
+          }
+        }
       }
     }
   });

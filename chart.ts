@@ -162,6 +162,7 @@ export class Chart {
   sound: Sound;
   viewing: boolean;
   practicing: boolean;
+  checkpoints: number[];
   finished: boolean;
 
   old_score: number;
@@ -187,6 +188,7 @@ export class Chart {
     this.sound = sounds[definition.song];
     this.viewing = settings.view_mode;
     this.practicing = settings.practice_mode;
+    this.checkpoints = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
     this.finished = false;
     this.old_score = this.score_obj?.value ?? 0;
 

@@ -192,6 +192,10 @@ export class Sound {
     else this.hide();
   }
 
+  get length(): number {
+    return Math.round(this.element.duration * 1000);
+  }
+
   show() {
     this.element.setAttribute("controls", "true");
   }

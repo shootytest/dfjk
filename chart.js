@@ -186,6 +186,7 @@ export class Chart {
     sound;
     viewing;
     practicing;
+    checkpoints;
     finished;
     old_score;
     constructor(definition, metadata) {
@@ -207,6 +208,7 @@ export class Chart {
         this.sound = sounds[definition.song];
         this.viewing = settings.view_mode;
         this.practicing = settings.practice_mode;
+        this.checkpoints = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
         let t = 0, d = 0;
