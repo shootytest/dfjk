@@ -1,6 +1,7 @@
 import { firebase } from "./firebase.js";
 import { chart_metadata, chart_metadata_2, chart_map, Score, scores, settings, songs, skill_rate_data, special_skill_rate_data } from "./settings.js";
 import { Sound, sounds } from "./sound.js";
+import { ui } from "./ui.js";
 import { key, mouse } from "./util/key.js";
 
 export class Chart {
@@ -160,6 +161,7 @@ export class Chart {
   number_offset: number;
   sound: Sound;
   viewing: boolean;
+  practicing: boolean;
   finished: boolean;
 
   old_score: number;
@@ -183,7 +185,8 @@ export class Chart {
     this.total_offset = 0;
     this.number_offset = 0;
     this.sound = sounds[definition.song];
-    this.viewing = settings.practice_mode;
+    this.viewing = settings.view_mode;
+    this.practicing = settings.practice_mode;
     this.finished = false;
     this.old_score = this.score_obj?.value ?? 0;
 
@@ -253,6 +256,10 @@ export class Chart {
   }
   
   tick() {
+    if (this.practicing && this.sound.seeked) {
+      this.sound.seeked = false;
+      this.reset();
+    }
     if (mouse.lanes[0]) {
       this.lane_pressed = [false, false, false, false, false];
     }
@@ -356,11 +363,14 @@ export class Chart {
     this.max_combo = 0;
     this.total_offset = 0;
     this.number_offset = 0;
-    this.viewing = settings.practice_mode;
+    this.viewing = settings.view_mode;
+    this.practicing = settings.practice_mode;
     this.finished = false;
     this.old_score = this.score_obj?.value ?? 0;
 
-    this.sound.visible = settings.practice_mode;
+    ui.reset_effects();
+
+    this.sound.visible = !settings.normal_mode && ui.menu === "game";
 
     for (const n of this.notes) {
       // help initialise queue

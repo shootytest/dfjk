@@ -10,12 +10,21 @@ export const settings = {
   line_offset: 0,
   hit_volume: 5,
   play_speed: 1,
-  practice_mode: false,
+  play_mode: "play",
   controls: "dfjk",
 
   get notespeed() {
     return this.NOTESPEED / 20 / settings.play_speed;
   },
+  get normal_mode() {
+    return this.play_mode === "play";
+  },
+  get view_mode() {
+    return this.play_mode === "view";
+  },
+  get practice_mode() {
+    return this.play_mode === "practice";
+  }
 
 };
 

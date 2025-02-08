@@ -1,6 +1,7 @@
 import { firebase } from "./firebase.js";
 import { scores, settings, songs, skill_rate_data, special_skill_rate_data } from "./settings.js";
 import { Sound, sounds } from "./sound.js";
+import { ui } from "./ui.js";
 import { key, mouse } from "./util/key.js";
 export class Chart {
     static current;
@@ -184,6 +185,7 @@ export class Chart {
     number_offset;
     sound;
     viewing;
+    practicing;
     finished;
     old_score;
     constructor(definition, metadata) {
@@ -203,7 +205,8 @@ export class Chart {
         this.total_offset = 0;
         this.number_offset = 0;
         this.sound = sounds[definition.song];
-        this.viewing = settings.practice_mode;
+        this.viewing = settings.view_mode;
+        this.practicing = settings.practice_mode;
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
         let t = 0, d = 0;
@@ -269,6 +272,10 @@ export class Chart {
         return songs[this.metadata.song_id].difficulties[this.metadata.song_type];
     }
     tick() {
+        if (this.practicing && this.sound.seeked) {
+            this.sound.seeked = false;
+            this.reset();
+        }
         if (mouse.lanes[0]) {
             this.lane_pressed = [false, false, false, false, false];
         }
@@ -373,10 +380,12 @@ export class Chart {
         this.max_combo = 0;
         this.total_offset = 0;
         this.number_offset = 0;
-        this.viewing = settings.practice_mode;
+        this.viewing = settings.view_mode;
+        this.practicing = settings.practice_mode;
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
-        this.sound.visible = settings.practice_mode;
+        ui.reset_effects();
+        this.sound.visible = !settings.normal_mode && ui.menu === "game";
         for (const n of this.notes) {
             if (n.type === note_type.hold || n.type === note_type.normal) {
                 this.queue[Math.round(n.lane)].push(n);

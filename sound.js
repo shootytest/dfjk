@@ -17,6 +17,7 @@ export class Sound {
     pause_timestamp = -1;
     pause_time_total = 0;
     options = {};
+    seeked = false;
     finished = false;
     constructor(path, volume = 1, start, end) {
         this.ctx = new AudioContext();
@@ -52,6 +53,7 @@ export class Sound {
             this.element.currentTime = 0;
         });
         this.element.addEventListener("seeked", (event) => {
+            this.seeked = true;
             this.element.blur();
         });
         if (end) {

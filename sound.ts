@@ -31,6 +31,7 @@ export class Sound {
     end?: number,
   } = {};
 
+  seeked: boolean = false;
   finished: boolean = false;
   
   constructor(path: string, volume: number = 1, start?: number, end?: number) {
@@ -74,6 +75,7 @@ export class Sound {
     });
 
     this.element.addEventListener("seeked", (event) => {
+      this.seeked = true;
       this.element.blur();
     });
 
