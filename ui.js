@@ -993,14 +993,20 @@ export const ui = {
             ui.game.scale_target.y = ui.game.scale.y;
         }
         else if (type === "scalex") {
+            if (-time_to > 200)
+                return;
             ui.game.scale_target.x = e.a;
             ui.game.scale_smoothness.x = 60 / e.duration;
         }
         else if (type === "scaley") {
+            if (-time_to > 200)
+                return;
             ui.game.scale_target.y = e.a;
             ui.game.scale_smoothness.y = 60 / e.duration;
         }
         else if (type === "lanes") {
+            if (-time_to > 200)
+                return;
             if (Chart.current)
                 Chart.current.lanes = e.a;
             ui.game.lanes_target = e.a;

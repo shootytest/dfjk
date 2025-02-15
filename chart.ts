@@ -5303,9 +5303,9 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 1, 26 ],
       [ note_type.inverse, 1, 27 ], [ "x", -10, 26.8, 0.3 ],
       [ note_type.normal, 1, 28 ],
-      [ "lanes",          5, 28, 1.5 ],
-      [ "scalex",         1.25, 28, 1.5 ],
-      [ "scaley",         -1, 28, 1.5 ],
+      [ "lanes",          5, 28.1, 1.5 ],
+      [ "scalex",         1.25, 28.1, 1.5 ],
+      [ "scaley",         -1, 28.1, 1.5 ],
       [ note_type.inverse, 1, 31 ],
       [ note_type.inverse, 2, 31 ],
       [ note_type.inverse, 5, 31 ],
@@ -5332,7 +5332,7 @@ for (let i = 0; i < 100; i++) {
   chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.20]);
 }
 
-for (let i = 0; i < 28; i += 4) {
+for (let i = 0; i < 27; i += 4) {
   chart_definitions.tetris_2.notes.push([ "scalex",         0.85, i, 5 ]);
   chart_definitions.tetris_2.notes.push([ "scaley",         0.85, i, 5 ]);
   chart_definitions.tetris_2.notes.push([ "scalex",         1.05, i + 2, 5 ]);
