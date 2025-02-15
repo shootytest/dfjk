@@ -128,4 +128,35 @@ export const math = {
     point_in_circle: (px, py, cx, cy, r) => {
         return math.dist2(px - cx, py - cy) < r * r;
     },
+    lane_hit_x: (lanes, lane) => {
+        if (lanes === 4)
+            return lane;
+        else if (lanes === 5) {
+            if (lane === 3)
+                return 5;
+            else if (lane > 3)
+                return lane - 1;
+        }
+        else if (lanes === 6) {
+            if (lane === 1)
+                return 5;
+            else if (lane === 6)
+                return 6;
+            else
+                return lane - 1;
+        }
+        else if (lanes === 7) {
+            if (lane === 1)
+                return 5;
+            else if (lane === 7)
+                return 6;
+            else if (lane === 4)
+                return 7;
+            else if (lane > 4)
+                return lane - 2;
+            else
+                return lane - 1;
+        }
+        return lane;
+    },
 };

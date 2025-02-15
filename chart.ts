@@ -154,6 +154,7 @@ export class Chart {
   lane_last_hit: number[];
   lane_last_release: number[];
   result: number[];
+  lanes: number;
   total_notes: number;
   combo: number;
   max_combo: number;
@@ -175,11 +176,12 @@ export class Chart {
     this.active_effects = {};
     this.notes = [];
     this.active_notes = {};
-    this.queue = [[], [], [], [], [], []];
-    this.lane_pressed = [false, false, false, false, false, false];
-    this.lane_last_hit = [-1, -1, -1, -1, -1, -1];
-    this.lane_last_release = [-1, -1, -1, -1, -1, -1];
+    this.queue = [[], [], [], [], [], [], [], []];
+    this.lane_pressed = [false, false, false, false, false, false, false, false];
+    this.lane_last_hit = [-1, -1, -1, -1, -1, -1, -1, -1];
+    this.lane_last_release = [-1, -1, -1, -1, -1, -1, -1, -1];
     this.result = [0, 0, 0, 0, 0];
+    this.lanes = 4;
     this.total_notes = 0;
     this.combo = 0;
     this.max_combo = 0;
@@ -355,11 +357,12 @@ export class Chart {
 
   reset() {
 
-    this.queue = [[], [], [], [], [], []];
-    this.lane_pressed = [false, false, false, false, false, false];
-    this.lane_last_hit = [-1, -1, -1, -1, -1, -1];
-    this.lane_last_release = [-1, -1, -1, -1, -1, -1];
+    this.queue = [[], [], [], [], [], [], [], []];
+    this.lane_pressed = [false, false, false, false, false, false, false, false];
+    this.lane_last_hit = [-1, -1, -1, -1, -1, -1, -1, -1];
+    this.lane_last_release = [-1, -1, -1, -1, -1, -1, -1, -1];
     this.result = [0, 0, 0, 0, 0];
+    this.lanes = 4;
     this.total_notes = 0;
     this.combo = 0;
     this.max_combo = 0;
@@ -416,6 +419,7 @@ export class Note {
   duration?: number;
   hit: number = -1; // -1 = not hit yet, 0 = missed, 1 = bad, 2 = good, 3 = perfect, 4 = perfect+ (temporary names ok) (i guess it's permanent now)
   hit_time: number = -1; // -1 = not hit yet, >0 = relative timestamp of hit
+  // just_hit: boolean = false;
   release: number = -1;
   visible: boolean = true;
 
@@ -437,6 +441,7 @@ export class Note {
   tick() {
     if (!Sound.current) return;
     if (this.chart.viewing) return;
+    // if (this.hit > -1) this.just_hit = false;
     const t = -Sound.current.time_to(this.time); // t = time after hitting
     if (t < -3000) return; // hopefully this is optimisation
     if (this.hit < 0 && t > 160) {
@@ -496,6 +501,7 @@ export class Note {
     if (this.hit >= 0) return; // already hit!
     this.hit = hit;
     this.hit_time = Sound.current_time;
+    // this.just_hit = true;
     this.chart.result[hit]++;
     if (this.hit === 0) {
       this.chart.combo = 0;
@@ -4889,7 +4895,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ "x",              3, 20, 4 ],
       [ note_type.hold,   3, 24, 4 ],
       [ "tilt+",          180, 25, 2 ],
-      [ "scale_x",        -1, 25, 2 ],
+      [ "scalex",        -1, 25, 2 ],
       [ note_type.inverse, 3, 29.5 ],
       [ note_type.inverse, 3, 31.5 ],
       [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 192, 60000 / BPMs.tetris ],
@@ -4932,7 +4938,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 1, 26 ],
       [ note_type.normal, 1, 28 ],
       [ "tilt+",          360, 28.5, 1.5 ],
-      [ "scale_x",        1, 28.75, 1 ],
+      [ "scalex",        1, 28.75, 1 ],
       [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 256, 60000 / BPMs.tetris ],
       [ note_type.normal, 4, 0 ],
       [ note_type.normal, 1, 2 ],
@@ -4979,6 +4985,335 @@ export const chart_definitions: { [key: string]: chart_def } = {
     ],
   },
 
+  tetris_2: {
+    song: "tetris",
+    notes: [
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 0, 60000 / BPMs.tetris ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.inverse, 4, 1 ],
+      [ note_type.normal, 1, 2 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 2, 5 ],
+      [ note_type.normal, 3, 5.5 ],
+      [ note_type.normal, 4, 6 ],
+      [ note_type.normal, 3, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.inverse, 4, 9 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 3, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.inverse, 1, 13 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 4, 17 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.inverse, 3, 21 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.inverse, 4, 23 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.inverse, 3, 25 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.inverse, 1, 27 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.normal, 1, 29 ],
+      [ note_type.normal, 2, 30 ],
+      [ note_type.normal, 3, 31 ],
+      [ note_type.normal, 4, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 32, 60000 / BPMs.tetris ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 4, 5 ],
+      [ note_type.normal, 4, 5.5 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.inverse, 2, 9 ],
+      [ note_type.inverse, 1, 10 ],
+      [ note_type.normal, 2, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 1, 13 ],
+      [ note_type.normal, 2, 13.5 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.inverse, 1, 17 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.inverse, 3, 21 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.inverse, 4, 23 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.inverse, 3, 25 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.inverse, 1, 27 ],
+      [ note_type.normal, 1, 28 ],
+      [ "lanes", 5, 28, 4 ],
+      [ "scalex", 1.25, 28, 4 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 64, 60000 / BPMs.tetris ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.normal, 2, 2 ],
+      [ note_type.normal, 5, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 5, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 5, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 5, 15 ],
+      [ note_type.normal, 2, 16 ],
+      [ note_type.normal, 5, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 5, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.inverse, 2, 29 ],
+      [ note_type.inverse, 5, 30 ],
+      [ note_type.inverse, 3, 31 ],
+      [ note_type.inverse, 4, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 96, 60000 / BPMs.tetris ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 5, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 5, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.normal, 1, 11 ],
+      [ note_type.normal, 5, 12 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 5, 15 ],
+      [ note_type.normal, 2, 16 ],
+      [ note_type.normal, 2, 18 ],
+      [ note_type.normal, 5, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.normal, 5, 24 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 128, 60000 / BPMs.tetris ],
+      [ note_type.hold,   4, 0, 4 ],
+      [ note_type.normal, 5, 1 ], [ "y", 5, 1, 0.3 ],
+      [ note_type.normal, 5, 3 ], [ "y", 5, 3, 0.3 ],
+      [ "tilt",           0.8, 0, 4 ],
+      [ note_type.hold,   2, 4, 4 ],
+      [ note_type.normal, 5, 5 ], [ "y", 5, 5, 0.3 ],
+      [ note_type.normal, 5, 7 ], [ "y", 5, 7, 0.3 ],
+      [ "tilt",           -0.5, 4, 4 ],
+      [ note_type.hold,   3, 8, 4 ],
+      [ note_type.normal, 5, 9 ], [ "y", 5, 9, 0.3 ],
+      [ note_type.normal, 5, 11 ], [ "y", 5, 11, 0.3 ],
+      [ "tilt",           0.5, 8, 4 ],
+      [ note_type.hold,   1, 12, 4 ],
+      [ note_type.normal, 5, 13 ], [ "y", 5, 13, 0.3 ],
+      [ note_type.normal, 5, 15 ], [ "y", 5, 15, 0.3 ],
+      [ "tilt",           -0.8, 12, 4 ],
+      [ note_type.hold,   2, 16, 4 ],
+      [ note_type.normal, 5, 17 ], [ "y", 5, 17, 0.3 ],
+      [ note_type.normal, 5, 19 ], [ "y", 5, 19, 0.3 ],
+      [ "tilt",           -0.5, 16, 4 ],
+      [ note_type.hold,   4, 20, 4 ],
+      [ note_type.normal, 5, 21 ], [ "y", 5, 21, 0.3 ],
+      [ note_type.normal, 5, 23 ], [ "y", 5, 23, 0.3 ],
+      [ "tilt",           0.8, 20, 4 ],
+      [ note_type.hold,   1, 24, 4 ],
+      [ note_type.normal, 5, 25 ], [ "y", 5, 25, 0.3 ],
+      [ note_type.normal, 5, 27 ], [ "y", 5, 27, 0.3 ],
+      [ "tilt",           -0.8, 24, 4 ],
+      [ note_type.hold,   3, 28, 1.25 ],
+      [ "tilt",           10, 28, 1 ],
+      [ note_type.inverse, 3, 30 ],
+      [ note_type.inverse, 5, 31 ],
+      [ note_type.inverse, 2, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 160, 60000 / BPMs.tetris ],
+      [ note_type.hold,   4, 0, 4 ],
+      [ note_type.normal, 5, 1 ], [ "y", 5, 1, 0.3 ],
+      [ note_type.normal, 5, 3 ], [ "y", 5, 3, 0.3 ],
+      [ "tilt",           0.8, 0, 4 ],
+      [ note_type.hold,   2, 4, 4 ],
+      [ note_type.normal, 5, 5 ], [ "y", 5, 5, 0.3 ],
+      [ note_type.normal, 5, 7 ], [ "y", 5, 7, 0.3 ],
+      [ "tilt",           -0.5, 4, 4 ],
+      [ note_type.hold,   3, 8, 4 ],
+      [ note_type.normal, 5, 9 ], [ "y", 5, 9, 0.3 ],
+      [ note_type.normal, 5, 11 ], [ "y", 5, 11, 0.3 ],
+      [ "tilt",           0.5, 8, 4 ],
+      [ note_type.hold,   1, 12, 4 ],
+      [ note_type.normal, 5, 13 ], [ "y", 5, 13, 0.3 ],
+      [ note_type.normal, 5, 15 ], [ "y", 5, 15, 0.3 ],
+      [ "tilt",           -0.8, 12, 4 ],
+      [ note_type.hold,   2, 16, 2 ],
+      [ note_type.normal, 5, 17 ], [ "y", 5, 17, 0.3 ],
+      [ "tilt",           -0.5, 16, 2 ],
+      [ note_type.hold,   3, 18, 2 ],
+      [ note_type.normal, 5, 19 ], [ "y", 5, 19, 0.3 ],
+      [ "tilt",           0.5, 18, 2 ],
+      [ note_type.hold,   4, 20, 4 ],
+      [ note_type.normal, 5, 21 ], [ "y", 5, 21, 0.3 ],
+      [ note_type.normal, 5, 23 ], [ "y", 5, 23, 0.3 ],
+      [ "tilt",           0.8, 20, 4 ],
+      [ note_type.hold,   3, 24, 4 ],
+      [ note_type.normal, 5, 25 ], [ "y", 5, 25, 0.3 ],
+      [ note_type.normal, 5, 27 ], [ "y", 5, 27, 0.3 ],
+      [ note_type.normal, 5, 28 ], [ "y", 5, 28, 0.3 ],
+      [ "tilt",           0.5, 24, 4 ],
+      [ note_type.inverse, 3, 29 ],
+      [ note_type.inverse, 5, 30 ],
+      [ note_type.inverse, 2, 31 ],
+      [ note_type.inverse, 1, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 192, 60000 / BPMs.tetris ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.inverse, 4, 1 ],
+      [ note_type.normal, 2, 2 ],
+      [ note_type.normal, 5, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 4, 5 ],
+      [ note_type.normal, 3, 5.5 ],
+      [ note_type.normal, 5, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.inverse, 4, 9 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 5, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.inverse, 1, 13 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 5, 15 ],
+      [ note_type.normal, 2, 16 ],
+      [ note_type.normal, 1, 17 ],
+      [ note_type.normal, 2, 18 ],
+      [ note_type.normal, 5, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.inverse, 3, 21 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.inverse, 4, 23 ],
+      [ note_type.normal, 5, 24 ],
+      [ note_type.inverse, 5, 25 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.inverse, 1, 27 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.normal, 2, 29 ],
+      [ note_type.normal, 5, 30 ],
+      [ note_type.normal, 3, 31 ],
+      [ note_type.normal, 4, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 224, 60000 / BPMs.tetris ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 5, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 4, 5 ],
+      [ note_type.normal, 4, 5.5 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 5, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.inverse, 1, 9 ],
+      [ note_type.inverse, 2, 10 ],
+      [ note_type.normal, 1, 11 ],
+      [ note_type.normal, 5, 12 ],
+      [ note_type.normal, 3, 13 ],
+      [ note_type.normal, 4, 13.5 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 5, 15 ],
+      [ note_type.normal, 2, 16 ],
+      [ note_type.inverse, 4, 17 ],
+      [ note_type.normal, 2, 18 ],
+      [ note_type.normal, 5, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.inverse, 3, 21 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.inverse, 4, 23 ],
+      [ note_type.normal, 5, 24 ],
+      [ note_type.inverse, 5, 25 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.inverse, 1, 27 ],
+      [ note_type.normal, 1, 28 ],
+      [ "lanes",          4, 28.2, 2.5 ],
+      [ "scalex",         1, 28.2, 2.5 ],
+      [ "tilt",           1, 30, 34 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 256, 60000 / BPMs.tetris ],
+      // [ "hit_force",      0, 0, 0 ],
+      [ note_type.normal, 4, 0 ],
+      [ note_type.inverse, 4, 1 ], [ "x", 10, 0.8, 0.3 ],
+      [ note_type.normal, 1, 2 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 3, 4 ],
+      [ note_type.normal, 2, 5 ],
+      [ note_type.normal, 3, 5.5 ],
+      [ note_type.normal, 4, 6 ],
+      [ note_type.normal, 3, 7 ],
+      [ note_type.normal, 2, 8 ],
+      [ note_type.inverse, 4, 9 ], [ "x", 10, 8.8, 0.3 ],
+      [ note_type.normal, 1, 10 ],
+      [ note_type.normal, 3, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.inverse, 1, 13 ], [ "x", -10, 12.8, 0.3 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.normal, 4, 17 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.inverse, 3, 21 ], [ "x", 6, 20.8, 0.3 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.inverse, 4, 23 ], [ "x", 10, 22.8, 0.3 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.inverse, 3, 25 ], [ "x", 6, 24.8, 0.3 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.inverse, 1, 27 ], [ "x", -10, 26.8, 0.3 ],
+      [ note_type.normal, 1, 28 ],
+      [ note_type.normal, 1, 29 ],
+      [ note_type.normal, 2, 30 ],
+      [ note_type.normal, 3, 31 ],
+      [ note_type.normal, 4, 32 ],
+      [ note_type.none,   0, 2020 + 60000 / BPMs.tetris * 288, 60000 / BPMs.tetris ],
+      [ "tilt",           -1, 0, 27.5 ],
+      [ note_type.normal, 1, 1 ],
+      [ note_type.normal, 2, 3 ],
+      [ note_type.normal, 4, 4 ],
+      [ note_type.normal, 4, 5 ],
+      [ note_type.normal, 4, 5.5 ],
+      [ note_type.normal, 3, 6 ],
+      [ note_type.normal, 2, 7 ],
+      [ note_type.normal, 1, 8 ],
+      [ note_type.inverse, 2, 9 ], [ "x", -6, 9, 0.3 ],
+      [ note_type.inverse, 1, 10 ], [ "x", -10, 10, 0.3 ],
+      [ note_type.normal, 2, 11 ],
+      [ note_type.normal, 4, 12 ],
+      [ note_type.normal, 1, 13 ],
+      [ note_type.normal, 2, 13.5 ],
+      [ note_type.normal, 3, 14 ],
+      [ note_type.normal, 2, 15 ],
+      [ note_type.normal, 1, 16 ],
+      [ note_type.inverse, 1, 17 ], [ "x", -10, 17, 0.3 ],
+      [ note_type.normal, 1, 18 ],
+      [ note_type.normal, 2, 19 ],
+      [ note_type.normal, 3, 20 ],
+      [ note_type.inverse, 3, 21 ], [ "x", 6, 21, 0.3 ],
+      [ note_type.normal, 4, 22 ],
+      [ note_type.inverse, 4, 23 ], [ "x", 10, 23, 0.3 ],
+      [ note_type.normal, 3, 24 ],
+      [ note_type.inverse, 3, 25 ], [ "x", 6, 25, 0.3 ],
+      [ note_type.normal, 1, 26 ],
+      [ note_type.inverse, 1, 27 ], [ "x", -10, 26.8, 0.3 ],
+      [ note_type.normal, 1, 28 ],
+      [ "lanes",          5, 28, 1.5 ],
+      [ "scalex",         1.25, 28, 1.5 ],
+      [ "scaley",         -1, 28, 1.5 ],
+      [ note_type.inverse, 1, 31 ],
+      [ note_type.inverse, 2, 31 ],
+      [ note_type.inverse, 5, 31 ],
+      [ note_type.inverse, 3, 31 ],
+      [ note_type.inverse, 4, 31 ], [ "y", -30, 30.9, 0.5 ],
+    ],
+  },
+
   beeps: {
     song: "beeps",
     notes: [
@@ -4995,6 +5330,13 @@ for (let i = 0; i < 100; i++) {
   chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.10]);
   chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.15]);
   chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.20]);
+}
+
+for (let i = 0; i < 28; i += 4) {
+  chart_definitions.tetris_2.notes.push([ "scalex",         0.85, i, 5 ]);
+  chart_definitions.tetris_2.notes.push([ "scaley",         0.85, i, 5 ]);
+  chart_definitions.tetris_2.notes.push([ "scalex",         1.05, i + 2, 5 ]);
+  chart_definitions.tetris_2.notes.push([ "scaley",         1.05, i + 2, 5 ]);
 }
 
 export const charts: { [key: string]: Chart } = {}; // to make... if not memory overload? (hmmm)

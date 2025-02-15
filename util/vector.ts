@@ -99,6 +99,9 @@ export const vector = {
   lerp: (v1: vector, v2: vector, t: number): vector => {
     return vector.add(vector.mult(v1, 1 - t), vector.mult(v2, t));
   },
+  lerp_v: (v1: vector, v2: vector, vt: vector): vector => {
+    return vector.create(math.lerp(v1.x, v2.x, vt.x), math.lerp(v1.y, v2.y, vt.y));
+  },
   deg_to_rad: (degrees: number): number => {
     return degrees / 180 * Math.PI;
   },

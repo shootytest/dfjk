@@ -1,4 +1,6 @@
+import { config } from "../settings.js";
 import { canvas } from "./canvas.js";
+import { math } from "./math.js";
 import { vector } from "./vector.js";
 
 export const keys: { [key: string]: boolean } = {};
@@ -24,7 +26,7 @@ export const mouse = {
   buttons: [false, false, false],
   down_buttons: [false, false, false],
   up_buttons: [false, false, false],
-  lanes: [false, false, false, false, false],
+  lanes: [false, false, false, false, false, false, false, false],
   lane_hit: [] as ((lane: number) => void)[],
   lane_release: [] as ((lane: number) => void)[],
   lane_ids: {} as { [key: number]: number },
@@ -120,15 +122,16 @@ export const key = {
     function update_touch_vectors(touches: TouchList, up_or_down: number = 0) {
       if (up_or_down === 0) {
         mouse.touch_vectors = [];
-        mouse.lanes = [true, false, false, false, false];
+        mouse.lanes = [true, false, false, false, false, false, false, false];
       }
       for (const t of touches) {
         const v = vector.create(t.clientX, t.clientY);
-        let lane = 1 + Math.floor(v.x / (window.innerWidth + 1) * 4);
+        let lane = 1 + Math.floor(v.x / (window.innerWidth + 1) * config.lanes);
+        const display_lane = math.lane_hit_x(config.lanes, lane);
         if (up_or_down === 0) { // move
           lane = mouse.lane_ids[t.identifier] ?? lane;
           mouse.touch_vectors.push(v);
-          mouse.lanes[lane] = true;
+          mouse.lanes[display_lane] = true;
         } else if (up_or_down === 1) { // down
           mouse.lane_ids[t.identifier] = lane;
           for (const f of mouse.lane_hit) {

@@ -86,11 +86,17 @@ export const ui = {
         },
     },
     game: {
+        lanes: 4,
+        lanes_target: 4,
+        lanes_smoothness: 0.05,
         tilt: 0,
         tilt_: 0,
         offset: vector.create(0, 0),
         offset_: vector.create(0, 0),
         scale: vector.create(1, 1),
+        scale_target: vector.create(1, 1),
+        scale_smoothness: vector.create(0.05, 0.05),
+        hit_force: 0,
         backing: 0,
         restarting: 0,
     },
@@ -695,28 +701,34 @@ export const ui = {
         ui.game.tilt += tilt * 0.001;
         ui.game.tilt *= 0.90909090909090909;
         ui.game.offset = vector.mult(ui.game.offset, 0.90909090909090909);
+        ui.game.lanes = math.lerp(ui.game.lanes, ui.game.lanes_target, ui.game.lanes_smoothness);
+        ui.game.scale = vector.lerp_v(ui.game.scale, ui.game.scale_target, ui.game.scale_smoothness);
         ctx.save("tilted");
         ctx.translate(v.x, v.y);
         ctx.rotate(ui.game.tilt + ui.game.tilt_);
+        ctx.translate(-v.x, -v.y);
+        ctx.save("scaled");
+        ctx.translate(v.x, v.y);
         ctx.scale(ui.game.scale.x, ui.game.scale.y);
         ctx.translate(-v.x, -v.y);
         let xx = v.x - size.x / 2;
         let yy = v.y - size.y / 2;
-        let lanewidth = size.x / 4;
+        let lanewidth = size.x / ui.game.lanes;
+        let lanes = Math.max(ui.game.lanes_target, math.round(ui.game.lanes + 0.45));
         ctx.fillStyle = color.white;
         ctx.globalAlpha = 0.1;
-        for (let i = 0; i < 4; i++) {
-            if (!chart.lane_pressed[i + 1])
+        for (let i = 1; i <= lanes; i++) {
+            if (!chart.lane_pressed[i])
                 continue;
             ctx.beginPath();
-            x = xx + i * lanewidth;
-            ctx.rect(x, yy, lanewidth, size.y);
+            x = xx + (ui.lane_x(i) - 1) * lanewidth;
+            ctx.rect(x, yy, ui.lane_w(i) * lanewidth, size.y);
             ctx.fill();
         }
         ctx.strokeStyle = color.white;
         ctx.lineWidth = 2;
-        for (let i = 0; i < 5; i++) {
-            x = xx + i * lanewidth;
+        for (let i = 1; i <= lanes + 1; i++) {
+            x = xx + (ui.lane_x(i) - 1) * lanewidth;
             ctx.globalAlpha = 0.6 + 0.2 * Math.abs(i - 2);
             ctx.line(x, yy, x, yy + size.y);
         }
@@ -731,6 +743,7 @@ export const ui = {
         const seems = size.y * (line_offset + 0.2) / notespeed;
         for (const note of Object.values(chart.active_notes)) {
             const time_to = sound.time_to(note.time);
+            const notesize = vector.mult(size, ui.lane_w(note.lane) / ui.game.lanes);
             if (time_to > seems)
                 continue;
             if (note.type === note_type.hold) {
@@ -745,18 +758,21 @@ export const ui = {
                     ctx.globalAlpha = (note.hit === 0 || note.release === 0) ? 0.2 : 0.6;
                 }
                 ctx.beginPath();
-                ctx.round_rectangle(xx + (note.lane - 0.5) * lanewidth, y - (sound.time_to(note.time) + length / 2) * notespeed, lanewidth, size.y * 0.05 + length * notespeed, size.y * 0.02);
+                ctx.round_rectangle(xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - (sound.time_to(note.time) + length / 2) * notespeed, notesize.x, notesize.y * 0.2 + length * notespeed, notesize.y * 0.08);
                 ctx.fill();
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = color.white;
-                ui.draw_note(note_type.normal, xx + (note.lane - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, size);
+                ui.draw_note(note_type.normal, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize);
             }
             if (note.hit >= 0) {
                 const t = -sound.time_to(note.hit_time);
                 if (t < 200) {
+                    if (ui.game.hit_force) {
+                        ui.game.offset.y += ui.game.hit_force;
+                    }
                     ctx.fillStyle = color[["red", "yellow", "green", "blue", "purple"][note.hit]];
                     ctx.globalAlpha = (200 - t) / 300;
-                    ui.draw_note(note.type, xx + (note.lane - 0.5) * lanewidth, y - (time_to + t) * notespeed, size);
+                    ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - (time_to + t) * notespeed, notesize);
                     ctx.globalAlpha = 1;
                 }
                 else if (note.type !== note_type.hold || t > 200 + (note.duration ?? 0)) {
@@ -767,7 +783,7 @@ export const ui = {
                 if (!note.visible)
                     continue;
                 ctx.fillStyle = color.white;
-                ui.draw_note(note.type, xx + (note.lane - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, size);
+                ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize);
                 continue;
             }
         }
@@ -784,14 +800,15 @@ export const ui = {
             }
         }
         ctx.restore("draw_board");
+        ctx.restore("scaled");
         const result = chart.result;
         h = size.y * 0.4;
         y = yy + size.y - h;
         ctx.set_font_mono(h * 0.12);
         ctx.textAlign = "left";
-        x = xx + size.x * 1.1;
+        x = v.x + size.x * Math.abs(ui.game.scale.x) / 2 + size.x * 0.08;
         if (x_constrained) {
-            x = xx + size.x + (ui.width - size.x) / 4;
+            x = v.x + size.x * Math.abs(ui.game.scale.x) / 2 + (ui.width - size.x) / 4;
             ctx.textAlign = "center";
         }
         for (let i = 4; i >= 0; i--) {
@@ -802,20 +819,20 @@ export const ui = {
         if (x_constrained) {
             ctx.set_font_mono(h * 0.15);
             ctx.fillStyle = color["grade_" + Chart.grade(chart.score)];
-            ctx.text("" + chart.score, xx + size.x * 0.5, h * 0.3);
+            ctx.text("" + chart.score, v.x, h * 0.3);
             ctx.set_font_mono(h * 0.2);
             ctx.fillStyle = color["special_" + Chart.special_grade(result)];
-            ctx.text("" + chart.combo, xx + size.x * 0.5, yy + h * 0.3);
+            ctx.text("" + chart.combo, v.x, yy + h * 0.3);
         }
         else {
-            ctx.text("score: " + chart.score, xx + size.x * 1.1, yy + h * 0.2);
-            ctx.text("combo: " + chart.combo, xx + size.x * 1.1, yy + h * 0.4);
+            ctx.text("score: " + chart.score, x, yy + h * 0.2);
+            ctx.text("combo: " + chart.combo, x, yy + h * 0.4);
             ctx.set_font_mono(h * 0.08);
             ctx.textAlign = "left";
-            ctx.text("offset: " + chart.avg_offset.toFixed(2), xx + size.x * 1.1, yy + h * 0.6);
-            ctx.text(chart.notes_played + "/" + chart.total_notes + " notes", xx + size.x * 1.1, yy + h * 0.72);
+            ctx.text("offset: " + chart.avg_offset.toFixed(2), x, yy + h * 0.6);
+            ctx.text(chart.notes_played + "/" + chart.total_notes + " notes", x, yy + h * 0.72);
             y = v.y + size.y / 2 - h;
-            x = v.x - size.x * 0.6;
+            x = v.x - size.x * Math.abs(ui.game.scale.x) / 2 - size.x * 0.08;
             ctx.set_font_mono(h * 0.15, "", "right");
             ctx.fillStyle = color.white;
             ctx.text("max combo", x, y + h * 0.2);
@@ -826,19 +843,21 @@ export const ui = {
         ctx.restore("tilted");
         if (ui.mobile) {
             ctx.save("mobile");
-            w = ui.width / 4;
-            for (let i = 0; i < 4; i++) {
-                ctx.fillStyle = (mouse.lanes[i + 1] ? color.green : color.red);
+            w = ui.width / ui.game.lanes;
+            for (let i = 1; i <= lanes; i++) {
+                x = (ui.lane_x(i) - 1) * w;
+                let ww = ui.lane_w(i) * w;
+                ctx.fillStyle = (mouse.lanes[i] ? color.green : color.red);
                 ctx.globalAlpha = 0.3;
                 ctx.beginPath();
-                ctx.rect(i * w, ui.height - w, w, w);
+                ctx.rect(x, ui.height - w, ww, w);
                 ctx.fill();
-                if (i < 3) {
+                if (ui.lane_x(i) < lanes) {
                     ctx.fillStyle = color.white;
                     ctx.strokeStyle = color.white;
                     ctx.lineWidth = 3;
                     ctx.globalAlpha = 1;
-                    ctx.line(i * w + w, ui.height - w, i * w + w, ui.height);
+                    ctx.line(x + ww, ui.height - w, x + ww, ui.height);
                 }
             }
             w = Math.min(ui.width, ui.height) * 0.2;
@@ -875,22 +894,72 @@ export const ui = {
             ctx.restore("mobile");
         }
     },
+    lane_x: function (i) {
+        if (ui.game.lanes_target === 4)
+            return i;
+        else if (ui.game.lanes_target === 5) {
+            if (i <= 2)
+                return i;
+            if (i <= 4)
+                return ui.game.lanes + 1 - (5 - i);
+            if (i <= 5)
+                return 3;
+            if (i <= 6)
+                return ui.game.lanes + 1;
+        }
+        else if (ui.game.lanes_target === 6) {
+            if (i <= 4)
+                return (ui.game.lanes - 4) / 2 + i;
+            if (i <= 5)
+                return 1;
+            if (i <= 6)
+                return ui.game.lanes;
+            if (i <= 7)
+                return ui.game.lanes + 1;
+        }
+        else if (ui.game.lanes_target === 7) {
+        }
+        return i;
+    },
+    lane_w: function (i) {
+        if (i <= 4)
+            return 1;
+        if (ui.game.lanes_target === 4) {
+            if (i <= 5)
+                return ui.game.lanes - 4;
+            if (i <= 6)
+                return Math.max(0, ui.game.lanes - 5);
+        }
+        else if (ui.game.lanes_target === 5) {
+            if (i <= 5)
+                return ui.game.lanes - 4;
+        }
+        else if (ui.game.lanes_target === 6) {
+            if (i <= 5)
+                return (ui.game.lanes - 4) / 2;
+            if (i <= 6)
+                return (ui.game.lanes - 4) / 2;
+        }
+        else if (ui.game.lanes_target === 7) {
+        }
+        return 1;
+    },
     draw_note: function (type, x, y, size) {
         if (type === note_type.normal || type === note_type.hold) {
             ctx.beginPath();
-            ctx.round_rectangle(x, y, size.x * 0.25, size.y * 0.05, size.y * 0.02);
+            ctx.round_rectangle(x, y, size.x, size.y * 0.2, size.y * 0.08);
             ctx.fill();
         }
         else if (type === note_type.spam) {
             ctx.beginPath();
-            ctx.circle(x, y, size.y * 0.025);
+            ctx.circle(x, y, size.y * 0.1);
             ctx.fill();
         }
         else if (type === note_type.inverse) {
-            const r = size.y * 0.025;
+            const r = size.y * 0.1;
             ctx.beginPath();
             ctx.strokeStyle = ctx.fillStyle;
-            ctx.lineWidth = size.y * 0.01;
+            ctx.lineWidth = size.y * 0.04;
             ctx.line(x - r, y - r, x + r, y + r);
             ctx.line(x + r, y - r, x - r, y + r);
         }
@@ -917,17 +986,44 @@ export const ui = {
         }
         else if (type === "scale_x") {
             ui.game.scale.x = 1 + (e.a - 1) * e.ratio(-time_to);
+            ui.game.scale_target.x = ui.game.scale.x;
         }
         else if (type === "scale_y") {
             ui.game.scale.y = 1 + (e.a - 1) * e.ratio(-time_to);
+            ui.game.scale_target.y = ui.game.scale.y;
+        }
+        else if (type === "scalex") {
+            ui.game.scale_target.x = e.a;
+            ui.game.scale_smoothness.x = 60 / e.duration;
+        }
+        else if (type === "scaley") {
+            ui.game.scale_target.y = e.a;
+            ui.game.scale_smoothness.y = 60 / e.duration;
+        }
+        else if (type === "lanes") {
+            if (Chart.current)
+                Chart.current.lanes = e.a;
+            ui.game.lanes_target = e.a;
+            ui.game.lanes_smoothness = 60 / e.duration;
+            config.lanes = e.a;
+        }
+        else if (type === "hit_force") {
+            ui.game.hit_force = e.a;
         }
     },
     reset_effects: function () {
+        ui.game.lanes = 4;
+        ui.game.lanes_target = 4;
+        config.lanes = 4;
+        ui.game.lanes_smoothness = 0.05;
         ui.game.offset = vector.create();
         ui.game.offset_ = vector.create();
         ui.game.scale = vector.create(1, 1);
+        ui.game.scale_target = vector.create(1, 1);
+        ui.game.scale_smoothness = vector.create(0.05, 0.05);
         ui.game.tilt = 0;
         ui.game.tilt_ = 0;
+        ui.game.hit_force = 0;
     },
     draw_practice: function () {
         w = this.width - 113.2 - 16 * 2;
@@ -1265,6 +1361,9 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.3 | 15-02-2025 | 🎶 6  📊 14 </h3>
+      <p> - added something... you'll see </p>
+      <p> - added medium chart for tetris theme </p>
       <h3> 0.5.2 | 08-02-2025 | 🎶 6  📊 13 </h3>
       <p> - split the practice mode into view mode and practice mode </p>
       <p> - you can actually practice in practice mode now </p>

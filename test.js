@@ -3,8 +3,9 @@ import { key, mouse } from "./util/key.js";
 import { Chart } from "./chart.js";
 import { Sound } from "./sound.js";
 import { ui } from "./ui.js";
-import { scores, settings } from "./settings.js";
+import { config, scores, settings } from "./settings.js";
 import { firebase } from "./firebase.js";
+import { math } from "./util/math.js";
 const main = function () {
     init();
     tick();
@@ -17,6 +18,8 @@ const init = function () {
     ui.init();
     key.add_key_listener("Space", function () {
         if (document.activeElement?.tagName.toLowerCase() === "input")
+            return;
+        if (ui.game.lanes_target % 2 === 1)
             return;
         ui.enter();
     });
@@ -53,13 +56,18 @@ const init = function () {
         if (event.repeat)
             return;
         for (let i = 0; i < 4; i++) {
-            if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
+            if (event.code === "Key" + settings.controls[i].toUpperCase()) {
                 Chart.current?.key_hit(i + 1);
             }
         }
-        if (event.code === "Space") {
+        if (ui.game.lanes_target === 5 && (event.code === "Space" || event.code === "KeyG" || event.code === "KeyH"))
             Chart.current?.key_hit(5);
-        }
+        if (ui.game.lanes_target > 5)
+            for (let i = 5; i <= ui.game.lanes_target; i++) {
+                if (event.code === [0, 1, 2, 3, 4, "KeyS", "KeyL", "Space"][i]) {
+                    Chart.current?.key_hit(i);
+                }
+            }
         if (settings.practice_mode && Chart.current && Sound.current) {
             for (let i = 0; i <= 9; i++) {
                 if (event.code === "Digit" + i) {
@@ -77,19 +85,26 @@ const init = function () {
         if (event.repeat)
             return;
         for (let i = 0; i < 4; i++) {
-            if (event.code === "Key" + settings.controls.toUpperCase()[i]) {
+            if (event.code === "Key" + settings.controls[i].toUpperCase()) {
                 Chart.current?.key_release(i + 1);
             }
         }
-        if (event.code === "Space") {
+        if (ui.game.lanes_target === 5 && (event.code === "Space" || event.code === "KeyG" || event.code === "KeyH"))
             Chart.current?.key_release(5);
-        }
+        if (ui.game.lanes_target > 5)
+            for (let i = 5; i <= ui.game.lanes_target; i++) {
+                if (event.code === [0, 1, 2, 3, 4, "KeyS", "KeyL", "Space"][i]) {
+                    Chart.current?.key_release(i);
+                }
+            }
     });
     key.add_lane_hit(function (lane) {
-        Chart.current?.key_hit(lane);
+        const lanes = config.lanes;
+        Chart.current?.key_hit(math.lane_hit_x(lanes, lane));
     });
     key.add_lane_release(function (lane) {
-        Chart.current?.key_release(lane);
+        const lanes = config.lanes;
+        Chart.current?.key_release(math.lane_hit_x(lanes, lane));
     });
     key.add_key_listener("ArrowUp", function () {
         ui.up();

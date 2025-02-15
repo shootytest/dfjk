@@ -25,6 +25,7 @@ export const settings = {
     }
 };
 export const config = {
+    lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1737861791/dfjk/",
     cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1737807623/dfjk/",
 };
@@ -90,9 +91,9 @@ export const songs = [
         name: "⠞⠧⠶⠳⡇⠼⠗",
         bpm: 74.63,
         types: ["easy", "medium", "hard"],
-        difficulties: [5, -1, -1],
+        difficulties: [5, 9, -1],
         charts: ["tetris_1", "tetris_2", "tetris_3"],
-        notes: [189, 0, 0],
+        notes: [189, 303, 0],
         preview: "tetris_preview",
         image: "tetris.png",
     },
