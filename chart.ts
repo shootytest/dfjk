@@ -226,6 +226,14 @@ export class Chart {
 
   }
 
+  get _score() {
+    let total = 0;
+    for (let i = 0; i < 5; i++) {
+      total += this.result[i] * [0, 0.3, 0.7, 1, 1.01][i];
+    }
+    return total;
+  }
+
   get score() {
     let total = 0;
     for (let i = 0; i < 5; i++) {
@@ -244,6 +252,15 @@ export class Chart {
       total += i;
     }
     return total;
+  }
+
+  get accuracy() {
+    if (this.notes_played <= 0) return 1;
+    else return this.score / 1010000 / this.notes_played * this.total_notes;
+  }
+
+  get highest_score() {
+    return Math.round(1000000 * (this._score + 1.01 * (this.total_notes - this.notes_played)) / this.total_notes);
   }
 
   get avg_offset() {

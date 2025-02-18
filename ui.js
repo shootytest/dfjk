@@ -129,6 +129,8 @@ export const ui = {
         });
         const c8 = gui.add(settings, "play_mode", { normal: "play", practice: "practice", view: "view", edit: "edit" });
         c8.name("play mode");
+        const c9 = gui.add(settings, "display_number", { score: "score", accuracy: "accuracy", "accuracy+": "accuracy+", "highest score": "highest", "predicted": "predict" });
+        c9.name("number display");
         const c7 = gui.add(settings, "controls");
         c7.name("controls");
         settings.play_speed = 1;
@@ -493,6 +495,8 @@ export const ui = {
             }
             ctx.globalAlpha = 1;
         }
+        else {
+        }
         if (index_target_change)
             ui.list_change_index(index_target_change);
     },
@@ -815,16 +819,38 @@ export const ui = {
             ctx.fillStyle = color[["red", "yellow", "green", "blue", "purple"][i]];
             ctx.text((x_constrained ? "" : (["miss", "bad", "good", "perfect", "perfect+"][i] + ": ")) + result[i], x, y + i * h / 5);
         }
-        ctx.fillStyle = "white";
-        if (x_constrained) {
-            ctx.set_font_mono(h * 0.15);
+        ctx.set_font_mono(h * 0.15);
+        let text = "";
+        if (settings.display_number === "score") {
             ctx.fillStyle = color["grade_" + Chart.grade(chart.score)];
-            ctx.text("" + chart.score, v.x, h * 0.3);
+            text = "" + chart.score;
+        }
+        else if (settings.display_number === "accuracy") {
+            ctx.fillStyle = color["grade_" + Chart.grade(chart.accuracy * 1010000)];
+            text = (chart.accuracy * 100).toFixed(2) + "%";
+        }
+        else if (settings.display_number === "accuracy+") {
+            ctx.fillStyle = color["grade_" + Chart.grade(chart.accuracy * 1010000)];
+            text = (chart.accuracy * 101).toFixed(2) + "%";
+        }
+        else if (settings.display_number === "highest") {
+            ctx.fillStyle = color["grade_" + Chart.grade(chart.highest_score)];
+            text = "" + chart.highest_score;
+        }
+        else if (settings.display_number === "predict") {
+            ctx.fillStyle = color["grade_" + Chart.grade(Math.round(chart.accuracy * 1010000))];
+            text = "" + Math.round(chart.accuracy * 1010000);
+        }
+        ctx.text(text, v.x, x_constrained ? h * 0.3 : h * 0.2);
+        if (x_constrained) {
             ctx.set_font_mono(h * 0.2);
             ctx.fillStyle = color["special_" + Chart.special_grade(result)];
             ctx.text("" + chart.combo, v.x, yy + h * 0.3);
         }
         else {
+            ctx.fillStyle = color.white;
+            ctx.set_font_mono(h * 0.12);
+            ctx.textAlign = "left";
             ctx.text("score: " + chart.score, x, yy + h * 0.2);
             ctx.text("combo: " + chart.combo, x, yy + h * 0.4);
             ctx.set_font_mono(h * 0.08);
@@ -1367,6 +1393,10 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.4 | 18-02-2025 | 🎶 6  📊 14 </h3>
+      <p> - added an option in settings to change what statistic the display number shows, and made the display number show up on computer also </p>
+      <p> - types of statistics: score, accuracy, accuracy+ (accuracy considering perfect+ as 101%), highest possible score now, and predicted score based on performance (basically the same as accuracy+ * 1000000)</p>
+      <p> - that's all </p>
       <h3> 0.5.3 | 15-02-2025 | 🎶 6  📊 14 </h3>
       <p> - added something... you'll see </p>
       <p> - added medium chart for tetris theme </p>

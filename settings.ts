@@ -10,6 +10,7 @@ export const settings = {
   line_offset: 0,
   hit_volume: 5,
   play_speed: 1,
+  display_number: "score",
   play_mode: "play",
   controls: "dfjk",
 
