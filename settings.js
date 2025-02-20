@@ -27,8 +27,8 @@ export const settings = {
 };
 export const config = {
     lanes: 4,
-    cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1737861791/dfjk/",
-    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1737807623/dfjk/",
+    cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740076652/dfjk/",
+    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740075693/dfjk/",
 };
 export const main_menu = {};
 export const songs = [
@@ -97,6 +97,17 @@ export const songs = [
         notes: [189, 303, 0],
         preview: "tetris_preview",
         image: "tetris.png",
+    },
+    {
+        id: 6,
+        name: "Happiness",
+        bpm: 126,
+        types: ["easy", "medium", "hard"],
+        difficulties: [-1, -1, -1],
+        charts: ["happiness_1", "happiness_1", "happiness_1"],
+        notes: [0, 0, 0],
+        preview: "happiness_preview",
+        image: "happiness.png",
     },
 ];
 ;
@@ -272,5 +283,45 @@ export const scores = {
     },
     init: () => {
         scores.load();
+    },
+};
+;
+export const requirements = {
+    [6]: {
+        name: "score AA on loneliness",
+        at_least: 1,
+        requirements: ["happiness_1", "happiness_2", "happiness_3"],
+    },
+    happiness_1: {
+        name: "score AA on loneliness easy",
+        at_least: 1,
+        charts: ["loneliness_1"],
+        scores: [950000],
+        combos: [0],
+    },
+    happiness_2: {
+        name: "score AA on loneliness medium",
+        at_least: 1,
+        charts: ["loneliness_2"],
+        scores: [950000],
+        combos: [0],
+    },
+    happiness_3: {
+        name: "score AA on loneliness hard",
+        at_least: 1,
+        charts: ["loneliness_3"],
+        scores: [950000],
+        combos: [0],
+    },
+};
+export const requirement = {
+    check: function (r) {
+        let fulfilled = 0;
+        if ("requirements" in r) {
+            r = r;
+        }
+        else {
+            r = r;
+        }
     },
 };
