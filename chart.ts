@@ -613,6 +613,7 @@ export enum note_type {
 
 export const BPMs: { [key: string]: number } = {
   tetris: 298.5,
+  happiness: 126.0,
 };
 
 export const chart_definitions: { [key: string]: chart_def } = {
@@ -5328,6 +5329,14 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.inverse, 5, 31 ],
       [ note_type.inverse, 3, 31 ],
       [ note_type.inverse, 4, 31 ], [ "y", -30, 30.9, 0.5 ],
+    ],
+  },
+  
+  happiness_1: {
+    song: "happiness",
+    notes: [
+      [ note_type.none,   0, 2000 + 60000 / BPMs.happiness * 0, 60000 / BPMs.happiness ],
+      [ note_type.normal, 4, 0 ],
     ],
   },
 

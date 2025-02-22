@@ -6,7 +6,7 @@ import dat from "./dat.js";
 import { firebase } from "./firebase.js";
 import { math } from "./util/math.js";
 import { key, mouse } from "./util/key.js";
-import { scores, settings, songs, chart_map, config, Score } from "./settings.js";
+import { scores, settings, songs, chart_map, config, Score, requirement, requirements } from "./settings.js";
 
 // globals, why not?
 let x: number, y: number, w: number, h: number;
@@ -357,6 +357,8 @@ export const ui = {
       const song = songs[ii];
       const type_target = Math.min(ui.list.type_target, song.types.length - 1);
       const score = scores.map[song.charts[type_target]]?.[0];
+      const req = requirements[song.charts[type_target]];
+      let locked = false;
       const angle = 0.32 * -((Math.round(index_circle) - index_circle) - 1 + i);
       if (x_constrained) ctx.translate(v.x, v.y / 2 - r * 1.05);
       else ctx.translate(v.x - 0.35 * r, v.y - r * 1.05);
@@ -373,6 +375,21 @@ export const ui = {
         ctx.text(`combo: ${score.max_combo}/${song.notes[type_target]}`, 0, r * 1.115 + rr);
         // ctx.text("rating: " + score.skill.toFixed(2), 0, r * 1.088 + rr);
         ctx.strokeStyle = color["grade_" + Chart.grade(score.value)];
+      } else if (!requirement.check(req)) {
+        locked = true;
+        ctx.fillStyle = color.purple;
+        ctx.set_font_mono(r * 0.025);
+        ctx.text("locked", 0, r * 1.04 + rr);
+        ctx.set_font_mono(r * 0.02);
+        ctx.text(req.name, 0, r * 1.08 + rr);
+        ctx.strokeStyle = color.purple;
+      } else if (req) {
+        ctx.fillStyle = color.green;
+        ctx.set_font_mono(r * 0.025);
+        ctx.text("unlocked!", 0, r * 1.04 + rr);
+        ctx.set_font_mono(r * 0.02);
+        ctx.text(req.name, 0, r * 1.08 + rr);
+        ctx.strokeStyle = color.grade_Z;
       } else {
         ctx.fillStyle = diff < 0 ? color.red : color.yellow;
         ctx.set_font_mono(r * 0.025);
@@ -399,9 +416,19 @@ export const ui = {
       ctx.clip();
 
       ctx.translate(0, r);
-      if (rotato) ctx.rotate(ui.time * 0.5); // todo better effect (but it works for now)
-      ctx.draw_image(ui.images[songs[ii].image], -0.15 * r, -0.15 * r, 0.3 * r, 0.3 * r);
-
+      
+      if (locked) {
+        ctx.fillStyle = color.purple;
+        ctx.svg("lock", 0, 0, r * 0.16);
+      } else {
+        if (rotato) ctx.rotate(ui.time * 0.5); // todo better effect (but it works for now)
+        ctx.draw_image(ui.images[songs[ii].image], -0.15 * r, -0.15 * r, 0.3 * r, 0.3 * r);
+        if (req && !score) {
+          ctx.fillStyle = color.green;
+          ctx.svg("unlock", 0, 0, r)
+        }
+      }
+      
       // reset :(
       ctx.resetTransform();
       ctx.restore("draw_list_left");
@@ -592,10 +619,12 @@ export const ui = {
   list_enter: function() {
     if (ui.menu !== "list") return;
     const song = songs[ui.list.index_target];
+    const chart_name = song.charts[settings.current_chart.song_type];
     settings.current_chart.song_id = song.id;
     settings.current_chart.song_type = Math.min(ui.list.type_target, song.charts.length - 1);
-    settings.current_chart.chart_name = song.charts[settings.current_chart.song_type];
+    settings.current_chart.chart_name = chart_name;
     if (song.difficulties[settings.current_chart.song_type] === -1) return;
+    if (!requirement.check(requirements[chart_name])) return;
     ui.list.playing.pause();
     ui.list.playing.reset();
     ui.menu = "game";
@@ -1698,7 +1727,6 @@ export const ui = {
     mouse.up_buttons[0] = false;
     mouse.down_position[0] = vector.create(-1000, -1000);
   },
-
 
   resize: function() {
     ui.width = window.innerWidth;

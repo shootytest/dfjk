@@ -104,7 +104,7 @@ export const songs = [
         bpm: 126,
         types: ["easy", "medium", "hard"],
         difficulties: [-1, -1, -1],
-        charts: ["happiness_1", "happiness_1", "happiness_1"],
+        charts: ["happiness_1", "happiness_2", "happiness_3"],
         notes: [0, 0, 0],
         preview: "happiness_preview",
         image: "happiness.png",
@@ -287,7 +287,7 @@ export const scores = {
 };
 ;
 export const requirements = {
-    [6]: {
+    ["6"]: {
         name: "score AA on loneliness",
         at_least: 1,
         requirements: ["happiness_1", "happiness_2", "happiness_3"],
@@ -316,12 +316,35 @@ export const requirements = {
 };
 export const requirement = {
     check: function (r) {
+        if (r == undefined)
+            return true;
         let fulfilled = 0;
         if ("requirements" in r) {
             r = r;
+            for (const s of r.requirements) {
+                if (requirement.check(typeof s === "string" ? requirements[s] : s))
+                    fulfilled += 1;
+                if (fulfilled >= r.at_least)
+                    return true;
+            }
         }
         else {
             r = r;
+            for (let i = 0; i < r.charts.length; i++) {
+                const k = r.charts[i];
+                const scorelist = scores.map[k];
+                if (scorelist == undefined || scorelist.length <= 0)
+                    continue;
+                for (const s of scorelist) {
+                    if (s.value >= r.scores[i] && s.max_combo >= r.combos[i]) {
+                        fulfilled += 1;
+                        break;
+                    }
+                }
+                if (fulfilled >= r.at_least)
+                    return true;
+            }
         }
+        return false;
     },
 };
