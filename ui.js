@@ -553,9 +553,9 @@ export const ui = {
         if (ui.menu !== "list")
             return;
         const song = songs[ui.list.index_target];
-        const chart_name = song.charts[settings.current_chart.song_type];
         settings.current_chart.song_id = song.id;
         settings.current_chart.song_type = Math.min(ui.list.type_target, song.charts.length - 1);
+        const chart_name = song.charts[settings.current_chart.song_type];
         settings.current_chart.chart_name = chart_name;
         if (song.difficulties[settings.current_chart.song_type] === -1)
             return;

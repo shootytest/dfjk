@@ -74,7 +74,7 @@ export const ui = {
   gui: new dat.GUI(),
 
   menu: "main",
-  
+
   main: {
     index: 0,
     index_target: 0,
@@ -192,7 +192,7 @@ export const ui = {
     ui.time++;
   
   },
-  
+
   check_hover: function(hover_f: () => void) {
     if (ctx.point_in_path_v(mouse)) {
       hover_f();
@@ -207,7 +207,7 @@ export const ui = {
       }
     }
   },
-  
+
   draw: function() {
 
     ctx.clear(color.black);
@@ -244,7 +244,7 @@ export const ui = {
     }
     
   },
-  
+
   draw_main: function(v: vector) {
     
     const size = { x: ui.width, y: ui.height };
@@ -298,7 +298,7 @@ export const ui = {
     ui.check_click(ui.enter);
     
   },
-  
+
   main_enter: function() {
     const i = ui.main.index_target;
     if (i === 0) {
@@ -619,9 +619,9 @@ export const ui = {
   list_enter: function() {
     if (ui.menu !== "list") return;
     const song = songs[ui.list.index_target];
-    const chart_name = song.charts[settings.current_chart.song_type];
     settings.current_chart.song_id = song.id;
     settings.current_chart.song_type = Math.min(ui.list.type_target, song.charts.length - 1);
+    const chart_name = song.charts[settings.current_chart.song_type];
     settings.current_chart.chart_name = chart_name;
     if (song.difficulties[settings.current_chart.song_type] === -1) return;
     if (!requirement.check(requirements[chart_name])) return;
@@ -632,7 +632,7 @@ export const ui = {
     ui.game.restarting = 0;
     ui.reset_effects();
   },
-  
+
   enter: function() {
     if (ui.close_boxes()) return;
     if (ui.menu === "main") {
@@ -663,7 +663,7 @@ export const ui = {
       }
     }
   },
-  
+
   restart: function() {
     if (ui.menu === "game" && Sound.current && Sound.current?.play_timestamp > -1) {
       ui.game.restarting = 0;
@@ -673,7 +673,7 @@ export const ui = {
       sfxr.play(sound);
     }
   },
-  
+
   back: function() {
     if (ui.close_boxes()) return;
     if (ui.menu === "list") {
@@ -1010,7 +1010,7 @@ export const ui = {
     }
 
   },
-  
+
   lane_x: function(i: number): number {
     if (ui.game.lanes_target === 4) return i;
     else if (ui.game.lanes_target === 5) {
@@ -1209,7 +1209,7 @@ export const ui = {
     }
 
   },
-  
+
   make_toplist: function(uid?: string, name?: string) {
     if (document.getElementById("toplist")) {
       document.body.removeChild(document.getElementById("toplist")!)
@@ -1280,7 +1280,7 @@ export const ui = {
     if (uid) firebase.get_toplist(uid, fn);
     else fn(scores.get_list(), false);
   },
-  
+
   make_toplist_chart: function(chart_name: string, leaderboard: boolean = false) {
     if (document.getElementById("toplist_chart")) {
       document.body.removeChild(document.getElementById("toplist_chart")!)
@@ -1391,7 +1391,7 @@ export const ui = {
       ui.hide_box("toplist_chart");
     });
   },
-  
+
   make_leaderboard: function() {
     if (document.getElementById("leaderboard")) {
       document.body.removeChild(document.getElementById("leaderboard")!)
@@ -1712,15 +1712,15 @@ export const ui = {
     }
     return false;
   },
-  
+
   check_box: function(id: string) {
     return document?.getElementById(id)?.classList?.contains("hide") === false;
   },
-  
+
   show_box: function(id: string) {
     document?.getElementById(id)?.classList?.remove("hide");
   },
-  
+
   hide_box: function(id: string) {
     document?.getElementById(id)?.classList?.add("hide");
   },
@@ -1736,7 +1736,7 @@ export const ui = {
     ui.width = window.innerWidth;
     ui.height = window.innerHeight;
   },
-  
+
   mobile: key.mobile,
 
 
