@@ -386,7 +386,7 @@ export const ui = {
                 ctx.draw_image(ui.images[songs[ii].image], -0.15 * r, -0.15 * r, 0.3 * r, 0.3 * r);
                 if (req && !score) {
                     ctx.fillStyle = color.green;
-                    ctx.svg("unlock", 0, 0, r);
+                    ctx.svg("unlock", 0, 0, r * 0.15);
                 }
             }
             ctx.resetTransform();
@@ -1420,11 +1420,15 @@ export const ui = {
         <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
         <p><a href="https://kadthemusiclad.bandcamp.com/track/dusk-approach" target="_blank"><span> Dusk approach <l></l></span><span> kad </span></a></p>
         <p><a href="https://youtu.be/NmCCQxVBfyM" target="_blank"><span> ⠞⠧⠶⠳⡇⠼⠗ <l></l></span><span> folk / Hip Tanaka </span></a></p>
+        <p><a href="https://music.apple.com/sg/song/happiness/698628232" target="_blank"><span> Happiness <l></l></span><span> Lin Hai </span></a></p>
         <h3 style="text-align: center;"> Images </h3>
         <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.5 | 22-02-2025 | 🎶 7  📊 14 </h3>
+      <p> - added new song: <a href="${config.cdn_v}happiness.mp3" target="_blank">Happiness</a> </p>
+      <p> - added unlock conditions to the new song (related to loneliness) and to piano_music_01.mp3 extreme</p>
       <h3> 0.5.4 | 18-02-2025 | 🎶 6  📊 14 </h3>
       <p> - added an option in settings to change what statistic the display number shows, and made the display number show up on computer also </p>
       <p> - types of statistics: score, accuracy, accuracy+ (accuracy considering perfect+ as 101%), highest possible score now, and predicted score based on performance (basically the same as accuracy+ * 1000000)</p>

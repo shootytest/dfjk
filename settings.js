@@ -292,26 +292,29 @@ export const requirements = {
         at_least: 1,
         requirements: ["happiness_1", "happiness_2", "happiness_3"],
     },
+    saloon_4: {
+        name: "score AA on piano_music_01.mp3 hard",
+        at_least: 1,
+        charts: ["saloon_3"],
+        scores: [950000],
+    },
     happiness_1: {
         name: "score AA on loneliness easy",
         at_least: 1,
         charts: ["loneliness_1"],
         scores: [950000],
-        combos: [0],
     },
     happiness_2: {
         name: "score AA on loneliness medium",
         at_least: 1,
         charts: ["loneliness_2"],
         scores: [950000],
-        combos: [0],
     },
     happiness_3: {
         name: "score AA on loneliness hard",
         at_least: 1,
         charts: ["loneliness_3"],
         scores: [950000],
-        combos: [0],
     },
 };
 export const requirement = {
@@ -336,7 +339,7 @@ export const requirement = {
                 if (scorelist == undefined || scorelist.length <= 0)
                     continue;
                 for (const s of scorelist) {
-                    if (s.value >= r.scores[i] && s.max_combo >= r.combos[i]) {
+                    if (s.value >= (r.scores?.[i] ?? 0) && s.max_combo >= (r.combos?.[i] ?? 0) && s.special >= (r.specials?.[i] ?? 0)) {
                         fulfilled += 1;
                         break;
                     }
