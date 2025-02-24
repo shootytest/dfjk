@@ -36,7 +36,7 @@ const init = function () {
     key.add_key_listener("Backquote", function () {
         if (Sound.current) {
             ui.restart();
-            Sound.current.element.currentTime = 6.442953 * 8 + 0.201342 * 0;
+            Sound.current.element.currentTime = 7.61904762 * 20 + 0.4762 * 0;
         }
     });
     key.add_key_listener("Backspace", function () {

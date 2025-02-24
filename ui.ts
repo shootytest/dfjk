@@ -624,7 +624,7 @@ export const ui = {
     const chart_name = song.charts[settings.current_chart.song_type];
     settings.current_chart.chart_name = chart_name;
     if (song.difficulties[settings.current_chart.song_type] === -1) return;
-    if (!requirement.check(requirements[chart_name])) return;
+    if (!requirement.check(requirements[chart_name]) && window.location.hostname !== "127.0.0.1") return;
     ui.list.playing.pause();
     ui.list.playing.reset();
     ui.menu = "game";
@@ -1477,6 +1477,8 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.6 | 24-02-2025 | 🎶 7  📊 15 </h3>
+      <p> - added medium chart for happiness (score AA on loneliness easy to unlock it) </p>
       <h3> 0.5.5 | 22-02-2025 | 🎶 7  📊 14 </h3>
       <p> - added new song: <a href="${config.cdn_v}happiness.mp3" target="_blank">Happiness</a> </p>
       <p> - added unlock conditions to the new song (related to loneliness) and to piano_music_01.mp3 extreme</p>

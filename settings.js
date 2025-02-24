@@ -28,7 +28,7 @@ export const settings = {
 export const config = {
     lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740076652/dfjk/",
-    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740075693/dfjk/",
+    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740320108/dfjk/",
 };
 export const main_menu = {};
 export const songs = [
@@ -103,7 +103,7 @@ export const songs = [
         name: "Happiness",
         bpm: 126,
         types: ["easy", "medium", "hard"],
-        difficulties: [-1, -1, -1],
+        difficulties: [-1, 9, -1],
         charts: ["happiness_1", "happiness_2", "happiness_3"],
         notes: [0, 0, 0],
         preview: "happiness_preview",
@@ -287,30 +287,25 @@ export const scores = {
 };
 ;
 export const requirements = {
-    ["6"]: {
-        name: "score AA on loneliness",
-        at_least: 1,
-        requirements: ["happiness_1", "happiness_2", "happiness_3"],
-    },
     saloon_4: {
         name: "score AA on piano_music_01.mp3 hard",
         at_least: 1,
         charts: ["saloon_3"],
         scores: [950000],
     },
-    happiness_1: {
+    happiness_2: {
         name: "score AA on loneliness easy",
         at_least: 1,
         charts: ["loneliness_1"],
         scores: [950000],
     },
-    happiness_2: {
+    happiness_3: {
         name: "score AA on loneliness medium",
         at_least: 1,
         charts: ["loneliness_2"],
         scores: [950000],
     },
-    happiness_3: {
+    happiness_4: {
         name: "score AA on loneliness hard",
         at_least: 1,
         charts: ["loneliness_3"],
