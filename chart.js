@@ -1,5 +1,5 @@
 import { firebase } from "./firebase.js";
-import { scores, settings, songs, skill_rate_data, special_skill_rate_data } from "./settings.js";
+import { chart_map, scores, settings, skill_rate_data, special_skill_rate_data } from "./settings.js";
 import { Sound, sounds } from "./sound.js";
 import { ui } from "./ui.js";
 import { key, mouse } from "./util/key.js";
@@ -286,10 +286,10 @@ export class Chart {
         return this.total_offset / this.number_offset;
     }
     get difficulty_type() {
-        return songs[this.metadata.song_id].types[this.metadata.song_type];
+        return chart_map[this.metadata.chart_name].song_type;
     }
     get difficulty_number() {
-        return songs[this.metadata.song_id].difficulties[this.metadata.song_type];
+        return chart_map[this.metadata.chart_name].song_difficulty;
     }
     tick() {
         if ((this.practicing || this.viewing) && this.sound.seeked) {

@@ -269,11 +269,11 @@ export class Chart {
   }
   
   get difficulty_type() {
-    return songs[this.metadata.song_id].types[this.metadata.song_type];
+    return chart_map[this.metadata.chart_name].song_type;
   }
 
   get difficulty_number() {
-    return songs[this.metadata.song_id].difficulties[this.metadata.song_type];
+    return chart_map[this.metadata.chart_name].song_difficulty;
   }
   
   tick() {

@@ -85,6 +85,17 @@ export const songs = [
     image: "loneliness.jpg",
   },
   {
+    id: 6,
+    name: "Happiness",
+    bpm: 126,
+    types: ["easy", "medium", "hard"],
+    difficulties: [-1, 9, -1],
+    charts: ["happiness_1", "happiness_2", "happiness_3"],
+    notes: [0, 600, 0],
+    preview: "happiness_preview",
+    image: "happiness.png",
+  },
+  {
     id: 4,
     name: "dusk approach",
     bpm: 90,
@@ -106,17 +117,6 @@ export const songs = [
     preview: "tetris_preview",
     image: "tetris.png",
   },
-  {
-    id: 6,
-    name: "Happiness",
-    bpm: 126,
-    types: ["easy", "medium", "hard"],
-    difficulties: [-1, 9, -1],
-    charts: ["happiness_1", "happiness_2", "happiness_3"],
-    notes: [0, 0, 0],
-    preview: "happiness_preview",
-    image: "happiness.png",
-  },
 ];
 
 export interface chart_metadata {
@@ -127,6 +127,7 @@ export interface chart_metadata {
 
 export interface chart_metadata_2 {
   chart_name: string,
+  song_name: string,
   song_id: number,
   song_type: string,
   song_difficulty: number,
@@ -139,6 +140,7 @@ for (const song of songs) {
     const name = song.charts[i];
     chart_map[name] = {
       chart_name: name,
+      song_name: song.name,
       song_id: id,
       song_type: song.types[i],
       song_difficulty: song.difficulties[i],

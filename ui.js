@@ -471,7 +471,10 @@ export const ui = {
             ctx.fill();
             ctx.globalAlpha = 1;
             ctx.set_font_mono(h * 0.4);
-            ctx.text("" + Math.floor(song.difficulties[type_target]), h / 2 - w / 2, 0);
+            let difftext = "" + Math.floor(song.difficulties[type_target]);
+            if (difftext === "-1")
+                difftext = "✖";
+            ctx.text(difftext, h / 2 - w / 2, 0);
             const grade = Chart.grade(score?.value ?? 0);
             ctx.fillStyle = color["grade_" + grade];
             ctx.globalAlpha = 0.1;
@@ -695,8 +698,8 @@ export const ui = {
         const chart = Chart.current;
         const sound = Sound.current;
         if (!chart || !sound) {
-            const difftype = songs[settings.current_chart.song_id].types[settings.current_chart.song_type];
-            const diffnumber = songs[settings.current_chart.song_id].difficulties[settings.current_chart.song_type];
+            const difftype = chart_map[settings.current_chart.chart_name].song_type;
+            const diffnumber = chart_map[settings.current_chart.chart_name].song_difficulty;
             const h = Math.min(150, Math.min(ui.width * 0.2, r * 0.3));
             ctx.set_font_mono(h * 0.6);
             ctx.fillStyle = color.white;
@@ -1191,7 +1194,7 @@ export const ui = {
                 const tdy = dt.toLocaleDateString("en-SG") === d.toLocaleDateString("en-SG");
                 tr.innerHTML = `
           <td>${i + 1}</td>
-          <td>${songs[chart.song_id].name}</td>
+          <td>${chart.song_name}</td>
           <td style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type}</td>
           <td style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_difficulty}</td>
           <td style="color: ${color["grade_" + gr]};">${score.value}</td>
@@ -1233,7 +1236,6 @@ export const ui = {
         main.classList.add("centerbox");
         document.body.appendChild(main);
         const chart = chart_map[chart_name];
-        const song = songs[chart.song_id];
         if (leaderboard) {
             main.innerHTML = `<p> loading leaderboard... </p>`;
             firebase.get_scores(chart_name, (leaderboard) => {
@@ -1255,7 +1257,7 @@ export const ui = {
                 }
                 else {
                     main.innerHTML = `
-            <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: leaderboard </h3>
+            <h3> ${chart.song_name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: leaderboard </h3>
             <table id="chair_chart" style="margin-left: auto; margin-right: auto;">
               <tr><th>#</th><th>username</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
             </table>
@@ -1295,7 +1297,7 @@ export const ui = {
             const list = scores.map[chart_name];
             if (!list || list.length === 0) {
                 main.innerHTML = `
-          <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
+          <h3> ${chart.song_name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
           <br><p> not played yet </p><br>
           <p> <button id="switch"> switch to leaderboard </button> </p>
         `;
@@ -1303,7 +1305,7 @@ export const ui = {
             else {
                 list?.sort(scores.compare_fn);
                 main.innerHTML = `
-          <h3> ${song.name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
+          <h3> ${chart.song_name} <span style="color: ${color["difficulty_" + chart.song_type]};">${chart.song_type} ${chart.song_difficulty}</span>: scores </h3>
           <table id="chair_chart" style="margin-left: auto; margin-right: auto;">
             <tr><th>#</th><th>score</th><th colspan="2">grade</th><th>max<br>combo</th><th>skill</th><th>date</th></tr>
           </table>
@@ -1548,7 +1550,7 @@ export const ui = {
       <h3> 0.0.0 | 09-12-2024 | 🎶 0  📊 0 </h3>
       <p> - site created! </p>
       <h3> 0.0.-1 | 09-12-2024 | 🎶 -1  📊 -1 </h3>
-      <p> - actually created in version 4.1.0 or something </p>
+      <p> - actually created in version 0.4.1 or something </p>
       <p> <button id="store_data"> save data </button> </p>
       <p> <button id="load_data"> load data </button> </p>
       <p> <button id="clear_data"> clear data </button> </p>
