@@ -1478,6 +1478,8 @@ export const ui = {
       </div>
       <h1> Versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.7 | 26-02-2025 | 🎶 7  📊 16 </h3>
+      <p> - added easy chart for happiness :) </p>
       <h3> 0.5.6 | 24-02-2025 | 🎶 7  📊 15 </h3>
       <p> - added medium chart for happiness (score AA on loneliness easy to unlock it) </p>
       <h3> 0.5.5 | 22-02-2025 | 🎶 7  📊 14 </h3>
