@@ -31,8 +31,8 @@ export const settings = {
 
 export const config = {
   lanes: 4,
-  cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740076652/dfjk/",
-  cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740320108/dfjk/",
+  cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740795348/dfjk/",
+  cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740795344/dfjk/",
 };
 
 export const main_menu = {
@@ -56,7 +56,7 @@ export const songs = [
     name: "piano_music_01.mp3",
     bpm: 121.5,
     types: ["easy", "medium", "hard", "extreme"],
-    difficulties: [3, 6, 15, 48],
+    difficulties: [3, 6, 17, 48],
     charts: ["saloon_1", "saloon_2", "saloon_3", "saloon_4"],
     notes: [100, 148, 228, 390],
     preview: "saloon_preview",
@@ -116,6 +116,17 @@ export const songs = [
     notes: [189, 303, 0],
     preview: "tetris_preview",
     image: "tetris.png",
+  },
+  {
+    id: 7,
+    name: "🧪🥧✳️",
+    bpm: 120,
+    types: ["easy", "medium", "hard"],
+    difficulties: [2, -1, -1],
+    charts: ["nush_1", "nush_2", "nush_3"],
+    notes: [173, 0, 0],
+    preview: "nush_preview",
+    image: "nush.jpg",
   },
 ];
 
@@ -345,7 +356,7 @@ export const requirements: { [key: string]: Lock } = {
     requirements: ["happiness_1", "happiness_2", "happiness_3"],
   },*/
   saloon_4: {
-    name: "score AA on piano_music_01.mp3 hard",
+    name: "score AA on this song's hard",
     at_least: 1,
     charts: ["saloon_3"],
     scores: [950000],
@@ -368,12 +379,25 @@ export const requirements: { [key: string]: Lock } = {
     charts: ["loneliness_3"],
     scores: [950000],
   },
+  nush_2: {
+    name: "???",
+    at_least: 1,
+    charts: ["nush_2"],
+    scores: [1],
+  },
+  nush_3: {
+    name: "???",
+    at_least: 1,
+    charts: ["nush_3"],
+    scores: [1],
+  },
 };
 
 export const requirement = {
 
   check: function(r?: Lock) {
     if (r == undefined) return true;
+    if (r.at_least <= 0) return true;
     let fulfilled = 0;
     if ("requirements" in r) {
       r = r as Requirements;

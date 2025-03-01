@@ -184,6 +184,8 @@ export const sounds = {
     tetris_preview: new Sound("tetris.mp3", 0.4, 2020, 14880),
     happiness: new Sound("happiness.mp3", 0.7),
     happiness_preview: new Sound("happiness.mp3", 0.7, 32370, 62864),
+    nush: new Sound("nush.mp3", 0.6),
+    nush_preview: new Sound("nush.mp3", 0.6, 10000, 26000),
 };
 const sfx_make = {
     hit: "111118CvBfBFjoUuukiKaP7emd7z4u3mbuxJGrb7zny1cJghYj9Ri4puRHguBYi1EEJFExsnakGq55F6MNZZo9Tt5p5QhqC16R6s4Ssj9v2yEbQqptiLtqAo",

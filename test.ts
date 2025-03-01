@@ -40,7 +40,8 @@ const init = function() {
       ui.restart();
       // Sound.current.element.currentTime = 15.975 * 0 + 0.1248 * 0; // loneliness
       // Sound.current.element.currentTime = 6.442953 * 8 + 0.201342 * 0; // tetris
-      Sound.current.element.currentTime = 7.61904762 * 20 + 0.4762 * 0; // happiness
+      Sound.current.element.currentTime = 7.61904762 * 6 + 0.4762 * 0; // happiness
+      Sound.current.element.currentTime = 8 * 9 + 0.5 * 0; // nush
     }
   });
   key.add_key_listener("Backspace", function() {
