@@ -26,6 +26,7 @@ export const settings = {
     }
 };
 export const config = {
+    charts: 18,
     lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740795348/dfjk/",
     cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740795344/dfjk/",

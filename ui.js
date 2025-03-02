@@ -65,7 +65,7 @@ export const ui = {
         index: 0,
         index_target: 0,
         svg: ["play", "toplist", "leaderboard", "about", "account"],
-        text: ["play!", "top performance", "leaderboard", "info", "account"],
+        text: ["play!", "stats", "leaderboard", "info", "account"],
         color: ["green", "blue", "yellow", "white", "purple"],
     },
     list: {
@@ -1181,17 +1181,28 @@ export const ui = {
       <table id="chair" style="margin: 0 auto;">
         <tr><th>#</th><th>name</th><th colspan="2">diff</th><th>score</th><th colspan="2">grade</th><th>skill</th><th>date</th></tr>
       </table>
+      <p>total score: <span id="totalscore"></span></p>
+      <p>
+        <span style="color: ${color["special_FC"]};">FC <span id="special1"></span></span><br>
+        <span style="color: ${color["special_FC+"]};">FC+ <span id="special2"></span></span><br>
+        <span style="color: ${color["special_AP"]};">AP <span id="special3"></span></span><br>
+        <span style="color: ${color["special_AP+"]};">AP+ <span id="special4"></span></span><br>
+      </p>
     `;
         const table = document.getElementById("chair");
         const fn = function (list, others = true) {
             list.sort(scores.compare_fn);
-            let total = 0;
+            let totalskill = 0;
+            let totalscore = 0;
+            let special_count = [0, 0, 0, 0, 0];
             for (let i = 0; i < list.length; i++) {
                 const score = list[i];
                 const chart = chart_map[score.chart];
                 const tr = document.createElement("tr");
                 const gr = Chart.grade(score.value);
                 const sp = Chart.special_grades[score.special];
+                for (let j = 0; j <= score.special; j++)
+                    special_count[j]++;
                 const d = new Date();
                 const dt = new Date(score.time ?? (1735689599999 + d.getTimezoneOffset() * 60000));
                 const tdy = dt.toLocaleDateString("en-SG") === d.toLocaleDateString("en-SG");
@@ -1207,11 +1218,20 @@ export const ui = {
           <td title="${dt.toLocaleTimeString("en-SG")}">${tdy ? dt.toLocaleTimeString("en-SG") : dt.toLocaleDateString("en-SG")}</td>
         `;
                 table.appendChild(tr);
-                total += score.skill;
+                totalskill += score.skill;
+                totalscore += score.value;
             }
             const span_skill = document.getElementById("totalskill");
-            span_skill.textContent = total.toFixed(3);
-            span_skill.title = "" + total;
+            span_skill.textContent = totalskill.toFixed(3);
+            span_skill.title = "" + totalskill;
+            const span_score = document.getElementById("totalscore");
+            span_score.textContent = totalscore.toFixed(0);
+            span_score.title = "" + totalscore;
+            for (let j = 1; j <= 4; j++) {
+                const span_special = document.getElementById("special" + j);
+                span_special.textContent = special_count[j] + "/" + config.charts;
+                span_special.title = "" + special_count[j];
+            }
             if (ui.mobile)
                 main.addEventListener("click", function () {
                     ui.cancel_click();
@@ -1445,14 +1465,14 @@ export const ui = {
       <h1> credits </h1>
       <div style="text-align: left;" id="real_credits">
         <h3 style="text-align: center;"> music </h3>
-        <p style="width: max(40vw, 50ch);"><a href="https://squirkymusic.sourceaudio.com/track/25689665" target="_blank"><span> piano_music_01.mp3 <l></l></span><span> Crispin Merrell </span></a></p>
+        <p><a href="https://squirkymusic.sourceaudio.com/track/25689665" target="_blank"><span> piano_music_01.mp3 <l></l></span><span> Crispin Merrell </span></a></p>
         <p><a href="https://youtu.be/fCNQMJba86A" target="_blank"><span> Deep Under <l></l></span><span> Whitesand </span></a></p>
         <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
         <p><a href="https://kadthemusiclad.bandcamp.com/track/dusk-approach" target="_blank"><span> Dusk approach <l></l></span><span> kad </span></a></p>
         <p><a href="https://youtu.be/NmCCQxVBfyM" target="_blank"><span> ⠞⠧⠶⠳⡇⠼⠗ <l></l></span><span> folk / Hip Tanaka </span></a></p>
         <p><a href="https://music.apple.com/sg/song/happiness/698628232" target="_blank"><span> Happiness <l></l></span><span> Lin Hai </span></a></p>
         <h3 style="text-align: center;"> images </h3>
-        <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> level 40's congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
+        <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
