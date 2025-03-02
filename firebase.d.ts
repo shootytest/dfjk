@@ -27,6 +27,8 @@ export declare namespace firebase {
   function login_goggle_user(username: string): void;
   function logout_user(clear_scores: boolean, resolve_fn: () => void = () => {}): void;
 
+  function add_to_scorelist(score: Score): void;
+
   function save_scores(uid: string): Promise<void>;
   function merge_scores(other_map: { [key: string]: Score[] }): { [key: string]: Score[] };
   function update_scores(fn: () => void = () => {}): void;

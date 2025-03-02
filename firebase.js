@@ -190,18 +190,12 @@ export const firebase = {
   },
   bare_transaction: (path, setter_function) => {
     runTransaction(ref(db, path), (old_data) => {
-      if (old_data == null) {
-        return null;
-      }
       return setter_function(old_data);
     });
   },
   transaction: (path, setter_function) => {
     firebase.get(path, (_) => { // _ = unused locally cached data
       runTransaction(ref(db, path), (old_data) => {
-        if (old_data == null) {
-          return null;
-        }
         return setter_function(old_data);
       });
     });
@@ -243,6 +237,17 @@ export const firebase = {
         display_result(`failed to log out for some reason! (check console)`, color.red);
         console.error(error);
       });
+  },
+
+  add_to_scorelist: function(score) {
+    const uid = firebase.user?.uid;
+    firebase.bare_transaction("/scorelist/", function(scorelist) {
+      scorelist = scorelist ?? [];
+      const s = score;
+      if (uid) s.user = uid;
+      scorelist.push(s);
+      return scorelist;
+    });
   },
 
   save_scores: function(uid) {

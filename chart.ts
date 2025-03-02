@@ -357,19 +357,21 @@ export class Chart {
     const special = (this.notes_played === this.total_notes) ? (Chart.special_grade_number(this.result)) : 0;
     const skill = Chart.skill_rate(this.difficulty_number, this.score, special);
     if ((Sound.current?.element?.playbackRate ?? 0) >= 1) {
-      scores.add({
+      const o = {
         chart: this.metadata.chart_name,
         value: this.score,
         max_combo: this.max_combo,
         special: special,
         skill: skill,
         time: Date.now(),
-      });
+      };
+      scores.add(o);
       scores.save();
       if (firebase.user?.uid) {
         firebase.save_scores(firebase.user.uid); // save
         firebase.increment(`/users/${firebase.user.uid}/plays`, 1);
       }
+      firebase.add_to_scorelist(o);
     }
   }
 

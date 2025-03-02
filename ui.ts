@@ -151,7 +151,7 @@ export const ui = {
         sound.element.playbackRate = settings.play_speed;
       }
     });
-    const c8 = gui.add(settings, "play_mode", { normal: "play", practice: "practice", view: "view", edit: "edit" });
+    const c8 = gui.add(settings, "play_mode", { normal: "play", practice: "practice", view: "view" });
     c8.name("play mode");
     const c9 = gui.add(settings, "display_number", { score: "score", accuracy: "accuracy", "accuracy+": "accuracy+", "highest score": "highest", "predicted": "predict" });
     c9.name("number display");
