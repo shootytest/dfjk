@@ -1463,7 +1463,7 @@ export const ui = {
         <tr><td><kbd>R</kbd><td>rest<b>a</b>rt</td></tr>
       </table>
       <h1> credits </h1>
-      <div style="text-align: left;" id="real_credits">
+      <div style="text-align: left; width: max(50vw, 40ch); margin: 0 auto;" id="real_credits">
         <h3 style="text-align: center;"> music </h3>
         <p><a href="https://squirkymusic.sourceaudio.com/track/25689665" target="_blank"><span> piano_music_01.mp3 <l></l></span><span> Crispin Merrell </span></a></p>
         <p><a href="https://youtu.be/fCNQMJba86A" target="_blank"><span> Deep Under <l></l></span><span> Whitesand </span></a></p>

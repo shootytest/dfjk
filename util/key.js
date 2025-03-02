@@ -107,10 +107,10 @@ export const key = {
             for (const t of touches) {
                 const v = vector.create(t.clientX, t.clientY);
                 let lane = 1 + Math.floor(v.x / (window.innerWidth + 1) * config.lanes);
-                const display_lane = math.lane_hit_x(config.lanes, lane);
                 if (up_or_down === 0) {
                     lane = mouse.lane_ids[t.identifier] ?? lane;
                     mouse.touch_vectors.push(v);
+                    const display_lane = math.lane_hit_x(config.lanes, lane);
                     mouse.lanes[display_lane] = true;
                 }
                 else if (up_or_down === 1) {
