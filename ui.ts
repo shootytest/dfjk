@@ -1470,24 +1470,27 @@ export const ui = {
       <h2> how? </h2>
       <p>use the <kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd> keys to <em>hit</em> the notes as they touch the line</p>
       <p><img src="${config.cdn_i}tutorial.jpg" style="width: max(60%, 250px);"></p>
-      <p>your score depends on how accurately you can <em>hit</em></p>
+      <p>your score depends on how accurately you can <em>hit</em> them</p>
       <table style="margin: 0 auto;">
-        <tr><th>name</th><th>hit time</th><th>score</th></tr>
-        <tr style="color: ${color.purple};"><td>perfect+</td><td>±40 ms</td><td>101%</td></tr>
+        <tr><th></th><th>time</th><th>score</th></tr>
+        <tr style="color: ${color.purple};"><td>perfect+&nbsp;</td><td>±40 ms</td><td>101%</td></tr>
         <tr style="color: ${color.blue};"><td>perfect</td><td>±80 ms</td><td>100%</td></tr>
         <tr style="color: ${color.green};"><td>good</td><td>±120 ms</td><td>70%</td></tr>
         <tr style="color: ${color.yellow};"><td>bad</td><td>±160 ms</td><td>30%</td></tr>
-        <tr style="color: ${color.red};"><td>miss</td><td>160 ms</td><td>0%</td></tr>
+        <tr style="color: ${color.red};"><td>miss</td><td>&gt;160 ms</td><td>0%</td></tr>
       </table>
       <p>sometimes after you <em>hit</em> you have to hold the key down (long rectangles)</p>
-      <p>sometimes you just have to hold the key down (circles)</p>
+      <p>sometimes the keys just has to be held down, no hitting needed (circles)</p>
+      <p>sometimes when you solve a puzzle you can scroll all the way down</p>
       <h2>controls</h2>
       <table style="margin: 0 auto;">
-        <tr><td><kbd>esc</kbd> <kbd>backspace</kbd></td><td>back</td></tr>
-        <tr><td><kbd>enter</kbd> <kbd>space</kbd></td><td>confirm</td></tr>
-        <tr><td><kbd>A</kbd> <kbd>⬅️</kbd> / <kbd>D</kbd> <kbd>➡️</kbd></td><td>change difficulty</td></tr>
-        <tr><td><kbd>W</kbd> <kbd>⬆️</kbd> / <kbd>S</kbd> <kbd>⬇️</kbd></td><td>change song</td></tr>
-        <tr><td><kbd>shift</kbd> <kbd>tab</kbd></td><td>view leaderboard</td></tr>
+        <tr><td><kbd>esc</kbd> <kbd>backspace</kbd></td><td>b<b>a</b>ck</td></tr>
+        <tr><td><kbd>enter</kbd> <kbd>space</kbd></td><td>confi<b>r</b>m</td></tr>
+        <tr><td><kbd>A</kbd> <kbd>⬅️</kbd> / <kbd>D</kbd> <kbd>➡️</kbd></td><td>change diffi<b>c</b>ulty</td></tr>
+        <tr><td><kbd>W</kbd> <kbd>⬆️</kbd> / <kbd>S</kbd> <kbd>⬇️</kbd></td><td>ch<b>a</b>nge song</td></tr>
+        <tr><td><kbd>shift</kbd> <kbd>tab</kbd></td><td>view lea<b>d</b>erboard</td></tr>
+        <tr><td><kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd></td><td><em>h<b>i</b>t</em></td></tr>
+        <tr><td><kbd>R</kbd><td>rest<b>a</b>rt</td></tr>
       </table>
       <h1> credits </h1>
       <div style="text-align: left;" id="real_credits">
@@ -1503,6 +1506,8 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.5.9 | 02-03-2025 | 🎶 8  📊 18 </h3>
+      <p> - added hard chart for happiness >:) </p>
       <h3> 0.5.8 | 01-03-2025 | 🎶 8  📊 17 </h3>
       <p> - how? </p>
       <p> - added easy chart for 🧪🥧✳️ </p>
@@ -1630,12 +1635,16 @@ export const ui = {
       <h3> 0.0.0 | 09-12-2024 | 🎶 0  📊 0 </h3>
       <p> - site created! </p>
       <h3> 0.0.-1 | 09-12-2024 | 🎶 -1  📊 -1 </h3>
-      <p> - actually created in version 0.4.1 or something </p>
-      <p> <button id="store_data"> save data </button> </p>
+      <p> - this page is actually created in version 0.4.1 or something </p>
+      <h3> ?.?.? | ??-??-???? | 🎶 ?  📊 ? </h3>
+      <p> enter answers here: <input type="text"> </p>
+      <p> this feature is coming in a later update... </p>
+      <h3> test | test | 🎶 test 📊 test </h3>
+      <!--<p> <button id="store_data"> save data </button> </p>
       <p> <button id="load_data"> load data </button> </p>
-      <p> <button id="clear_data"> clear data </button> </p>
+      <p> <button id="clear_data"> clear data </button> </p>-->
       <p id="debug_result"> </p>
-      </div> 
+      </div>
     `;
     const debug_p = document.getElementById("debug_result") as HTMLParagraphElement;
     document.getElementById("store_data")?.addEventListener("click", function(event) {
