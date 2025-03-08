@@ -160,4 +160,19 @@ export const math = {
     return lane;
   },
 
+  mean: (a: number[]): number => {
+    if (a.length <= 0) return 0;
+    return a.reduce(function(b: number, c: number) {
+      return b + c;
+    }, 0) / a.length;
+  },
+
+  variance: (a: number[]): number => {
+    if (a.length <= 0) return 0;
+    const m = math.mean(a);
+    return a.reduce(function(b: number, c: number) {
+      return b + (c - m) * (c - m);
+    }, 0) / a.length;
+  },
+
 };

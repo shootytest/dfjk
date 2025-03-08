@@ -290,6 +290,12 @@ export const key = {
             check = true; })(navigator.userAgent ?? navigator.vendor);
         return check;
     })(),
+    check_url: function (url, callback) {
+        fetch(url, { method: 'head' })
+            .then(function (result) {
+            callback(result.status);
+        });
+    },
 };
 const mouseup_all = () => {
     mouse.up_buttons = [false, false, false];

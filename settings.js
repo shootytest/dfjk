@@ -26,7 +26,7 @@ export const settings = {
     }
 };
 export const config = {
-    charts: 18,
+    charts: 19,
     lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740795348/dfjk/",
     cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740795344/dfjk/",
@@ -35,7 +35,7 @@ export const main_menu = {};
 export const songs = [
     {
         id: 0,
-        name: "beep beep",
+        name: "calibration",
         bpm: 120,
         types: ["calibration"],
         difficulties: [1],
@@ -115,9 +115,9 @@ export const songs = [
         name: "🧪🥧✳️",
         bpm: 120,
         types: ["easy", "medium", "hard"],
-        difficulties: [2, -1, -1],
+        difficulties: [2, 7, -1],
         charts: ["nush_1", "nush_2", "nush_3"],
-        notes: [173, 0, 0],
+        notes: [173, 333, 0],
         preview: "nush_preview",
         image: "nush.jpg",
     },
@@ -193,6 +193,49 @@ export const skill_rate = function (score) {
         }
     }
     return result;
+};
+export const variance_rate = function (variance) {
+    if (variance <= 50)
+        return "✪";
+    if (variance <= 120)
+        return "✸";
+    if (variance <= 140)
+        return "★";
+    if (variance <= 160)
+        return "✦";
+    if (variance <= 180)
+        return "SS+";
+    if (variance <= 200)
+        return "SS";
+    if (variance <= 220)
+        return "S+";
+    if (variance <= 240)
+        return "S";
+    if (variance <= 270)
+        return "AA+";
+    if (variance <= 300)
+        return "AA";
+    if (variance <= 325)
+        return "A+";
+    if (variance <= 350)
+        return "A";
+    if (variance <= 375)
+        return "B+";
+    if (variance <= 400)
+        return "B";
+    if (variance <= 450)
+        return "C+";
+    if (variance <= 500)
+        return "C";
+    if (variance <= 600)
+        return "D+";
+    if (variance <= 700)
+        return "D";
+    if (variance <= 1000)
+        return "E";
+    if (variance > 2500)
+        return "Z";
+    return "F";
 };
 ;
 export const scores = {
@@ -323,12 +366,6 @@ export const requirements = {
         at_least: 1,
         charts: ["loneliness_3"],
         scores: [950000],
-    },
-    nush_2: {
-        name: "???",
-        at_least: 1,
-        charts: ["nush_2"],
-        scores: [1],
     },
     nush_3: {
         name: "???",

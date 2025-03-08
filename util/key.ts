@@ -330,6 +330,13 @@ export const key = {
     return check;
   })(),
 
+  check_url: function(url: string, callback: (status: number) => void) {
+    fetch(url, { method: 'head' })
+      .then(function(result) {
+        callback(result.status);
+      });
+  },
+
 };
 
 const mouseup_all = () => {

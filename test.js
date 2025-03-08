@@ -23,7 +23,11 @@ const init = function () {
             return;
         ui.enter();
     });
-    key.add_key_listener("Enter", ui.enter);
+    key.add_key_listener("Enter", function () {
+        if (document.activeElement?.id === "answer")
+            return;
+        ui.enter();
+    });
     key.add_key_listener("Tab", ui.shift);
     key.add_key_listener("ShiftLeft", ui.shift);
     key.add_key_listener("ShiftRight", ui.shift);
@@ -36,6 +40,7 @@ const init = function () {
     key.add_key_listener("Backquote", function () {
         if (Sound.current) {
             ui.restart();
+            Sound.current.element.currentTime = 8 * 8 + 0.5 * 0;
         }
     });
     key.add_key_listener("Backspace", function () {

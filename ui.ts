@@ -6,7 +6,7 @@ import dat from "./dat.js";
 import { firebase } from "./firebase.js";
 import { math } from "./util/math.js";
 import { key, mouse } from "./util/key.js";
-import { scores, settings, songs, chart_map, config, Score, requirement, requirements } from "./settings.js";
+import { scores, settings, songs, chart_map, config, Score, requirement, requirements, variance_rate } from "./settings.js";
 
 // globals, why not?
 let x: number, y: number, w: number, h: number;
@@ -115,6 +115,11 @@ export const ui = {
     hit_force: 0,
     backing: 0,
     restarting: 0,
+    calibration: {
+      offset_queue: [] as number[],
+      get mean() { return math.mean(this.offset_queue); },
+      get variance() { return math.variance(this.offset_queue); },
+    },
   },
 
   images: {} as { [key: string]: HTMLImageElement },
@@ -691,6 +696,10 @@ export const ui = {
     } else if (ui.menu === "game") {
       ui.menu = "list";
       ui.list_change_index(0);
+      if (Chart.current?.metadata.chart_name === "beeps" && ui.game.calibration.offset_queue.length >= 4) {
+        ui.make_calibration_popup();
+        ui.show_box("calibration_popup");
+      }
       Sound.current?.pause();
       Sound.current?.reset();
       Chart.current?.reset();
@@ -959,6 +968,12 @@ export const ui = {
       ctx.fillStyle = color["special_" + Chart.special_grade(result)];
       ctx.set_font_mono(h * 0.3, "", "right");
       ctx.text("" + chart.max_combo, x, y + h * 0.6);
+    }
+    if (chart.metadata.chart_name === "beeps") {
+      ctx.set_font_mono(h * 0.12);
+      ctx.fillStyle = color.white; //["special_" + Chart.special_grade(result)];
+      ctx.text("offset: " + ui.game.calibration.mean.toFixed(2), v.x, yy + h * 0.25);
+      ctx.text("variance: " + ui.game.calibration.variance.toFixed(0), v.x, yy + h * 0.5);
     }
     
     ctx.restore("tilted");
@@ -1525,6 +1540,9 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.6.0 | 08-03-2025 | 🎶 8  📊 19 </h3>
+      <p> - made calibration way more useful 🙂 </p>
+      <p> - added medium chart for 🧪🥧✳️ </p>
       <h3> 0.5.9 | 02-03-2025 | 🎶 8  📊 18 </h3>
       <p> - added hard chart for happiness >:) </p>
       <h3> 0.5.8 | 01-03-2025 | 🎶 8  📊 17 </h3>
@@ -1656,9 +1674,9 @@ export const ui = {
       <h3> 0.0.-1 | 09-12-2024 | 🎶 -1  📊 -1 </h3>
       <p> - this page is actually created in version 0.4.1 or something </p>
       <h3> ?.?.? | ??-??-???? | 🎶 ?  📊 ? </h3>
-      <p> enter answers here: <input type="text"> </p>
-      <p> this feature is coming in a later update... </p>
-      <h3> test | test | 🎶 test 📊 test </h3>
+      <p> <input type="text" id="answer" placeholder="enter answer"> <button id="answered"> submit </button> </p>
+      <p id="answer_result"> </p>
+      <h3> ?.?.? | ??-??-???? | 🎶 ? 📊 ? </h3>
       <!--<p> <button id="store_data"> save data </button> </p>
       <p> <button id="load_data"> load data </button> </p>
       <p> <button id="clear_data"> clear data </button> </p>-->
@@ -1677,6 +1695,31 @@ export const ui = {
     document.getElementById("clear_data")?.addEventListener("click", function(event) {
       event.stopPropagation();
       firebase.set("/test/data/", "");
+    });
+    const answer = document.getElementById("answer") as HTMLInputElement;
+    const answered = document.getElementById("answered") as HTMLButtonElement;
+    const answer_result = document.getElementById("answer_result") as HTMLParagraphElement;
+    const go = function() {
+      const v = answer.value.toLowerCase().replaceAll(/\s+/g, "");
+      const url = `/puzzl/${v}.html`;
+      key.check_url(url, (status) => {
+        if (status === 404) {
+          answer_result.textContent = "incorrect!";
+          answer_result.style.color = color.red;
+        } else if (status === 200) {
+          answer_result.innerHTML = `correct! <a href="${url}"><button> go </button></a>`;
+          answer_result.style.color = color.green;
+        } else {
+          answer_result.textContent = "unknown status code: " + status;
+          answer_result.style.color = color.yellow;
+        }
+      });
+    };
+    answer.addEventListener("keydown", function(event) {
+      if (event.code === "Enter" && !event.repeat) go();
+    });
+    answered.addEventListener("click", function(event) {
+      go();
     });
     if (ui.mobile) main.addEventListener("click", function() {
       ui.cancel_click();
@@ -1754,9 +1797,39 @@ export const ui = {
     else firebase.redisplay_result();
   },
 
+  make_calibration_popup: function() {
+    if (document.getElementById("calibration_popup")) {
+      document.body.removeChild(document.getElementById("calibration_popup")!)
+    }
+    const main = document.createElement("div");
+    main.id = "calibration_popup";
+    main.classList.add("centerbox");
+    document.body.appendChild(main);
+    const new_offset = math.round_to(settings.offset + ui.game.calibration.mean, 5);
+    const variance = Math.round(ui.game.calibration.variance);
+    const grade = variance_rate(variance);
+    main.innerHTML = `
+      <p> calibration done! </p>
+      <p> set offset to ${new_offset} ms? </p>
+      <p style="color: ${color["grade_" + grade]};"> consistency: ${grade} (${variance}) </p>
+      <p> <button id="yes"> yes </button> &nbsp; <button id="no"> no </button> </p>
+    `;
+    document.getElementById("yes")?.addEventListener("click", function(event) {
+      settings.offset = new_offset;
+      ui.gui.save();
+      ui.gui.updateDisplay();
+      ui.cancel_click();
+      ui.hide_box("calibration_popup");
+    });
+    document.getElementById("no")?.addEventListener("click", function(event) {
+      ui.cancel_click();
+      ui.hide_box("calibration_popup");
+    });
+  },
+
   close_boxes() {
     let closed = false;
-    for (const id of ["toplist", "toplist_chart", "leaderboard", "credits", "account"]) {
+    for (const id of ["toplist", "toplist_chart", "leaderboard", "credits", "account", "calibration_popup"]) {
       if (ui.check_box(id)) {
         ui.hide_box(id);
         closed = true;
@@ -1766,7 +1839,7 @@ export const ui = {
   },
 
   is_box_open() {
-    for (const id of ["toplist", "toplist_chart", "leaderboard", "credits", "account"]) {
+    for (const id of ["toplist", "toplist_chart", "leaderboard", "credits", "account", "calibration_popup"]) {
       if (ui.check_box(id)) {
         return true;
       }
