@@ -220,26 +220,28 @@ export const skill_rate = function(score: Score) {
 };
 
 export const variance_rate = function(variance: number) {
-  if (variance <= 50) return "✪";
-  if (variance <= 120) return "✸";
-  if (variance <= 140) return "★";
-  if (variance <= 160) return "✦";
-  if (variance <= 180) return "SS+";
+  if (variance <= 25) return "✪";
+  if (variance <= 75) return "✸";
+  if (variance <= 85) return "★★";
+  if (variance <= 100) return "★";
+  if (variance <= 120) return "✦✦";
+  if (variance <= 150) return "✦";
+  if (variance <= 170) return "SS+";
   if (variance <= 200) return "SS";
   if (variance <= 220) return "S+";
-  if (variance <= 240) return "S";
+  if (variance <= 250) return "S";
   if (variance <= 270) return "AA+";
   if (variance <= 300) return "AA";
   if (variance <= 325) return "A+";
-  if (variance <= 350) return "A";
-  if (variance <= 375) return "B+";
-  if (variance <= 400) return "B";
-  if (variance <= 450) return "C+";
-  if (variance <= 500) return "C";
-  if (variance <= 600) return "D+";
-  if (variance <= 700) return "D";
-  if (variance <= 1000) return "E";
-  if (variance > 2500) return "Z";
+  if (variance <= 360) return "A";
+  if (variance <= 400) return "B+";
+  if (variance <= 450) return "B";
+  if (variance <= 500) return "C+";
+  if (variance <= 600) return "C";
+  if (variance <= 700) return "D+";
+  if (variance <= 1000) return "D";
+  if (variance <= 1500) return "E";
+  if (variance > 5000) return "Z";
   return "F";
 };
 

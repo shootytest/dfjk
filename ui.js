@@ -1492,7 +1492,7 @@ export const ui = {
       <h1> versions </h1>
       <div style="text-align: left;">
       <h3> 0.6.0 | 08-03-2025 | 🎶 8  📊 19 </h3>
-      <p> - made calibration way more useful 🙂 </p>
+      <p> - made calibration way more useful 🙂 exiting the calibration chart after hitting at least 4 notes will make a pop-up pop up </p>
       <p> - added medium chart for 🧪🥧✳️ </p>
       <h3> 0.5.9 | 02-03-2025 | 🎶 8  📊 18 </h3>
       <p> - added hard chart for happiness >:) </p>
@@ -1768,9 +1768,9 @@ export const ui = {
         const variance = Math.round(ui.game.calibration.variance);
         const grade = variance_rate(variance);
         main.innerHTML = `
-      <p> calibration done! </p>
+      <h3> calibration done! </h3>
+      <p style="color: ${color["grade_" + grade]};"> consistency: ${grade} (σ² = ${variance}) </p>
       <p> set offset to ${new_offset} ms? </p>
-      <p style="color: ${color["grade_" + grade]};"> consistency: ${grade} (${variance}) </p>
       <p> <button id="yes"> yes </button> &nbsp; <button id="no"> no </button> </p>
     `;
         document.getElementById("yes")?.addEventListener("click", function (event) {
