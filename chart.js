@@ -7035,7 +7035,6 @@ export const chart_definitions = {
             [note_type.normal, 2, 0.05],
             [note_type.inverse, 1, 0.2],
             [note_type.inverse, 2, 0.3],
-            [note_type.normal, 2, 0.05],
             [note_type.normal, 3, 0.5],
             [note_type.normal, 4, 1],
             [note_type.normal, 3, 1.5],
