@@ -75,6 +75,7 @@ export const ui = {
         type: 0,
         type_target: 0,
         playing: sounds.beeps_preview,
+        leaderboard: false,
         get song() {
             return songs[ui.list.index_target];
         },
@@ -87,6 +88,7 @@ export const ui = {
     },
     game: {
         lanes: 4,
+        lanes_prev: 4,
         lanes_target: 4,
         lanes_smoothness: 0.05,
         tilt: 0,
@@ -608,7 +610,12 @@ export const ui = {
     shift: function () {
         if (ui.menu === "list") {
             if (ui.check_box("toplist_chart")) {
-                ui.hide_box("toplist_chart");
+                if (ui.list.leaderboard) {
+                    ui.make_toplist_chart(ui.list.chart, false);
+                }
+                else {
+                    ui.hide_box("toplist_chart");
+                }
             }
             else {
                 ui.make_toplist_chart(ui.list.chart, true);
@@ -973,10 +980,17 @@ export const ui = {
             ctx.restore("mobile");
         }
     },
-    lane_x: function (i) {
-        if (ui.game.lanes_target === 4)
-            return i;
-        else if (ui.game.lanes_target === 5) {
+    lane_x: function (i, override_lanes_target) {
+        const t = override_lanes_target ?? ui.game.lanes_target;
+        if (t === 4) {
+            if (ui.game.lanes_prev > 4 && Math.abs(ui.game.lanes - ui.game.lanes_target) > 0.05) {
+                return this.lane_x(i, ui.game.lanes_prev);
+            }
+            else {
+                return i;
+            }
+        }
+        else if (t === 5) {
             if (i <= 2)
                 return i;
             if (i <= 4)
@@ -986,17 +1000,17 @@ export const ui = {
             if (i <= 6)
                 return ui.game.lanes + 1;
         }
-        else if (ui.game.lanes_target === 6) {
+        else if (t === 6) {
             if (i <= 4)
                 return (ui.game.lanes - 4) / 2 + i;
             if (i <= 5)
                 return 1;
             if (i <= 6)
-                return ui.game.lanes;
+                return (ui.game.lanes - 4) / 2 + 5;
             if (i <= 7)
                 return ui.game.lanes + 1;
         }
-        else if (ui.game.lanes_target === 7) {
+        else if (t === 7) {
         }
         return i;
     },
@@ -1072,22 +1086,23 @@ export const ui = {
             ui.game.scale_target.y = ui.game.scale.y;
         }
         else if (type === "scalex") {
-            if (-time_to > 200)
+            if (ui.game.scale_target.x === e.a)
                 return;
             ui.game.scale_target.x = e.a;
             ui.game.scale_smoothness.x = 60 / e.duration;
         }
         else if (type === "scaley") {
-            if (-time_to > 200)
+            if (ui.game.scale_target.y === e.a)
                 return;
             ui.game.scale_target.y = e.a;
             ui.game.scale_smoothness.y = 60 / e.duration;
         }
         else if (type === "lanes") {
-            if (-time_to > 200)
+            if (ui.game.lanes_target === e.a)
                 return;
             if (Chart.current)
                 Chart.current.lanes = e.a;
+            ui.game.lanes_prev = ui.game.lanes_target;
             ui.game.lanes_target = e.a;
             ui.game.lanes_smoothness = 60 / e.duration;
             config.lanes = e.a;
@@ -1274,6 +1289,7 @@ export const ui = {
         main.classList.add("centerbox");
         document.body.appendChild(main);
         const chart = chart_map[chart_name];
+        ui.list.leaderboard = leaderboard;
         if (leaderboard) {
             main.innerHTML = `<p> loading leaderboard... </p>`;
             firebase.get_scores(chart_name, (leaderboard) => {
