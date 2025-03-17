@@ -40,7 +40,6 @@ const init = function () {
     key.add_key_listener("Backquote", function () {
         if (Sound.current) {
             ui.restart();
-            Sound.current.element.currentTime = 8 * 8 + 0.5 * 0;
         }
     });
     key.add_key_listener("Backspace", function () {

@@ -30,8 +30,8 @@ export const settings = {
 };
 
 export const config = {
-  version: "0.6.0.3",
-  charts: 19,
+  version: "0.6.1.0",
+  charts: 20,
   lanes: 4,
   cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740795348/dfjk/",
   cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740795344/dfjk/",
@@ -91,7 +91,7 @@ export const songs = [
     name: "Happiness",
     bpm: 126,
     types: ["easy", "medium", "hard"],
-    difficulties: [4, 9, 21],
+    difficulties: [5, 9, 21],
     charts: ["happiness_1", "happiness_2", "happiness_3"],
     notes: [507, 600, 1017],
     preview: "happiness_preview",
@@ -113,9 +113,9 @@ export const songs = [
     name: "⠞⠧⠶⠳⡇⠼⠗",
     bpm: 74.63,
     types: ["easy", "medium", "hard"],
-    difficulties: [5, 8, -1],
+    difficulties: [4, 8, 26],
     charts: ["tetris_1", "tetris_2", "tetris_3"],
-    notes: [189, 303, 0],
+    notes: [189, 303, 666],
     preview: "tetris_preview",
     image: "tetris.png",
   },

@@ -54,6 +54,14 @@ export const color = {
     ["special_FC+"]: "#aee848",
     ["special_AP"]: "#7a8eff",
     ["special_AP+"]: "#9c7aff",
+    tetris_0: "#a1a1a1",
+    tetris_7: "#65e9b8",
+    tetris_2: "#e99665",
+    tetris_3: "#5f4db0",
+    tetris_5: "#da585f",
+    tetris_4: "#b0df60",
+    tetris_1: "#c15cb7",
+    tetris_6: "#d8be58",
 };
 export const ui = {
     time: 0,
@@ -98,7 +106,12 @@ export const ui = {
         scale: vector.create(1, 1),
         scale_target: vector.create(1, 1),
         scale_smoothness: vector.create(0.05, 0.05),
+        skin: "normal",
+        skins: ["normal", "tetris"],
         hit_force: 0,
+        notespeed_mult: 1,
+        notespeed_set: undefined,
+        note_acceleration: 0,
         backing: 0,
         restarting: 0,
         calibration: {
@@ -797,7 +810,7 @@ export const ui = {
         ctx.beginPath();
         ctx.rect(xx, yy, size.x, size.y);
         ctx.clip();
-        const notespeed = settings.notespeed * size.y / 700;
+        const notespeed = (ui.game.notespeed_set ?? (settings.notespeed * ui.game.notespeed_mult)) * size.y / 700;
         const seems = size.y * (line_offset + 0.2) / notespeed;
         for (const note of Object.values(chart.active_notes)) {
             const time_to = sound.time_to(note.time);
@@ -820,7 +833,7 @@ export const ui = {
                 ctx.fill();
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = color.white;
-                ui.draw_note(note_type.normal, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize);
+                ui.draw_note(note_type.normal, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize, note);
             }
             if (note.hit >= 0) {
                 const t = -sound.time_to(note.hit_time);
@@ -830,7 +843,7 @@ export const ui = {
                     }
                     ctx.fillStyle = color[["red", "yellow", "green", "blue", "purple"][note.hit]];
                     ctx.globalAlpha = (200 - t) / 300;
-                    ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - (time_to + t) * notespeed, notesize);
+                    ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - (time_to + t) * notespeed, notesize, note);
                     ctx.globalAlpha = 1;
                 }
                 else if (note.type !== note_type.hold || t > 200 + (note.duration ?? 0)) {
@@ -841,7 +854,7 @@ export const ui = {
                 if (!note.visible)
                     continue;
                 ctx.fillStyle = color.white;
-                ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize);
+                ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize, note);
                 continue;
             }
         }
@@ -1037,9 +1050,18 @@ export const ui = {
         }
         return 1;
     },
-    draw_note: function (type, x, y, size) {
+    draw_note: function (type, x, y, size, note) {
         if (type === note_type.normal || type === note_type.hold) {
             ctx.beginPath();
+            if (ui.game.skin === "tetris" && ctx.globalAlpha === 1) {
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = color["tetris_" + (note.duration ?? 0)];
+                const a = size.x * ui.game.scale.x / ui.game.scale.y;
+                ctx.round_rectangle(x, y, size.x, a, size.y * 0.05);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.beginPath();
+            }
             ctx.round_rectangle(x, y, size.x, size.y * 0.2, size.y * 0.08);
             ctx.fill();
         }
@@ -1110,6 +1132,18 @@ export const ui = {
         else if (type === "hit_force") {
             ui.game.hit_force = e.a;
         }
+        else if (type === "skin") {
+            ui.game.skin = ui.game.skins[e.a];
+        }
+        else if (type === "notespeed_mult") {
+            ui.game.notespeed_mult = e.a;
+        }
+        else if (type === "notespeed_set") {
+            if (e.a)
+                ui.game.notespeed_set = e.a;
+            else
+                ui.game.notespeed_set = undefined;
+        }
     },
     reset_effects: function () {
         ui.game.lanes = 4;
@@ -1123,7 +1157,10 @@ export const ui = {
         ui.game.scale_smoothness = vector.create(0.05, 0.05);
         ui.game.tilt = 0;
         ui.game.tilt_ = 0;
+        ui.game.notespeed_mult = 1;
+        ui.game.notespeed_set = undefined;
         ui.game.hit_force = 0;
+        ui.game.skin = ui.game.skins[0];
     },
     draw_practice: function () {
         w = this.width - 113.2 - 16 * 2;
@@ -1507,6 +1544,9 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.6.1 | 17-03-2025 | 🎶 8  📊 20 </h3>
+      <p> - added more chart effects... you'll see </p>
+      <p> - added hard chart for ⠞⠧⠶⠳⡇⠼⠗ </p>
       <h3> 0.6.0 | 08-03-2025 | 🎶 8  📊 19 </h3>
       <p> - made calibration way more useful 🙂 exiting the calibration chart after hitting at least 4 notes will make a pop-up pop up </p>
       <p> - added medium chart for 🧪🥧✳️ </p>
