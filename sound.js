@@ -186,6 +186,8 @@ export const sounds = {
     happiness_preview: new Sound("happiness.mp3", 0.7, 32370, 62864),
     nush: new Sound("nush.mp3", 0.6),
     nush_preview: new Sound("nush.mp3", 0.6, 10000, 26000),
+    kahoot: new Sound("kahoot.mp3", 0.9),
+    kahoot_preview: new Sound("kahoot.mp3", 0.9, 2000, 66000),
 };
 const sfx_make = {
     hit: "111118CvBfBFjoUuukiKaP7emd7z4u3mbuxJGrb7zny1cJghYj9Ri4puRHguBYi1EEJFExsnakGq55F6MNZZo9Tt5p5QhqC16R6s4Ssj9v2yEbQqptiLtqAo",

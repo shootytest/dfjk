@@ -223,6 +223,8 @@ export const sounds: { [key: string]: Sound } = {
   happiness_preview: new Sound("happiness.mp3", 0.7, 32370, 62864),
   nush: new Sound("nush.mp3", 0.6),
   nush_preview: new Sound("nush.mp3", 0.6, 10000, 26000),
+  kahoot: new Sound("kahoot.mp3", 0.9),
+  kahoot_preview: new Sound("kahoot.mp3", 0.9, 2000, 66000),
 };
 
 const sfx_make: { [key: string]: string | sfxr.sound_options } = {

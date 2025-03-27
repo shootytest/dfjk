@@ -62,6 +62,10 @@ export const color = {
     tetris_4: "#b0df60",
     tetris_1: "#c15cb7",
     tetris_6: "#d8be58",
+    kahoot_1: "#e21b3c",
+    kahoot_2: "#1367ce",
+    kahoot_3: "#d79e00",
+    kahoot_4: "#26880b",
 };
 export const ui = {
     time: 0,
@@ -106,8 +110,11 @@ export const ui = {
         scale: vector.create(1, 1),
         scale_target: vector.create(1, 1),
         scale_smoothness: vector.create(0.05, 0.05),
+        separation: 1,
+        separation_target: 1,
+        separation_smoothness: 0.05,
         skin: "normal",
-        skins: ["normal", "tetris"],
+        skins: ["normal", "tetris", "kahoot"],
         hit_force: 0,
         notespeed_mult: 1,
         notespeed_set: undefined,
@@ -773,6 +780,7 @@ export const ui = {
         ui.game.tilt *= 0.90909090909090909;
         ui.game.offset = vector.mult(ui.game.offset, 0.90909090909090909);
         ui.game.lanes = math.lerp(ui.game.lanes, ui.game.lanes_target, ui.game.lanes_smoothness);
+        ui.game.separation = math.lerp(ui.game.separation, ui.game.separation_target, ui.game.separation_smoothness);
         ui.game.scale = vector.lerp_v(ui.game.scale, ui.game.scale_target, ui.game.scale_smoothness);
         ctx.save("tilted");
         ctx.translate(v.x, v.y);
@@ -782,33 +790,38 @@ export const ui = {
         ctx.translate(v.x, v.y);
         ctx.scale(ui.game.scale.x, ui.game.scale.y);
         ctx.translate(-v.x, -v.y);
-        let xx = v.x - size.x / 2;
+        let xx = v.x;
         let yy = v.y - size.y / 2;
         let lanewidth = size.x / ui.game.lanes;
+        let lanesep = lanewidth * ui.game.separation;
         let lanes = Math.max(ui.game.lanes_target, math.round(ui.game.lanes + 0.45));
+        const total_lane_width = lanewidth + lanesep * (ui.game.lanes - 1);
+        xx -= total_lane_width / 2;
         ctx.fillStyle = color.white;
         ctx.globalAlpha = 0.1;
         for (let i = 1; i <= lanes; i++) {
             if (!chart.lane_pressed[i])
                 continue;
             ctx.beginPath();
-            x = xx + (ui.lane_x(i) - 1) * lanewidth;
+            x = xx + (ui.lane_x(i) - 1) * lanesep;
             ctx.rect(x, yy, ui.lane_w(i) * lanewidth, size.y);
             ctx.fill();
         }
         ctx.strokeStyle = color.white;
         ctx.lineWidth = 2;
-        for (let i = 1; i <= lanes + 1; i++) {
-            x = xx + (ui.lane_x(i) - 1) * lanewidth;
+        for (let i = 1; i <= lanes; i++) {
+            x = xx + (ui.lane_x(i) - 1) * lanesep;
             ctx.globalAlpha = 0.6 + 0.2 * Math.abs(i - 2);
+            ctx.line(x, yy, x, yy + size.y);
+            x += lanewidth;
             ctx.line(x, yy, x, yy + size.y);
         }
         const line_offset = (0.9 + settings.line_offset / 1000);
         y = yy + size.y * line_offset;
-        ctx.line(xx, y, xx + size.x, y);
+        ctx.line(xx, y, xx + total_lane_width, y);
         ctx.save("draw_board");
         ctx.beginPath();
-        ctx.rect(xx, yy, size.x, size.y);
+        ctx.rect(xx, yy, total_lane_width, size.y);
         ctx.clip();
         const notespeed = (ui.game.notespeed_set ?? (settings.notespeed * ui.game.notespeed_mult)) * size.y / 700;
         const seems = size.y * (line_offset + 0.2) / notespeed;
@@ -829,11 +842,11 @@ export const ui = {
                     ctx.globalAlpha = (note.hit === 0 || note.release === 0) ? 0.2 : 0.6;
                 }
                 ctx.beginPath();
-                ctx.round_rectangle(xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - (sound.time_to(note.time) + length / 2) * notespeed, notesize.x, notesize.y * 0.2 + length * notespeed, notesize.y * 0.08);
+                ctx.round_rectangle(xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - (sound.time_to(note.time) + length / 2) * notespeed, notesize.x, notesize.y * 0.2 + length * notespeed, notesize.y * 0.08);
                 ctx.fill();
                 ctx.globalAlpha = 1;
                 ctx.fillStyle = color.white;
-                ui.draw_note(note_type.normal, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize, note);
+                ui.draw_note(note_type.normal, xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - sound.time_to(note.time) * notespeed, notesize, note);
             }
             if (note.hit >= 0) {
                 const t = -sound.time_to(note.hit_time);
@@ -843,7 +856,7 @@ export const ui = {
                     }
                     ctx.fillStyle = color[["red", "yellow", "green", "blue", "purple"][note.hit]];
                     ctx.globalAlpha = (200 - t) / 300;
-                    ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - (time_to + t) * notespeed, notesize, note);
+                    ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - (time_to + t) * notespeed, notesize, note);
                     ctx.globalAlpha = 1;
                 }
                 else if (note.type !== note_type.hold || t > 200 + (note.duration ?? 0)) {
@@ -854,7 +867,7 @@ export const ui = {
                 if (!note.visible)
                     continue;
                 ctx.fillStyle = color.white;
-                ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 0.5) * lanewidth, y - sound.time_to(note.time) * notespeed, notesize, note);
+                ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - sound.time_to(note.time) * notespeed, notesize, note);
                 continue;
             }
         }
@@ -1054,13 +1067,15 @@ export const ui = {
         if (type === note_type.normal || type === note_type.hold) {
             ctx.beginPath();
             if (ui.game.skin === "tetris" && ctx.globalAlpha === 1) {
-                ctx.globalAlpha = 1;
                 ctx.fillStyle = color["tetris_" + (note.duration ?? 0)];
                 const a = size.x * ui.game.scale.x / ui.game.scale.y;
                 ctx.round_rectangle(x, y, size.x, a, size.y * 0.05);
                 ctx.fill();
                 ctx.globalAlpha = 1;
                 ctx.beginPath();
+            }
+            else if (ui.game.skin === "kahoot" && ctx.globalAlpha === 1) {
+                ctx.fillStyle = color["kahoot_" + (note.lane ?? 0)];
             }
             ctx.round_rectangle(x, y, size.x, size.y * 0.2, size.y * 0.08);
             ctx.fill();
@@ -1129,6 +1144,12 @@ export const ui = {
             ui.game.lanes_smoothness = 60 / e.duration;
             config.lanes = e.a;
         }
+        else if (type === "separation") {
+            if (ui.game.separation_target === e.a)
+                return;
+            ui.game.separation_target = e.a;
+            ui.game.separation_smoothness = 60 / e.duration;
+        }
         else if (type === "hit_force") {
             ui.game.hit_force = e.a;
         }
@@ -1146,10 +1167,13 @@ export const ui = {
         }
     },
     reset_effects: function () {
+        config.lanes = 4;
         ui.game.lanes = 4;
         ui.game.lanes_target = 4;
-        config.lanes = 4;
         ui.game.lanes_smoothness = 0.05;
+        ui.game.separation = 1;
+        ui.game.separation_target = 1;
+        ui.game.separation_smoothness = 0.05;
         ui.game.offset = vector.create();
         ui.game.offset_ = vector.create();
         ui.game.scale = vector.create(1, 1);

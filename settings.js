@@ -26,11 +26,11 @@ export const settings = {
     }
 };
 export const config = {
-    version: "0.6.1.1",
+    version: "0.6.1.2",
     charts: 20,
     lanes: 4,
-    cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1740795348/dfjk/",
-    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1740795344/dfjk/",
+    cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1742913250/dfjk/",
+    cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1742913252/dfjk/",
 };
 export const main_menu = {};
 export const songs = [
@@ -110,6 +110,17 @@ export const songs = [
         notes: [189, 303, 666],
         preview: "tetris_preview",
         image: "tetris.png",
+    },
+    {
+        id: 8,
+        name: "▲ ⯁ ⬤ ◼",
+        bpm: 120,
+        types: ["easy", "medium", "hard"],
+        difficulties: [-1, -1, -1],
+        charts: ["kahoot_1", "kahoot_2", "kahoot_3"],
+        notes: [0, 0, 0],
+        preview: "kahoot_preview",
+        image: "kahoot.jpg",
     },
     {
         id: 7,
