@@ -26,7 +26,7 @@ export const settings = {
     }
 };
 export const config = {
-    version: "0.6.2.0",
+    version: "0.6.2.1",
     charts: 20,
     lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1742913250/dfjk/",
