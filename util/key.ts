@@ -172,9 +172,8 @@ export const key = {
         if (keys.AltLeft) b = 2;
         else if (keys.AltRight) b = 1;
       }
-      mouse.down_buttons[b] = true;
-      // console.log(mouse.x, mouse.y);
       mouse.buttons[b] = true;
+      mouse.down_buttons[b] = true;
       mouse.down_position[b] = vector.create(mouse.x, mouse.y);
       mouse.drag_vector[b] = false;
       mouse.drag_vector_old[b] = false;

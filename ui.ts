@@ -101,6 +101,8 @@ export const ui = {
     index: 0,
     index_circle: 0,
     index_target: 0,
+    index_target_d: 0,
+    index_target_scroll_mult: 0.6,
     type: 0,
     type_target: 0,
     playing: sounds.beeps_preview,
@@ -227,11 +229,17 @@ export const ui = {
       hover_f();
     }
   },
+  
+  check_drag: function(drag_f: (v: vector) => void) {
+    if (mouse.buttons[0] && ctx.point_in_path_v(mouse.down_position[0])) {
+      drag_f(vector.sub(mouse, mouse.down_position[0]));
+    }
+  },
 
   check_click: function(click_f: () => void, hover_f: () => void = () => {}) {
     if (ctx.point_in_path_v(mouse)) {
       if (hover_f) hover_f();
-      if (mouse.down_buttons[0] && ctx.point_in_path_v(mouse.down_position[0])) {
+      if (mouse.up_buttons[0] && ctx.point_in_path_v(mouse.down_position[0])) {
         click_f();
       }
     }
@@ -354,8 +362,8 @@ export const ui = {
     r = x_constrained ? (size.y * 0.8) : (size.x * 0.92);
 
     // song index and type
-    ui.list.index_circle = math.lerp_circle(ui.list.index_circle, ui.list.index_target, songs.length, 0.1);
-    ui.list.index = math.lerp(ui.list.index, ui.list.index_target, 0.1);
+    ui.list.index_circle = math.lerp_circle(ui.list.index_circle, ui.list.index_target + ui.list.index_target_d, songs.length, 0.1);
+    ui.list.index = math.lerp(ui.list.index, ui.list.index_target + ui.list.index_target_d, 0.1);
     const index = ui.list.index;
     const index_circle = ui.list.index_circle;
     const indices = [];
@@ -379,6 +387,17 @@ export const ui = {
       ctx.rect(0, 0, x, size.y);
     }
     ctx.clip();
+    if (ui.mobile) {
+      let dragged = false;
+      ui.check_drag((delta: vector) => {
+        dragged = true;
+        ui.list.index_target_d = -delta.x / r * ui.list.index_target_scroll_mult * 4;
+      });
+      if (!mouse.buttons[0] && ui.list.index_target_d !== 0) {
+        index_target_change = Math.round(ui.list.index_target_d);
+        ui.list.index_target_d = 0;
+      }
+    }
 
     const rr = 0.14 * r;
     for (let i = 0; i < 3; i++) {
@@ -500,6 +519,20 @@ export const ui = {
       ctx.beginPath();
       ctx.rect(0, v.y, size.x, v.y);
       ctx.clip();
+    } else {
+      ctx.beginPath();
+      ctx.rectangle(x, y, w, size.y);
+    }
+    if (ui.mobile) {
+      let dragged = false;
+      ui.check_drag((delta: vector) => {
+        dragged = true;
+        ui.list.index_target_d = -delta.y / h * ui.list.index_target_scroll_mult;
+      });
+      if (!mouse.buttons[0] && ui.list.index_target_d !== 0) {
+        index_target_change = Math.round(ui.list.index_target_d);
+        ui.list.index_target_d = 0;
+      }
     }
     for (let i = 0; i < songs.length; i++) {
       const song = songs[i];
@@ -513,7 +546,7 @@ export const ui = {
         // ctx.fillStyle = color.green;
         const grade = Chart.grade(score?.value ?? 0);
         ctx.fillStyle = color["grade_" + grade];
-        ctx.globalAlpha = 0.2;
+        ctx.globalAlpha = 0.4;
         ctx.beginPath();
         ctx.rectangle(0, 0, w * 7 / 6 - 3, h * 1.12);
         ctx.fill();
@@ -530,6 +563,7 @@ export const ui = {
       ui.check_click(() => {
         const change = i - ui.list.index_target;
         if (change !== 0) ui.list_change_index(change);
+        else ui.enter();
       }, () => {
         ctx.fillStyle = color.white + "11";
         ctx.fill();
@@ -546,7 +580,7 @@ export const ui = {
 
       // ctx.save("draw_list_right_type");
       ctx.fillStyle = color["difficulty_" + song.types[type_target]];
-      ctx.globalAlpha = 0.1;
+      ctx.globalAlpha = 0.2;
       ctx.beginPath();
       ctx.round_rectangle(h / 2 - w / 2, 0, h, h, h * 0.1);
       ui.check_click(() => {
@@ -563,7 +597,7 @@ export const ui = {
       // ctx.save("draw_list_right_score");
       const grade = Chart.grade(score?.value ?? 0);
       ctx.fillStyle = color["grade_" + grade];
-      ctx.globalAlpha = 0.1;
+      ctx.globalAlpha = 0.15;
       ctx.beginPath();
       ctx.round_rectangle(w / 2 - h / 2, 0, h, h, h * 0.1);
       ctx.fill();
@@ -820,12 +854,8 @@ export const ui = {
         ctx.fill();
         ctx.svg("back", w, w, w * 0.8);
         ui.check_click(() => {
-          if (ui.game.backing <= 0) ui.game.backing = ui.time;
-          else ui.back();
+          ui.back();
         });
-        if (ui.game.backing && ui.time - ui.game.backing > 120) {
-          ui.game.backing = 0;
-        }
         ctx.globalAlpha = 1;
       }
       return;
@@ -1611,6 +1641,9 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.6.2 | 29-03-2025 | 🎶 8  📊 20 </h3>
+      <p> - added scrolling on mobile! </p>
+      <p> - improved some other ui stuff (i hope) </p>
       <h3> 0.6.1 | 17-03-2025 | 🎶 8  📊 20 </h3>
       <p> - added more chart effects... you'll see </p>
       <p> - added hard chart for ⠞⠧⠶⠳⡇⠼⠗ </p>
