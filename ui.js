@@ -1597,6 +1597,10 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.6.3 | 01-04-2025 | 🎶 9  📊 21 </h3>
+      <p> - added kahoot theme (displayed as <a href="${config.cdn_v}kahoot.mp3">▲ ⯁ ⬤ ◼</a>)! </p>
+      <p> - made easy chart for ▲ ⯁ ⬤ ◼ </p>
+      <p> - what day is it today? </p>
       <h3> 0.6.2 | 29-03-2025 | 🎶 8  📊 20 </h3>
       <p> - added scrolling on mobile! </p>
       <p> - improved some other ui stuff (i hope) </p>

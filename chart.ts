@@ -3,6 +3,7 @@ import { chart_metadata, chart_metadata_2, chart_map, Score, scores, settings, s
 import { Sound, sounds } from "./sound.js";
 import { ui } from "./ui.js";
 import { key, mouse } from "./util/key.js";
+import { math } from "./util/math.js";
 
 export class Chart {
 
@@ -407,8 +408,16 @@ export class Chart {
 
     this.sound.visible = !settings.normal_mode && ui.menu === "game";
 
+    let random_lanes = math.randshuffle([1, 2, 3, 4]);
+    while (random_lanes[0] === 1 && random_lanes[1] === 2 && random_lanes[2] === 3) {
+      random_lanes = math.randshuffle([1, 2, 3, 4]);
+    }
+
     for (const n of this.notes) {
       // help initialise queue
+      if (n.type === note_type.normal && n.duration !== undefined && n.duration < 0) {
+        n.lane = random_lanes[n.lane - 1];
+      }
       if (n.type === note_type.hold || n.type === note_type.normal) {
         this.queue[Math.round(n.lane)].push(n);
       }
@@ -9129,6 +9138,47 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 1, 5.5 ],
       [ note_type.normal, 1, 7 ],
       [ note_type.normal, 1, 7.5 ],
+      [ "separation",     0.01, 7.2, 0.5 ],
+      [ note_type.none,   0, 2000 + 4000 * 16, 500 ],
+      [ note_type.normal, 1, 0, -1 ],
+      [ note_type.normal, 4, 1, -1 ],
+      [ note_type.normal, 4, 1.5, -1 ],
+      [ note_type.normal, 3, 2, -1 ],
+      [ note_type.normal, 4, 3, -1 ],
+      [ note_type.normal, 1, 3.5, -1 ],
+      [ note_type.normal, 2, 4, -1 ],
+      [ note_type.normal, 3, 4.5, -1 ], 
+      [ note_type.normal, 4, 5, -1 ],
+      [ note_type.normal, 4, 5.5, -1 ],
+      [ note_type.normal, 4, 7, -1 ],
+      [ note_type.normal, 4, 7.5, -1 ],
+      [ note_type.none,   0, 2000 + 4000 * 17, 500 ],
+      [ note_type.normal, 1, 0, -1 ],
+      [ note_type.normal, 3, 1, -1 ],
+      [ note_type.normal, 3, 1.5, -1 ],
+      [ note_type.normal, 1, 2, -1 ],
+      [ note_type.normal, 3, 3, -1 ],
+      [ note_type.normal, 3, 3.5, -1 ],
+      [ note_type.normal, 3, 5, -1 ],
+      [ note_type.normal, 3, 5.5, -1 ],
+      [ note_type.normal, 2, 6, -1 ],
+      [ note_type.normal, 1, 6.5, -1 ],
+      [ note_type.normal, 2, 7, -1 ],
+      [ note_type.normal, 2, 7.5, -1 ],
+      [ "separation",     1, 7.9, 0.5 ],
+      [ note_type.none,   0, 2000 + 4000 * 18, 500 ],
+      [ note_type.inverse, 1, 1 ],
+      [ note_type.inverse, 2, 2 ],
+      [ note_type.inverse, 3, 3 ],
+      [ note_type.inverse, 4, 4 ],
+      [ note_type.inverse, 1, 5 ],
+      [ note_type.inverse, 2, 6 ],
+      [ note_type.inverse, 3, 7 ],
+      [ note_type.inverse, 4, 8 ],
+      [ note_type.inverse, 1, 9 ],
+      [ note_type.inverse, 2, 10 ],
+      [ note_type.inverse, 3, 11 ],
+      [ note_type.inverse, 4, 12 ],
     ],
   },
 

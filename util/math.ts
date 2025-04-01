@@ -110,6 +110,16 @@ export const math = {
   randpick: (array: any[]) => {
     return array[math.randint(0, array.length - 1)];
   },
+  randshuffle: <T>(array: T[]): T[] => {
+    let ci = array.length;
+    let ri;
+    while (ci != 0) {
+      ri = Math.floor(Math.random() * ci);
+      ci--;
+      [array[ci], array[ri]] = [array[ri], array[ci]];
+    }
+    return array;
+  },
 
   log_base: (a: number, b: number) => {
     return Math.log(a) / Math.log(b);

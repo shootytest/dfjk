@@ -26,8 +26,8 @@ export const settings = {
     }
 };
 export const config = {
-    version: "0.6.2.1",
-    charts: 20,
+    version: "0.6.3.0",
+    charts: 21,
     lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1742913250/dfjk/",
     cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1742913252/dfjk/",
@@ -116,9 +116,9 @@ export const songs = [
         name: "▲ ⯁ ⬤ ◼",
         bpm: 120,
         types: ["easy", "medium", "hard"],
-        difficulties: [-1, -1, -1],
+        difficulties: [6, -1, -1],
         charts: ["kahoot_1", "kahoot_2", "kahoot_3"],
-        notes: [0, 0, 0],
+        notes: [276, 0, 0],
         preview: "kahoot_preview",
         image: "kahoot.jpg",
     },
