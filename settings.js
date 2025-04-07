@@ -26,7 +26,7 @@ export const settings = {
     }
 };
 export const config = {
-    version: "0.6.3.0",
+    version: "0.6.3.1",
     charts: 21,
     lanes: 4,
     cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1742913250/dfjk/",
@@ -62,7 +62,7 @@ export const songs = [
         bpm: 63,
         types: ["easy", "medium", "hard"],
         difficulties: [5, 12, -1],
-        charts: ["deepunder_1", "deepunder_3", "deepunder_4"],
+        charts: ["deepunder_1", "deepunder_3", "deepunder_2"],
         notes: [401, 606, 0],
         preview: "deepunder_preview",
         image: "deepunder.png",

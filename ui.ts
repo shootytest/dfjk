@@ -374,6 +374,7 @@ export const ui = {
     ui.list.type = math.lerp(ui.list.type, ui.list.type_target, 0.1);
     const type = ui.list.type;
     let index_target_change = 0;
+    let song_enter = false;
 
     // circles
     ctx.strokeStyle = color.white;
@@ -388,9 +389,7 @@ export const ui = {
     }
     ctx.clip();
     if (ui.mobile) {
-      let dragged = false;
       ui.check_drag((delta: vector) => {
-        dragged = true;
         ui.list.index_target_d = -delta.x / r * ui.list.index_target_scroll_mult * 4;
       });
       if (!mouse.buttons[0] && ui.list.index_target_d !== 0) {
@@ -524,9 +523,7 @@ export const ui = {
       ctx.rectangle(x, y, w, size.y);
     }
     if (ui.mobile) {
-      let dragged = false;
       ui.check_drag((delta: vector) => {
-        dragged = true;
         ui.list.index_target_d = -delta.y / h * ui.list.index_target_scroll_mult;
       });
       if (!mouse.buttons[0] && ui.list.index_target_d !== 0) {
@@ -563,7 +560,7 @@ export const ui = {
       ui.check_click(() => {
         const change = i - ui.list.index_target;
         if (change !== 0) ui.list_change_index(change);
-        else ui.enter();
+        else song_enter = true;
       }, () => {
         ctx.fillStyle = color.white + "11";
         ctx.fill();
@@ -585,6 +582,7 @@ export const ui = {
       ctx.round_rectangle(h / 2 - w / 2, 0, h, h, h * 0.1);
       ui.check_click(() => {
         ui.list_change_type(1);
+        song_enter = false;
       }, () => ctx.globalAlpha = 0.2);
       ctx.fill();
       ctx.globalAlpha = 1;
@@ -619,6 +617,8 @@ export const ui = {
 
       ctx.resetTransform();
     }
+
+    if (song_enter) ui.enter();
     
     ctx.restore("draw_list_right");
 
