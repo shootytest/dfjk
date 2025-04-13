@@ -30,7 +30,7 @@ export const settings = {
 };
 
 export const config = {
-  version: "0.6.3.1",
+  version: "0.6.3.2",
   charts: 21,
   lanes: 4,
   cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1742913250/dfjk/",
@@ -395,28 +395,28 @@ export const requirements: { [key: string]: Lock } = {
     requirements: ["happiness_1", "happiness_2", "happiness_3"],
   },*/
   saloon_4: {
-    name: "score AA on this song's hard",
+    name: "score S on this song's hard",
     at_least: 1,
     charts: ["saloon_3"],
-    scores: [950000],
+    scores: [980000],
   },
   happiness_2: {
-    name: "score AA on loneliness easy",
+    name: "score S on loneliness easy",
     at_least: 1,
     charts: ["loneliness_1"],
-    scores: [950000],
+    scores: [980000],
   },
   happiness_3: {
-    name: "score AA on loneliness medium",
+    name: "score S on loneliness medium",
     at_least: 1,
     charts: ["loneliness_2"],
-    scores: [950000],
+    scores: [980000],
   },
   happiness_4: {
-    name: "score AA on loneliness hard",
+    name: "score S on loneliness hard",
     at_least: 1,
     charts: ["loneliness_3"],
-    scores: [950000],
+    scores: [980000],
   },
   nush_3: {
     name: "???",
