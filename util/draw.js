@@ -96,6 +96,8 @@ export class Context {
     }
     restore(slot) {
         const save = this.saves[slot];
+        if (save == undefined)
+            return;
         const ctx = this.ctx;
         ctx.restore();
         ctx.strokeStyle = save.strokeStyle;
@@ -117,6 +119,9 @@ export class Context {
         ctx.direction = save.direction;
         ctx.imageSmoothingEnabled = save.imageSmoothingEnabled;
         ctx.setTransform(save.transform);
+    }
+    has_slot(slot) {
+        return this.saves[slot] != undefined;
     }
     stroke() {
         this.ctx.stroke();

@@ -1,6 +1,6 @@
 import { canvas, ctx } from "./util/canvas.js";
 import { vector } from "./util/vector.js";
-import { BPMs, Chart, charts, Effect, Note, note_type } from "./chart.js";
+import { Chart, chart_type_def, Effect, lane_to_col, lane_to_key, lane_to_row, Note, note_type } from "./chart.js";
 import { Sound, sounds } from "./sound.js";
 import dat from "./dat.js";
 import { firebase } from "./firebase.js";
@@ -11,8 +11,8 @@ import { scores, settings, songs, chart_map, config, Score, requirement, require
 // globals, why not?
 let x: number, y: number, w: number, h: number;
 let r: number, c: string, size: number;
-let o: any;
-let hover: boolean, hovering: boolean, clicking: boolean;
+// let o: any;
+// let hover: boolean, hovering: boolean, clicking: boolean;
 
 export const color: { [key: string]: string } = {
 
@@ -24,6 +24,12 @@ export const color: { [key: string]: string } = {
   green: "#54f088",
   blue: "#7a8eff", // "#4c75cf",
   purple: "#9c7aff", // "#664ccf",
+
+  keyboard_row_0: "#a83275",
+  keyboard_row_1: "#a87f32",
+  keyboard_row_2: "#32a873",
+  keyboard_row_3: "#5e39bd", // "#5332a8",
+  keyboard_row_4: "#5ede02", // "#77a832",
 
   ["difficulty_easy"]: "#73f586",
   ["difficulty_medium"]: "#e8e864",
@@ -85,7 +91,7 @@ export const ui = {
   width: window.innerWidth,
   height: window.innerHeight,
 
-  gui: new dat.GUI(),
+  gui: new dat.GUI( { hideable: false, } ),
 
   menu: "main",
 
@@ -105,6 +111,7 @@ export const ui = {
     index_target_scroll_mult: 0.6,
     type: 0,
     type_target: 0,
+    mode: "four" as chart_type_def,
     playing: sounds.beeps_preview,
     leaderboard: false,
     get song() {
@@ -123,6 +130,7 @@ export const ui = {
     lanes_prev: 4,
     lanes_target: 4,
     lanes_smoothness: 0.05,
+    lanes_type: "four" as chart_type_def,
     tilt: 0,
     tilt_: 0,
     offset: vector.create(0, 0),
@@ -402,9 +410,13 @@ export const ui = {
     for (let i = 0; i < 3; i++) {
       const ii = indices[i];
       const song = songs[ii];
-      const type_target = Math.min(ui.list.type_target, song.types.length - 1);
+      const type_target = Math.min(ui.list.type_target, (ui.list.type_target < 5 ? (song.fourmode ?? 3) : song.types.length) - 1);
       const score = scores.map[song.charts[type_target]]?.[0];
       const req = requirements[song.charts[type_target]];
+      const current_type = song.types[type_target];
+      const is_full = current_type && current_type.length > 0 && current_type.substring(current_type.length - 1) === " ";
+      if (i === 1) ui.list.mode = (is_full) ? "full" : "four";
+
       let locked = false;
       const angle = 0.32 * -((Math.round(index_circle) - index_circle) - 1 + i);
       if (x_constrained) ctx.translate(v.x, v.y / 2 - r * 1.05);
@@ -451,8 +463,10 @@ export const ui = {
       }
 
       ctx.beginPath();
-      ctx.circle(0, r, rr);
+      if (!is_full) ctx.circle(0, r, rr);
+      else ctx.polygon(6, rr * 1.1, 0, r, 0.3);
       ctx.stroke();
+
       let rotato = false;
       if (i === 1) ui.check_click(ui.list_enter, () => { rotato = true; });
       else ui.check_click(() => {
@@ -533,8 +547,10 @@ export const ui = {
     }
     for (let i = 0; i < songs.length; i++) {
       const song = songs[i];
-      const type_target = Math.min(ui.list.type_target, song.types.length - 1);
+      const type_target = Math.min(ui.list.type_target, (ui.list.type_target < 5 ? (song.fourmode ?? 3) : song.types.length) - 1);
       const score = scores.map[song.charts[type_target]]?.[0];
+      const current_type = song.types[type_target];
+      const is_full = current_type && current_type.length > 0 && current_type.substring(current_type.length - 1) === " ";
       const angle = 0.2 * (i - index);
       ctx.translate(x, y + Math.sin(angle) * r / 2);
       ctx.scale(1, Math.cos(angle));
@@ -550,7 +566,7 @@ export const ui = {
         ctx.globalAlpha = 1;
         ctx.fillStyle = color.black;
         ctx.beginPath();
-        ctx.round_rectangle(0, 0, w, h, h * 0.1);
+        ctx.round_rectangle(0, 0, w, h, is_full ? h * 0.1 : h * 2);
         ctx.fill();
       }
 
@@ -576,10 +592,11 @@ export const ui = {
       // ctx.restore("draw_list_right_text");
 
       // ctx.save("draw_list_right_type");
-      ctx.fillStyle = color["difficulty_" + song.types[type_target]];
+      ctx.fillStyle = color["difficulty_" + song.types[type_target].trim()];
       ctx.globalAlpha = 0.2;
       ctx.beginPath();
-      ctx.round_rectangle(h / 2 - w / 2, 0, h, h, h * 0.1);
+      if (is_full) ctx.round_rectangle(h / 2 - w / 2, 0, h, h, h * 0.1);
+      else ctx.circle(h / 2 - w / 2, 0, h / 2);
       ui.check_click(() => {
         ui.list_change_type(1);
         song_enter = false;
@@ -597,14 +614,15 @@ export const ui = {
       ctx.fillStyle = color["grade_" + grade];
       ctx.globalAlpha = 0.15;
       ctx.beginPath();
-      ctx.round_rectangle(w / 2 - h / 2, 0, h, h, h * 0.1);
+      if (is_full) ctx.round_rectangle(w / 2 - h / 2, 0, h, h, h * 0.1);
+      else ctx.circle(w / 2 - h / 2, 0, h / 2);
       ctx.fill();
       ctx.globalAlpha = 1;
       ctx.set_font_mono(h * 0.4);
       ctx.text(grade, w / 2 - h / 2, 0);
 
       ctx.beginPath();
-      ctx.round_rectangle(0, 0, w, h, h * 0.1);
+      ctx.round_rectangle(0, 0, w, h, is_full ? h * 0.1 : h * 2);
       ctx.stroke();
 
       const special = Chart.special_grades[score?.special ?? 0];
@@ -679,8 +697,12 @@ export const ui = {
   list_change_type: function(delta: number) {
     if (ui.menu !== "list") return;
     const song = songs[ui.list.index_target];
-    ui.list.type_target += delta + Math.max(song.difficulties.length, 3);
-    ui.list.type_target %= Math.max(song.difficulties.length, 3);
+    ui.list.type_target += delta + Math.max(song.types.length, 3);
+    ui.list.type_target %= Math.max(song.types.length, 3);
+    if (song.types[ui.list.type_target] == undefined || song.types[ui.list.type_target].length <= 0) {
+      ui.list_change_type(delta);
+      return;
+    }
     ui.list.playing.play();
   },
 
@@ -711,6 +733,7 @@ export const ui = {
       ui.list.playing.pause();
       ui.list.playing.reset();
       Chart.make(settings.current_chart);
+      Chart.make(settings.current_chart); // don't know why but i need to do this for full charts to work consistently???
       Sound.current?.play_after(1000);
       if (Sound.current) Sound.current.element.playbackRate = settings.play_speed;
       const sound = sfxr.generate("pickupCoin");
@@ -822,11 +845,15 @@ export const ui = {
     }
   },
 
+  // i just realised this is a tetris code reference (probably used in both TI-Nspire and four.surge.sh)
   draw_board: function(v: vector, size: vector, x_constrained: boolean = false) {
 
-    r = Math.min(size.y / 2, size.x);
     const chart = Chart.current;
     const sound = Sound.current;
+    const is_full = chart?.type === "full";
+    // r = is_full ? Math.min(size.y / 2, size.x / 3.5) : Math.min(size.y / 2, size.x);
+    r = Math.min(size.y / 2, size.x);
+
     if (!chart || !sound) {
       const difftype = chart_map[settings.current_chart.chart_name].song_type;
       const diffnumber = chart_map[settings.current_chart.chart_name].song_difficulty;
@@ -861,11 +888,12 @@ export const ui = {
       return;
     }
 
-    const tilt = (chart.lane_pressed[1] ? -2 : 0) + (chart.lane_pressed[2] ? -1 : 0) + (chart.lane_pressed[3] ? 1 : 0) + (chart.lane_pressed[4] ? 2 : 0);
+    const tilt = is_full ? 0 : (chart.lane_pressed[1] ? -2 : 0) + (chart.lane_pressed[2] ? -1 : 0) + (chart.lane_pressed[3] ? 1 : 0) + (chart.lane_pressed[4] ? 2 : 0);
     ui.game.tilt += tilt * 0.001;
     ui.game.tilt *= 0.90909090909090909;
     ui.game.offset = vector.mult(ui.game.offset, 0.90909090909090909);
-    ui.game.lanes = math.lerp(ui.game.lanes, ui.game.lanes_target, ui.game.lanes_smoothness);
+    if (!is_full) ui.game.lanes = math.lerp(ui.game.lanes, ui.game.lanes_target, ui.game.lanes_smoothness);
+    else { ui.game.lanes = 11; size.x *= 2; }
     ui.game.separation = math.lerp(ui.game.separation, ui.game.separation_target, ui.game.separation_smoothness);
     ui.game.scale = vector.lerp_v(ui.game.scale, ui.game.scale_target, ui.game.scale_smoothness);
 
@@ -883,37 +911,73 @@ export const ui = {
     let yy = v.y - size.y / 2;
     let lanewidth = size.x / ui.game.lanes;
     let lanesep = lanewidth * ui.game.separation;
-    let lanes = Math.max(ui.game.lanes_target, math.round(ui.game.lanes + 0.45));
+    let lanes = is_full ? 58 : Math.max(ui.game.lanes_target, math.round(ui.game.lanes + 0.45));
 
-    const total_lane_width = lanewidth + lanesep * (ui.game.lanes - 1);
+    const total_lane_width = is_full ? lanewidth + lanesep * 10 : lanewidth + lanesep * (ui.game.lanes - 1);
     xx -= total_lane_width / 2;
     
-    ctx.fillStyle = color.white;
-    ctx.globalAlpha = 0.1;
-    for (let i = 1; i <= lanes; i++) {
-      if (!chart.lane_pressed[i]) continue;
-      ctx.beginPath();
-      x = xx + (ui.lane_x(i) - 1) * lanesep;
-      ctx.rect(x, yy, ui.lane_w(i) * lanewidth, size.y);
-      ctx.fill();
+    if (is_full) {
+      // draw lane presses
+      for (let i = 10; i <= lanes; i++) {
+        if (!chart?.lane_pressed[i]) continue;
+        const row = lane_to_row[i];
+        const col = lane_to_col[i];
+        ctx.fillStyle = color["keyboard_row_" + row];
+        ctx.globalAlpha = (i === 57 ? 0.04 : 0.1);
+        ctx.beginPath();
+        x = xx + (col - 1) * lanesep;
+        ctx.rect(x, yy, (i === 57 ? 6 : 1) * lanewidth, size.y);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 0.1;
+      for (let i = 10; i <= lanes; i++) {
+        if (true) continue;
+        const row = lane_to_row[i];
+        const col = lane_to_col[i];
+        ctx.fillStyle = color["keyboard_row_" + row];
+        x = xx + (col - 1) * lanesep;
+        ctx.line(x, yy, x, yy + size.y);
+        x += lanewidth;
+        ctx.line(x, yy, x, yy + size.y);
+      }
+    } else { // not full
+      // draw lane presses
+      ctx.fillStyle = color.white;
+      ctx.globalAlpha = 0.1;
+      for (let i = 1; i <= lanes; i++) {
+        if (!chart.lane_pressed[i]) continue;
+        ctx.beginPath();
+        x = xx + (ui.lane_x(i) - 1) * lanesep;
+        ctx.rect(x, yy, ui.lane_w(i) * lanewidth, size.y);
+        ctx.fill();
+      }
+      // draw lane lines
+      ctx.strokeStyle = color.white;
+      ctx.lineWidth = 2;
+      for (let i = 1; i <= lanes; i++) {
+        x = xx + (ui.lane_x(i) - 1) * lanesep;
+        ctx.globalAlpha = 0.6 + 0.2 * Math.abs(i - 2);
+        ctx.line(x, yy, x, yy + size.y);
+        x += lanewidth;
+        ctx.line(x, yy, x, yy + size.y);
+      }
     }
-    ctx.strokeStyle = color.white;
-    ctx.lineWidth = 2;
-    for (let i = 1; i <= lanes; i++) {
-      x = xx + (ui.lane_x(i) - 1) * lanesep;
-      ctx.globalAlpha = 0.6 + 0.2 * Math.abs(i - 2);
-      ctx.line(x, yy, x, yy + size.y);
-      x += lanewidth;
-      ctx.line(x, yy, x, yy + size.y);
-    }
+    ctx.globalAlpha = 1;
+
     const line_offset = (0.9 + settings.line_offset / 1000);
     y = yy + size.y * line_offset;
+    ctx.strokeStyle = color.white;
+    ctx.lineWidth = 2;
     ctx.line(xx, y, xx + total_lane_width, y);
 
     ctx.save("draw_board");
-    ctx.beginPath();
-    ctx.rect(xx, yy, total_lane_width, size.y);
-    ctx.clip();
+    if (!is_full) {
+      ctx.beginPath();
+      ctx.rect(xx, yy, total_lane_width, size.y);
+      ctx.clip();
+    } else {
+      ctx.fillStyle = color.white;
+    }
 
     const notespeed = (ui.game.notespeed_set ?? (settings.notespeed * ui.game.notespeed_mult)) * size.y / 700;
     const seems = size.y * (line_offset + 0.2) / notespeed; // see_ms, number of milliseconds the player sees ahead at this notespeed
@@ -926,17 +990,18 @@ export const ui = {
         const time_to_2 = sound.time_to(note.time2);
         const length = time_to_2 - time_to;
         if (note.hit > 0 && note.release < 0) {
-          ctx.fillStyle = color.white;
+          ctx.fillStyle = ui.lane_c(note.lane);
           ctx.globalAlpha = 0.8;
         } else {
-          ctx.fillStyle = color.white;
-          ctx.globalAlpha = (note.hit === 0 || note.release === 0) ? 0.2 : 0.6;
+          ctx.fillStyle = ui.lane_c(note.lane);
+          ctx.globalAlpha = (note.hit === 0 || note.release === 0) ? 0.2 : 0.55;
         }
+        if (note.lane === 57) ctx.globalAlpha *= 0.4;
         ctx.beginPath();
-        ctx.round_rectangle(xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - (sound.time_to(note.time) + length / 2) * notespeed, notesize.x, notesize.y * 0.2 + length * notespeed, notesize.y * 0.08);
+        ctx.round_rectangle(xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - (sound.time_to(note.time) + length / 2) * notespeed, notesize.x, notesize.y * 0.2 + length * notespeed, size.y * 0.02);
         ctx.fill();
-        ctx.globalAlpha = 1;
         ctx.fillStyle = color.white;
+        ctx.globalAlpha = 1;
         ui.draw_note(note_type.normal, xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - sound.time_to(note.time) * notespeed, notesize, note);
       }
       if (note.hit >= 0) {
@@ -956,6 +1021,7 @@ export const ui = {
       } else if (note.type !== note_type.hold) {
         if (!note.visible) continue;
         ctx.fillStyle = color.white;
+        ctx.globalAlpha = 1;
         ui.draw_note(note.type, xx + (ui.lane_x(note.lane) - 1) * lanesep + lanewidth / 2, y - sound.time_to(note.time) * notespeed, notesize, note);
         continue;
       }
@@ -1097,78 +1163,151 @@ export const ui = {
   },
 
   lane_x: function(i: number, override_lanes_target?: number): number {
-    const t = override_lanes_target ?? ui.game.lanes_target;
-    if (t === 4) {
-      if (ui.game.lanes_prev > 4 && Math.abs(ui.game.lanes - ui.game.lanes_target) > 0.05) {
-        return this.lane_x(i, ui.game.lanes_prev);
-      } else {
-        return i;
+    if (ui.game.lanes_type === "four") {
+      const t = override_lanes_target ?? ui.game.lanes_target;
+      if (t === 4) {
+        if (ui.game.lanes_prev > 4 && Math.abs(ui.game.lanes - ui.game.lanes_target) > 0.05) {
+          return this.lane_x(i, ui.game.lanes_prev);
+        } else {
+          return i;
+        }
+      } else if (t === 5) {
+        // 1 2 5 3 4
+        if (i <= 2) return i;
+        if (i <= 4) return ui.game.lanes + 1 - (5 - i);
+        if (i <= 5) return 3;
+        if (i <= 6) return ui.game.lanes + 1;
+      } else if (t === 6) {
+        // 5 1 2 3 4 6
+        if (i <= 4) return (ui.game.lanes - 4) / 2 + i;
+        if (i <= 5) return 1;
+        if (i <= 6) return (ui.game.lanes - 4) / 2 + 5;
+        if (i <= 7) return ui.game.lanes + 1; // ???
+      } else if (t === 7) {
+        // 5 1 2 7 3 4 6
+        // todo
       }
-    } else if (t === 5) {
-      // 1 2 5 3 4
-      if (i <= 2) return i;
-      if (i <= 4) return ui.game.lanes + 1 - (5 - i);
-      if (i <= 5) return 3;
-      if (i <= 6) return ui.game.lanes + 1;
-    } else if (t === 6) {
-      // 5 1 2 3 4 6
-      if (i <= 4) return (ui.game.lanes - 4) / 2 + i;
-      if (i <= 5) return 1;
-      if (i <= 6) return (ui.game.lanes - 4) / 2 + 5;
-      if (i <= 7) return ui.game.lanes + 1; // ???
-    } else if (t === 7) {
-      // 5 1 2 7 3 4 6
-      // todo
+      return i;
+    } else /*if (ui.game.lanes_type === "full")*/ {
+      if (i === 57) return 4.5;
+      return lane_to_col[i];
     }
-    return i;
   },
 
   lane_w: function(i: number): number {
-    if (i <= 4) return 1;
-    if (ui.game.lanes_target === 4) {
-      if (i <= 5) return ui.game.lanes - 4;
-      if (i <= 6) return Math.max(0, ui.game.lanes - 5);
-    } else if (ui.game.lanes_target === 5) {
-      if (i <= 5) return ui.game.lanes - 4;
-    } else if (ui.game.lanes_target === 6) {
-      if (i <= 5) return (ui.game.lanes - 4) / 2;
-      if (i <= 6) return (ui.game.lanes - 4) / 2;
-    } else if (ui.game.lanes_target === 7) {
-      // todo
+    if (ui.game.lanes_type === "full") {
+      if (i === 57) return 6;
+      else return 1;
+    } else {
+      if (i <= 4) return 1;
+      if (ui.game.lanes_target === 4) {
+        if (i <= 5) return ui.game.lanes - 4;
+        if (i <= 6) return Math.max(0, ui.game.lanes - 5);
+      } else if (ui.game.lanes_target === 5) {
+        if (i <= 5) return ui.game.lanes - 4;
+      } else if (ui.game.lanes_target === 6) {
+        if (i <= 5) return (ui.game.lanes - 4) / 2;
+        if (i <= 6) return (ui.game.lanes - 4) / 2;
+      } else if (ui.game.lanes_target === 7) {
+        // todo
+      }
     }
     return 1;
   },
 
+  lane_c: function(i: number): string {
+    if (ui.game.lanes_type === "four") {
+      return color.white;
+    } else {
+      return color["keyboard_row_" + lane_to_row[i]];
+    }
+  },
+
   draw_note: function(type: note_type, x: number, y: number, size: vector, note: Note) {
 
-    if (type === note_type.normal || type === note_type.hold) {
-      ctx.beginPath();
-      if (ui.game.skin === "tetris" && ctx.globalAlpha === 1) {
-        // ctx.globalAlpha = 1; // 0.75 + 0.25 * math.bounce(ui.time, 10 / BPMs.tetris);
-        ctx.fillStyle = color["tetris_" + (note.duration ?? 0)];
-        const a = size.x * ui.game.scale.x / ui.game.scale.y;
-        ctx.round_rectangle(x, y, size.x, a, size.y * 0.05);
-        ctx.fill();
-        ctx.globalAlpha = 1;
+    if (ui.game.lanes_type === "four") {
+      if (type === note_type.normal || type === note_type.hold) {
         ctx.beginPath();
-      } else if (ui.game.skin === "kahoot" && ctx.globalAlpha === 1) {
-        ctx.fillStyle = color["kahoot_" + (note.lane ?? 0)];
+        if (ui.game.skin === "tetris" && ctx.globalAlpha === 1) {
+          // ctx.globalAlpha = 1; // 0.75 + 0.25 * math.bounce(ui.time, 10 / BPMs.tetris);
+          ctx.fillStyle = color["tetris_" + (note.duration ?? 0)];
+          const a = size.x * ui.game.scale.x / ui.game.scale.y;
+          ctx.round_rectangle(x, y, size.x, a, size.y * 0.05);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.beginPath();
+        } else if (ui.game.skin === "kahoot" && ctx.globalAlpha === 1) {
+          ctx.fillStyle = color["kahoot_" + (note.lane ?? 0)];
+        }
+        ctx.round_rectangle(x, y, size.x, size.y * 0.2, size.y * 0.08);
+        ctx.fill();
+      } else if (type === note_type.spam) {
+        ctx.beginPath();
+        ctx.circle(x, y, size.y * 0.1);
+        ctx.fill();
+      } else if (type === note_type.inverse) {
+        const r = size.y * 0.1;
+        ctx.beginPath();
+        //ctx.circle(x, y, r);
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.lineWidth = size.y * 0.04;
+        ctx.line(x - r, y - r, x + r, y + r);
+        ctx.line(x + r, y - r, x - r, y + r);
+        //ctx.stroke();
       }
-      ctx.round_rectangle(x, y, size.x, size.y * 0.2, size.y * 0.08);
-      ctx.fill();
-    } else if (type === note_type.spam) {
-      ctx.beginPath();
-      ctx.circle(x, y, size.y * 0.1);
-      ctx.fill();
-    } else if (type === note_type.inverse) {
-      const r = size.y * 0.1;
-      ctx.beginPath();
-      //ctx.circle(x, y, r);
-      ctx.strokeStyle = ctx.fillStyle;
-      ctx.lineWidth = size.y * 0.04;
-      ctx.line(x - r, y - r, x + r, y + r);
-      ctx.line(x + r, y - r, x - r, y + r);
-      //ctx.stroke();
+    }
+    else {
+      if (type === note_type.normal || type === note_type.hold) {
+        h = size.x;
+        if (note.lane === 57) {
+          h /= 6;
+          ctx.globalAlpha *= 0.4;
+        }
+        ctx.beginPath();
+        ctx.round_rectangle(x, y, size.x, h, h * 0.1);
+        ctx.fill();
+        if (ctx.fillStyle === color.white) {
+          ctx.fillStyle = ui.lane_c(note.lane);
+          ctx.globalAlpha *= 0.7;
+          ctx.beginPath();
+          ctx.round_rectangle(x, y, size.x, h, h * 0.1);
+          ctx.fill();
+          ctx.fillStyle = color.black;
+          ctx.set_font_mono(size.x * 0.8, "bold");
+          ctx.fillText(lane_to_key[note.lane].toUpperCase(), x, y);
+        }
+      } else if (type === note_type.spam) {
+        ctx.beginPath();
+        ctx.circle(x, y, size.x * 0.25);
+        ctx.fill();
+        if (ctx.fillStyle === color.white) {
+          ctx.fillStyle = ui.lane_c(note.lane);
+          ctx.globalAlpha *= 0.7;
+          ctx.beginPath();
+          ctx.circle(x, y, size.x * 0.25);
+          ctx.fill();
+        }
+      } else if (type === note_type.inverse) {
+        const r = size.y * 0.1;
+        ctx.beginPath();
+        //ctx.circle(x, y, r);
+        ctx.strokeStyle = ctx.fillStyle;
+        ctx.lineWidth = size.y * 0.04;
+        ctx.line(x - r, y - r, x + r, y + r);
+        ctx.line(x + r, y - r, x - r, y + r);
+        //ctx.stroke();
+      } else if (type === note_type.hex) {
+        ctx.beginPath();
+        ctx.polygon(6, size.x, x, y);
+        ctx.fill();
+        if (ctx.fillStyle === color.white) {
+          ctx.fillStyle = ui.lane_c(note.lane);
+          ctx.globalAlpha *= 0.7;
+          ctx.beginPath();
+          ctx.polygon(6, size.x, x, y);
+          ctx.fill();
+        }
+      }
     }
 
   },
@@ -1232,6 +1371,7 @@ export const ui = {
     ui.game.lanes = 4;
     ui.game.lanes_target = 4;
     ui.game.lanes_smoothness = 0.05;
+    ui.game.lanes_type = Chart.current?.type ?? "four";
     ui.game.separation = 1;
     ui.game.separation_target = 1;
     ui.game.separation_smoothness = 0.05;
@@ -1641,6 +1781,8 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.7.0 | 27-05-2025 | 🎶 9  📊 21 📈 2 </h3>
+      <p> - new mode... </p>
       <h3> 0.6.3 | 01-04-2025 | 🎶 9  📊 21 </h3>
       <p> - added kahoot theme (displayed as <a href="${config.cdn_v}kahoot.mp3">▲ ⯁ ⬤ ◼</a>)! </p>
       <p> - made easy chart for ▲ ⯁ ⬤ ◼ </p>

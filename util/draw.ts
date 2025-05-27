@@ -156,6 +156,7 @@ export class Context {
 
   restore(slot: string) {
     const save: ctx_save = this.saves[slot];
+    if (save == undefined) return;
     const ctx = this.ctx;
     ctx.restore(); // restore first, in case of ctx.clip calls
     ctx.strokeStyle = save.strokeStyle;
@@ -177,6 +178,10 @@ export class Context {
     ctx.direction = save.direction;
     ctx.imageSmoothingEnabled = save.imageSmoothingEnabled;
     ctx.setTransform(save.transform);
+  }
+
+  has_slot(slot: string) {
+    return this.saves[slot] != undefined;
   }
 
   stroke() {

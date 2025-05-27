@@ -170,6 +170,7 @@ export class Chart {
         return result;
     }
     metadata;
+    type;
     effects;
     active_effects;
     notes;
@@ -193,14 +194,15 @@ export class Chart {
     old_score;
     constructor(definition, metadata) {
         this.metadata = metadata;
+        this.type = definition.type;
         this.effects = [];
         this.active_effects = {};
         this.notes = [];
         this.active_notes = {};
-        this.queue = [[], [], [], [], [], [], [], []];
-        this.lane_pressed = [false, false, false, false, false, false, false, false];
-        this.lane_last_hit = [-1, -1, -1, -1, -1, -1, -1, -1];
-        this.lane_last_release = [-1, -1, -1, -1, -1, -1, -1, -1];
+        this.queue = Array.from({ length: 100 }, _ => Array());
+        this.lane_pressed = Array(100).fill(false);
+        this.lane_last_hit = Array(100).fill(-1);
+        this.lane_last_release = Array(100).fill(-1);
         this.result = [0, 0, 0, 0, 0];
         this.lanes = 4;
         this.total_notes = 0;
@@ -211,7 +213,7 @@ export class Chart {
         this.sound = sounds[definition.song];
         this.viewing = settings.view_mode;
         this.practicing = settings.practice_mode;
-        this.checkpoints = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
+        this.checkpoints = Array(10).fill(-1);
         this.finished = false;
         this.old_score = this.score_obj?.value ?? 0;
         let t = 0, d = 0;
@@ -301,7 +303,7 @@ export class Chart {
             this.reset();
         }
         if (mouse.lanes[0]) {
-            this.lane_pressed = [false, false, false, false, false];
+            this.lane_pressed = Array(100).fill(false);
         }
         for (let i = 1; i <= 5; i++) {
             if (mouse.lanes[i])
@@ -404,10 +406,10 @@ export class Chart {
         }
     }
     reset() {
-        this.queue = [[], [], [], [], [], [], [], []];
-        this.lane_pressed = [false, false, false, false, false, false, false, false];
-        this.lane_last_hit = [-1, -1, -1, -1, -1, -1, -1, -1];
-        this.lane_last_release = [-1, -1, -1, -1, -1, -1, -1, -1];
+        this.queue = Array.from({ length: 100 }, _ => Array());
+        this.lane_pressed = Array(100).fill(false);
+        this.lane_last_hit = Array(100).fill(-1);
+        this.lane_last_release = Array(100).fill(-1);
         this.result = [0, 0, 0, 0, 0];
         this.lanes = 4;
         this.total_notes = 0;
@@ -607,8 +609,54 @@ export var note_type;
     note_type["spam"] = "spam";
     note_type["fake"] = "fake";
     note_type["inverse"] = "inverse";
+    note_type["hex"] = "hex";
 })(note_type || (note_type = {}));
 ;
+export const lane_to_key = "⁰¹²³⁴⁵⁶⁷⁸⁹`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./ ";
+export const normal_keys = "1234567890qwertyuiopasdfghjklzxcvbnm ";
+export const key_to_lane = {};
+for (let i = 0; i < lane_to_key.length; i++)
+    key_to_lane[lane_to_key[i]] = i;
+export const code_to_lane = {};
+for (let i = 0; i < 10; i++) {
+    code_to_lane["Digit" + i] = key_to_lane["" + i];
+}
+for (let i = 10; i < normal_keys.length - 1; i++) {
+    code_to_lane["Key" + normal_keys[i].toUpperCase()] = key_to_lane[normal_keys[i]];
+}
+code_to_lane.Backquote = 10;
+code_to_lane.BracketLeft = 33;
+code_to_lane.BracketRight = 34;
+code_to_lane.Backslash = 35;
+code_to_lane.Semicolon = 45;
+code_to_lane.Quote = 46;
+code_to_lane.Comma = 54;
+code_to_lane.Period = 55;
+code_to_lane.Slash = 56;
+code_to_lane.Space = 57;
+export const lane_to_row = [
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    4,
+];
+export const lane_to_col = [
+    -1, -2, -3, -4, -5, -6, -7, -8, -9, -10,
+    -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+    1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5,
+    2,
+];
+for (let i = 0; i < lane_to_col.length; i++)
+    lane_to_col[i]++;
+if (lane_to_row.length !== lane_to_key.length)
+    console.error("suspicious error 0x2EE77: it's different");
+if (lane_to_col.length !== lane_to_key.length)
+    console.error("suspicious error 0x2EE78: it's different");
+const k = key_to_lane;
 export const BPMs = {
     tetris: 298.5,
     happiness: 126.0,
@@ -616,6 +664,7 @@ export const BPMs = {
 export const chart_definitions = {
     saloon_0: {
         song: "saloon",
+        type: "four",
         notes: [
             [note_type.none, 0, 2100, 60000 / 486],
             [note_type.normal, 1, 5],
@@ -711,6 +760,7 @@ export const chart_definitions = {
     },
     saloon_1: {
         song: "saloon",
+        type: "four",
         notes: [
             [note_type.none, 0, 2100, 60000 / 486],
             [note_type.normal, 1, 5],
@@ -809,6 +859,7 @@ export const chart_definitions = {
     },
     saloon_2: {
         song: "saloon",
+        type: "four",
         notes: [
             [note_type.none, 0, 2100, 60000 / 486],
             [note_type.normal, 1, 0],
@@ -936,6 +987,7 @@ export const chart_definitions = {
     },
     saloon_3: {
         song: "saloon",
+        type: "four",
         notes: [
             [note_type.none, 0, 2100, 60000 / 486],
             [note_type.normal, 1, 0],
@@ -1114,6 +1166,7 @@ export const chart_definitions = {
     },
     saloon_4: {
         song: "saloon",
+        type: "four",
         notes: [
             [note_type.none, 0, 2100, 60000 / 486],
             [note_type.normal, 1, 0],
@@ -1406,8 +1459,105 @@ export const chart_definitions = {
             [note_type.hold, 4, 72.5, 7.5],
         ],
     },
+    saloon_1_: {
+        song: "saloon",
+        type: "full",
+        notes: [
+            [note_type.none, 0, 2100, 60000 / 486],
+            [note_type.normal, k.a, 5],
+            [note_type.normal, k.d, 6],
+            [note_type.normal, k.f, 8],
+            [note_type.normal, k.h, 9],
+            [note_type.normal, k.j, 14],
+            [note_type.normal, k.k, 15],
+            [note_type.normal, k.j, 17],
+            [note_type.normal, k.k, 20],
+            [note_type.normal, k.j, 23],
+            [note_type.normal, k.a, 29],
+            [note_type.normal, k.d, 30],
+            [note_type.normal, k.f, 32],
+            [note_type.normal, k.h, 33],
+            [note_type.normal, k.k, 35.5],
+            [note_type.hold, k.l, 39, 4],
+            [note_type.normal, k.d, 41],
+            [note_type.normal, k.f, 44],
+            [note_type.normal, k.a, 52],
+            [note_type.normal, k.d, 53],
+            [note_type.normal, k.f, 55],
+            [note_type.normal, k.h, 56],
+            [note_type.normal, k.j, 61],
+            [note_type.normal, k.k, 62],
+            [note_type.normal, k.j, 64],
+            [note_type.normal, k.k, 67],
+            [note_type.normal, k.j, 69.9],
+            [note_type.normal, k.a, 73],
+            [note_type.normal, k.k, 74],
+            [note_type.normal, k.j, 77],
+            [note_type.normal, k.k, 79],
+            [note_type.normal, k.j, 81.5],
+            [note_type.normal, k.a, 85],
+            [note_type.normal, k.h, 86],
+            [note_type.normal, k.s, 89],
+            [note_type.normal, k.g, 92],
+            [note_type.normal, k.a, 100],
+            [note_type.normal, k.f, 100],
+            [note_type.normal, k.d, 103],
+            [note_type.normal, k.j, 104],
+            [note_type.normal, k.g, 106],
+            [note_type.normal, k.f, 107],
+            [note_type.normal, k.d, 109],
+            [note_type.normal, k.k, 110],
+            [note_type.normal, k.j, 112.1],
+            [note_type.hold, k.h, 115.4, 7],
+            [note_type.spam, k.h, 117.9],
+            [note_type.spam, k.h, 120.4],
+            [note_type.normal, k.a, 124],
+            [note_type.normal, k.f, 126.26],
+            [note_type.normal, k.d, 129.6],
+            [note_type.normal, k.h, 131],
+            [note_type.normal, k.d, 134.4],
+            [note_type.hold, k.a, 138, 4],
+            [note_type.hold, k.f, 138, 4],
+            [note_type.hold, k.h, 144, 6],
+            [note_type.hold, k.l, 144, 6],
+            [note_type.none, 0, 21490, 60000 / 486],
+            [note_type.normal, k.a, 3],
+            [note_type.normal, k.d, 5],
+            [note_type.normal, k.f, 6],
+            [note_type.normal, k.h, 8],
+            [note_type.normal, k.k, 9],
+            [note_type.normal, k.h, 11],
+            [note_type.normal, k.f, 12],
+            [note_type.normal, k.a, 14],
+            [note_type.normal, k.s, 15],
+            [note_type.normal, k.f, 17],
+            [note_type.hold, k.j, 20, 4],
+            [note_type.none, 0, 24352.963, 60000 / 486],
+            [note_type.normal, k.a, 3],
+            [note_type.normal, k.d, 5],
+            [note_type.normal, k.f, 6],
+            [note_type.normal, k.h, 8],
+            [note_type.normal, k.k, 9],
+            [note_type.normal, k.h, 11],
+            [note_type.normal, k.f, 12],
+            [note_type.normal, k.a, 14],
+            [note_type.normal, k.s, 15],
+            [note_type.normal, k.f, 17],
+            [note_type.hold, k.j, 20, 4],
+            [note_type.none, 0, 21500, 60000 / 486],
+            [note_type.hold, k.a, 50.5, 5],
+            [note_type.hold, k.f, 50.5, 5],
+            [note_type.hold, k.d, 58.5, 8],
+            [note_type.hold, k.g, 59, 7.5],
+            [note_type.hold, k.h, 69, 10],
+            [note_type.spam, k.h, 69.3],
+            [note_type.hold, k.l, 69.6, 9.4],
+            [note_type.spam, k.l, 69.9],
+        ],
+    },
     deepunder_1: {
         song: "deepunder",
+        type: "four",
         notes: [
             [note_type.none, 0, 3900, 60000 / 252],
             [note_type.hold, 4, 0, 1],
@@ -1773,6 +1923,7 @@ export const chart_definitions = {
     },
     deepunder_3: {
         song: "deepunder",
+        type: "four",
         notes: [
             [note_type.none, 0, 3900, 60000 / 252],
             [note_type.normal, 4, 0],
@@ -2362,6 +2513,7 @@ export const chart_definitions = {
     },
     deepunder_2: {
         song: "deepunder",
+        type: "four",
         notes: [
             [note_type.none, 0, 3900, 60000 / 252],
             [note_type.normal, 2, 0],
@@ -2976,6 +3128,7 @@ export const chart_definitions = {
     },
     loneliness_1: {
         song: "loneliness",
+        type: "four",
         notes: [
             [note_type.none, 0, 2035, 60000 / 480.76],
             [note_type.hold, 2, 0, 8],
@@ -3381,6 +3534,7 @@ export const chart_definitions = {
     },
     loneliness_2: {
         song: "loneliness",
+        type: "four",
         notes: [
             [note_type.none, 0, 2035, 60000 / 480.76],
             [note_type.hold, 2, 0, 8],
@@ -3917,6 +4071,7 @@ export const chart_definitions = {
     },
     loneliness_3: {
         song: "loneliness",
+        type: "four",
         notes: [
             [note_type.none, 0, 2035, 60000 / 480.76],
             [note_type.hold, 1, 0, 8],
@@ -4795,6 +4950,7 @@ export const chart_definitions = {
     },
     dusk_1: {
         song: "dusk_approach",
+        type: "four",
         notes: [
             [note_type.none, 0, 2000, 60000 / 180],
             [note_type.hold, 2, 0, 10],
@@ -4909,6 +5065,7 @@ export const chart_definitions = {
     },
     dusk_2: {
         song: "dusk_approach",
+        type: "four",
         notes: [
             [note_type.none, 0, 2000, 60000 / 180],
             [note_type.hold, 3, 0, 9],
@@ -5245,6 +5402,7 @@ export const chart_definitions = {
     },
     tetris_1: {
         song: "tetris",
+        type: "four",
         notes: [
             [note_type.none, 0, 2020, 60000 / BPMs.tetris],
             [note_type.normal, 4, 0],
@@ -5454,6 +5612,7 @@ export const chart_definitions = {
     },
     tetris_2: {
         song: "tetris",
+        type: "four",
         notes: [
             [note_type.none, 0, 2020 + 60000 / BPMs.tetris * 0, 60000 / BPMs.tetris],
             [note_type.normal, 4, 0],
@@ -5781,6 +5940,7 @@ export const chart_definitions = {
     },
     tetris_3: {
         song: "tetris",
+        type: "four",
         notes: [
             [note_type.none, 0, 2020 + 60000 / BPMs.tetris * 0, 60000 / BPMs.tetris],
             [note_type.hold, 3, 0, 1],
@@ -6363,6 +6523,7 @@ export const chart_definitions = {
     },
     tetris_4: {
         song: "tetris",
+        type: "four",
         notes: [
             [note_type.none, 0, 2020 + 60000 / BPMs.tetris * 0, 60000 / BPMs.tetris],
             [note_type.normal, 4, 0],
@@ -6716,6 +6877,7 @@ export const chart_definitions = {
     },
     happiness_1: {
         song: "happiness",
+        type: "four",
         notes: [
             [note_type.none, 0, 1930 + 60000 / BPMs.happiness * 16, 60000 / BPMs.happiness],
             [note_type.normal, 4, 0],
@@ -7175,6 +7337,7 @@ export const chart_definitions = {
     },
     happiness_2: {
         song: "happiness",
+        type: "four",
         notes: [
             [note_type.none, 0, 1930 + 60000 / BPMs.happiness * 0, 60000 / BPMs.happiness],
             [note_type.normal, 4, 0],
@@ -7757,6 +7920,7 @@ export const chart_definitions = {
     },
     happiness_3: {
         song: "happiness",
+        type: "four",
         notes: [
             [note_type.none, 0, 1930 + 60000 / BPMs.happiness * 0, 60000 / BPMs.happiness],
             [note_type.normal, 4, 0],
@@ -8711,6 +8875,7 @@ export const chart_definitions = {
     },
     nush_1: {
         song: "nush",
+        type: "four",
         notes: [
             [note_type.none, 0, 2000, 500],
             [note_type.normal, 1, 0],
@@ -8885,6 +9050,7 @@ export const chart_definitions = {
     },
     nush_2: {
         song: "nush",
+        type: "four",
         notes: [
             [note_type.none, 0, 2000, 500],
             [note_type.normal, 1, 0],
@@ -9213,6 +9379,7 @@ export const chart_definitions = {
     },
     kahoot_1: {
         song: "kahoot",
+        type: "four",
         notes: [
             [note_type.none, 0, 0, 500],
             ["skin", 2, 1, 0],
@@ -9528,6 +9695,14 @@ export const chart_definitions = {
     },
     beeps: {
         song: "beeps",
+        type: "four",
+        notes: [
+            [note_type.none, 0, 2000, 500],
+        ],
+    },
+    beeps_: {
+        song: "beeps",
+        type: "full",
         notes: [
             [note_type.none, 0, 2000, 500],
         ],
@@ -9539,6 +9714,9 @@ for (let i = 0; i < 100; i++) {
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.10]);
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.15]);
     chart_definitions.beeps.notes.push([note_type.spam, i % 4 + 1, i + 0.20]);
+}
+for (let i = 0; i < 100; i++) {
+    chart_definitions.beeps_.notes.push([note_type.normal, key_to_lane[normal_keys[i % normal_keys.length]], i]);
 }
 for (let i = 0; i < 27; i += 4) {
     chart_definitions.tetris_2.notes.push(["scalex", 0.85, i, 5]);

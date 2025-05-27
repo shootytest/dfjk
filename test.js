@@ -1,6 +1,6 @@
 import { init_canvas } from "./util/canvas.js";
 import { key, mouse } from "./util/key.js";
-import { Chart } from "./chart.js";
+import { Chart, code_to_lane } from "./chart.js";
 import { Sound } from "./sound.js";
 import { ui } from "./ui.js";
 import { config, scores, settings } from "./settings.js";
@@ -17,6 +17,8 @@ const init = function () {
     key.init();
     ui.init();
     key.add_key_listener("Space", function () {
+        if (ui.menu === "game" && Chart.current?.type === "full" && Sound.current && Sound.current?.play_timestamp !== -1)
+            return;
         if (document.activeElement?.tagName.toLowerCase() === "input")
             return;
         if (ui.game.lanes_target % 2 === 1)
@@ -32,6 +34,13 @@ const init = function () {
     key.add_key_listener("ShiftLeft", ui.shift);
     key.add_key_listener("ShiftRight", ui.shift);
     key.add_key_listener("KeyR", function () {
+        if (ui.menu === "game" && Chart.current?.type === "full")
+            return;
+        if (document.activeElement?.tagName.toLowerCase() === "input")
+            return;
+        ui.restart();
+    });
+    key.add_key_listener("Equal", function () {
         if (document.activeElement?.tagName.toLowerCase() === "input")
             return;
         ui.restart();
@@ -48,6 +57,20 @@ const init = function () {
         ui.back();
     });
     key.add_key_listener("KeyP", function () {
+        if (ui.menu === "game" && Chart.current?.type === "full")
+            return;
+        if (document.activeElement?.tagName.toLowerCase() === "input")
+            return;
+        if (Sound.current?.paused) {
+            Sound.current?.play();
+        }
+        else {
+            Sound.current?.pause();
+        }
+    });
+    key.add_key_listener("Minus", function () {
+        if (document.activeElement?.tagName.toLowerCase() === "input")
+            return;
         if (Sound.current?.paused) {
             Sound.current?.play();
         }
@@ -58,48 +81,77 @@ const init = function () {
     key.add_keydown_listener(function (event) {
         if (event.repeat)
             return;
-        for (let i = 0; i < 4; i++) {
-            if (event.code === "Key" + settings.controls[i].toUpperCase()) {
-                Chart.current?.key_hit(i + 1);
+        if (ui.menu !== "game")
+            return;
+        if (ui.game.lanes_type === "four") {
+            for (let i = 0; i < 4; i++) {
+                if (event.code === "Key" + settings.controls[i].toUpperCase()) {
+                    Chart.current?.key_hit(i + 1);
+                }
+            }
+            if (ui.game.lanes_target === 5 && (event.code === "Space" || event.code === "KeyG" || event.code === "KeyH"))
+                Chart.current?.key_hit(5);
+            if (ui.game.lanes_target > 5)
+                for (let i = 5; i <= ui.game.lanes_target; i++) {
+                    if (event.code === [0, 1, 2, 3, 4, "KeyS", "KeyL", "Space"][i]) {
+                        Chart.current?.key_hit(i);
+                    }
+                }
+            if (settings.practice_mode && Chart.current && Sound.current) {
+                for (let i = 0; i <= 9; i++) {
+                    if (event.code === "Digit" + i) {
+                        if (event.shiftKey) {
+                            Chart.current.checkpoints[i] = Math.round(Sound.current.time);
+                        }
+                        else if (Chart.current.checkpoints[i] >= 0) {
+                            Sound.current.element.currentTime = Chart.current.checkpoints[i] / 1000;
+                        }
+                    }
+                }
             }
         }
-        if (ui.game.lanes_target === 5 && (event.code === "Space" || event.code === "KeyG" || event.code === "KeyH"))
-            Chart.current?.key_hit(5);
-        if (ui.game.lanes_target > 5)
-            for (let i = 5; i <= ui.game.lanes_target; i++) {
-                if (event.code === [0, 1, 2, 3, 4, "KeyS", "KeyL", "Space"][i]) {
-                    Chart.current?.key_hit(i);
+        else if (ui.game.lanes_type === "full") {
+            const lane = code_to_lane[event.code];
+            if (lane >= 11 && lane <= 19 && (event.shiftKey || event.ctrlKey) && settings.practice_mode && Chart.current && Sound.current) {
+                const i = lane - 10;
+                if (event.shiftKey) {
+                    Chart.current.checkpoints[i] = Math.round(Sound.current.time);
+                }
+                else if (Chart.current.checkpoints[i] >= 0) {
+                    Sound.current.element.currentTime = Chart.current.checkpoints[i] / 1000;
                 }
             }
-        if (settings.practice_mode && Chart.current && Sound.current) {
-            for (let i = 0; i <= 9; i++) {
-                if (event.code === "Digit" + i) {
-                    if (event.shiftKey) {
-                        Chart.current.checkpoints[i] = Math.round(Sound.current.time);
-                    }
-                    else if (Chart.current.checkpoints[i] >= 0) {
-                        Sound.current.element.currentTime = Chart.current.checkpoints[i] / 1000;
-                    }
-                }
+            else if (lane) {
+                Chart.current?.key_hit(lane);
             }
         }
     });
     key.add_keyup_listener(function (event) {
         if (event.repeat)
             return;
-        for (let i = 0; i < 4; i++) {
-            if (event.code === "Key" + settings.controls[i].toUpperCase()) {
-                Chart.current?.key_release(i + 1);
-            }
-        }
-        if (ui.game.lanes_target === 5 && (event.code === "Space" || event.code === "KeyG" || event.code === "KeyH"))
-            Chart.current?.key_release(5);
-        if (ui.game.lanes_target > 5)
-            for (let i = 5; i <= ui.game.lanes_target; i++) {
-                if (event.code === [0, 1, 2, 3, 4, "KeyS", "KeyL", "Space"][i]) {
-                    Chart.current?.key_release(i);
+        if (ui.menu !== "game")
+            return;
+        if (ui.game.lanes_type === "four") {
+            for (let i = 0; i < 4; i++) {
+                if (event.code === "Key" + settings.controls[i].toUpperCase()) {
+                    Chart.current?.key_release(i + 1);
                 }
             }
+            if (ui.game.lanes_target === 5 && (event.code === "Space" || event.code === "KeyG" || event.code === "KeyH"))
+                Chart.current?.key_release(5);
+            if (ui.game.lanes_target > 5)
+                for (let i = 5; i <= ui.game.lanes_target; i++) {
+                    if (event.code === [0, 1, 2, 3, 4, "KeyS", "KeyL", "Space"][i]) {
+                        Chart.current?.key_release(i);
+                    }
+                }
+        }
+        else if (ui.game.lanes_type === "full") {
+            const lane = code_to_lane[event.code];
+            if (lane) {
+                Chart.current?.key_release(lane);
+            }
+        }
     });
     key.add_lane_hit(function (lane) {
         const lanes = config.lanes;
