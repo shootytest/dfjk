@@ -579,6 +579,8 @@ export const ui = {
         else song_enter = true;
       }, () => {
         ctx.fillStyle = color.white + "11";
+        ctx.beginPath();
+        ctx.round_rectangle(0, 0, w, h, is_full ? h * 0.1 : h * 2);
         ctx.fill();
       });
 
@@ -710,7 +712,7 @@ export const ui = {
     if (ui.menu !== "list") return;
     const song = songs[ui.list.index_target];
     settings.current_chart.song_id = song.id;
-    settings.current_chart.song_type = Math.min(ui.list.type_target, song.charts.length - 1);
+    settings.current_chart.song_type = Math.min(ui.list.type_target, (ui.list.type_target < 5 ? (song.fourmode ?? 3) : song.types.length) - 1);
     const chart_name = song.charts[settings.current_chart.song_type];
     settings.current_chart.chart_name = chart_name;
     if (song.difficulties[settings.current_chart.song_type] === -1) return;
@@ -1775,14 +1777,14 @@ export const ui = {
         <p><a href="https://soundcloud.com/liwingyankobe/loneliness" target="_blank"><span> Loneliness <l></l></span><span> infiniteXforever </span></a></p>
         <p><a href="https://kadthemusiclad.bandcamp.com/track/dusk-approach" target="_blank"><span> Dusk approach <l></l></span><span> kad </span></a></p>
         <p><a href="https://youtu.be/NmCCQxVBfyM" target="_blank"><span> ⠞⠧⠶⠳⡇⠼⠗ <l></l></span><span> folk / Hip Tanaka </span></a></p>
-        <p><a href="https://music.apple.com/sg/song/happiness/698628232" target="_blank"><span> Happiness <l></l></span><span> Lin Hai </span></a></p>
+        <p><a href="https://music.apple.com/song/happiness/698628232" target="_blank"><span> Happiness <l></l></span><span> Lin Hai </span></a></p>
         <h3 style="text-align: center;"> images </h3>
         <p><a href="${config.cdn_i}deepunder.jpg" target="_blank"><span> congratulations.jpg <l></l></span><span> rnightshroud </span></a></p>
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
       <h3> 0.7.0 | 27-05-2025 | 🎶 9  📊 21 📈 2 </h3>
-      <p> - new mode... </p>
+      <p> - new mode... ⬢ </p>
       <h3> 0.6.3 | 01-04-2025 | 🎶 9  📊 21 </h3>
       <p> - added kahoot theme (displayed as <a href="${config.cdn_v}kahoot.mp3">▲ ⯁ ⬤ ◼</a>)! </p>
       <p> - made easy chart for ▲ ⯁ ⬤ ◼ </p>

@@ -30,9 +30,9 @@ export const settings = {
 };
 
 export const config = {
-  version: "0.6.3.2",
-  charts: 21,
-  lanes: 4,
+  version: "0.7.0.1",
+  charts: 23,
+  lanes: 4, // ?!
   cdn_i: "https://res.cloudinary.com/dzzjrhgkb/image/upload/v1742913250/dfjk/",
   cdn_v: "https://res.cloudinary.com/dzzjrhgkb/video/upload/v1742913252/dfjk/",
 };
