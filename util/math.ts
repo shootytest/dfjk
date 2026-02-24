@@ -38,7 +38,7 @@ export const math = {
   dist_v: (p1: vector, p2: vector) => {
     return Math.sqrt(math.dist2_v(p1, p2));
   },
-  
+
   atan2_v: (v: vector): number => {
     return Math.atan2(v.y, v.x);
   },
@@ -148,7 +148,7 @@ export const math = {
   point_in_circle: (px: number, py: number, cx: number, cy: number, r: number) => {
     return math.dist2(px - cx, py - cy) < r * r;
   },
-  
+
   lane_hit_x: (lanes: number, lane: number): number => {
     if (lanes === 4) return lane;
     else if (lanes === 5) {

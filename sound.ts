@@ -118,7 +118,7 @@ export class Sound {
       }
     }, 1);
   }
-  
+
   clear_interval() {
     if (!this.options.start || !this.options.end) return;
     clearInterval(this.options.interval);

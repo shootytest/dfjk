@@ -1,7 +1,5 @@
 import { svg_paths } from "./svg.js";
 import { math } from "./math.js";
-class Drawer {
-}
 export class Context {
     ctx;
     saves;

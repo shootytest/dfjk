@@ -128,7 +128,7 @@ export class Chart {
   static special_grade(result: number[]): string {
     return Chart.special_grades[Chart.special_grade_number(result)];
   }
-  
+
   static count_notes_from_result(result: number[]) {
     return result[0] + result[1] + result[2] + result[3] + result[4];
   }
@@ -272,7 +272,7 @@ export class Chart {
     if (this.number_offset === 0) return 0;
     return this.total_offset / this.number_offset;
   }
-  
+
   get difficulty_type() {
     return chart_map[this.metadata.chart_name].song_type;
   }
@@ -280,7 +280,7 @@ export class Chart {
   get difficulty_number() {
     return chart_map[this.metadata.chart_name].song_difficulty;
   }
-  
+
   tick() {
     if ((this.practicing || this.viewing) && this.sound.seeked) {
       this.sound.seeked = false;
@@ -809,7 +809,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.spam, 3.57, 69.9 ],
     ],
   },
-  
+
   saloon_1: {
     song: "saloon",
     type: "four",
@@ -1606,7 +1606,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.hold,   4, 72.5, 7.5 ],
     ],
   },
-  
+
   saloon_1_: {
     song: "saloon",
     type: "full",
@@ -7087,7 +7087,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.inverse, 4, 31 ], [ "y", -30, 30.9, 0.5 ],
     ],
   },
-  
+
   happiness_1: {
     song: "happiness",
     type: "four",
@@ -7597,7 +7597,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 4, 14 ],
     ],
   },
-  
+
   happiness_2: {
     song: "happiness",
     type: "four",
@@ -8201,7 +8201,7 @@ export const chart_definitions: { [key: string]: chart_def } = {
       [ note_type.normal, 4, 14 ],
     ],
   },
-  
+
   happiness_3: {
     song: "happiness",
     type: "four",

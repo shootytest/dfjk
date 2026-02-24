@@ -1749,6 +1749,8 @@ export const ui = {
       </div>
       <h1> versions </h1>
       <div style="text-align: left;">
+      <h3> 0.7.1 | 24-02-2026 | 🎶 9  📊 21 📈 2 </h3>
+      <p> - remove unlock requirements </p>
       <h3> 0.7.0 | 27-05-2025 | 🎶 9  📊 21 📈 2 </h3>
       <p> - new mode... ⬢ </p>
       <h3> 0.6.3 | 01-04-2025 | 🎶 9  📊 21 </h3>

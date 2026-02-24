@@ -370,24 +370,6 @@ export const scores = {
 };
 ;
 export const requirements = {
-    saloon_4: {
-        name: "score S on this song's hard",
-        at_least: 1,
-        charts: ["saloon_3"],
-        scores: [980000],
-    },
-    happiness_2: {
-        name: "score S on loneliness easy",
-        at_least: 1,
-        charts: ["loneliness_1"],
-        scores: [980000],
-    },
-    happiness_3: {
-        name: "score S on loneliness medium",
-        at_least: 1,
-        charts: ["loneliness_2"],
-        scores: [980000],
-    },
     happiness_4: {
         name: "score S on loneliness hard",
         at_least: 1,

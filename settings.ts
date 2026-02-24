@@ -1,5 +1,5 @@
 export const settings = {
-  
+
   NOTESPEED: 20,
   current_chart: {
     chart_name: "beeps",
@@ -404,7 +404,7 @@ export const requirements: { [key: string]: Lock } = {
     at_least: 1,
     requirements: ["happiness_1", "happiness_2", "happiness_3"],
   },*/
-  saloon_4: {
+  /*saloon_4: {
     name: "score S on this song's hard",
     at_least: 1,
     charts: ["saloon_3"],
@@ -421,7 +421,7 @@ export const requirements: { [key: string]: Lock } = {
     at_least: 1,
     charts: ["loneliness_2"],
     scores: [980000],
-  },
+  },*/
   happiness_4: {
     name: "score S on loneliness hard",
     at_least: 1,

@@ -25,12 +25,6 @@ type ctx_save = {
   transform: DOMMatrix,
 };
 
-class Drawer {
-
-  
-
-}
-
 export class Context {
 
   ctx: CanvasRenderingContext2D;
@@ -246,7 +240,7 @@ export class Context {
       this.ctx.rect(x, y, w, h);
     }
   }
-  
+
   rectangle(x: number, y: number, w: number, h: number, a?: number) {
     this.rect(x - w / 2, y - h / 2, w, h, a);
   }
@@ -254,11 +248,11 @@ export class Context {
   round_rect(x: number, y: number, w: number, h: number, r: number) {
     this.ctx.roundRect(x, y, w, h, r);
   }
-  
+
   round_rectangle(x: number, y: number, w: number, h: number, r: number) {
     this.round_rect(x - w / 2, y - h / 2, w, h, r);
   }
-  
+
   circle(x: number, y: number, r: number, clockwise = false) {
     this.arc(x, y, r, 0, 2 * Math.PI, clockwise);
   }
@@ -280,7 +274,7 @@ export class Context {
     this.ctx.lineTo(y1.x, y1.y);
     this.ctx.stroke();
   }
-  
+
   lines(xs: number[], ys: number[], close_loop = true) {
     if (xs.length <= 1 || ys.length <= 1) {
       return;
@@ -296,7 +290,7 @@ export class Context {
     }
     if (close_loop) this.ctx.lineTo(xs[0], ys[0]);
   }
-  
+
   lines_v(vectors: vector[], close_loop = true) {
     if (vectors.length <= 1) {
       return;
@@ -387,19 +381,19 @@ export class Context {
     const pixel_ratio = window.devicePixelRatio;
     this.ctx.scale(pixel_ratio, pixel_ratio);
   }
-  
+
   translate(x: number, y: number) {
     this.ctx.translate(x, y);
   }
-  
+
   translate_v(v: vector) {
     this.ctx.translate(v.x, v.y);
   }
-  
+
   rotate(angle: number) {
     this.ctx.rotate(angle);
   }
-  
+
   scale(scale_x: number, scale_y: number = scale_x) {
     this.ctx.scale(scale_x, scale_y);
   }

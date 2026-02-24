@@ -1,14 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 import { getDatabase, ref, set, onValue, get, child, query, increment, update, runTransaction } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
-import { getAuth, onAuthStateChanged, updateProfile, GoogleAuthProvider, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, signInWithPopup, signInWithEmailAndPassword, signInWithCredential, updateEmail, getAdditionalUserInfo, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, updateProfile, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, signInWithCredential, getAdditionalUserInfo, signOut } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
 import { scores } from "./settings.js";
 import { ui } from "./ui.js";
 
 /*
 window.fire = {
-  
+
   initializeApp: initializeApp,
-  
+
   getDatabase: getDatabase,
   ref: ref,
   set: set,
@@ -19,7 +19,7 @@ window.fire = {
   update: update,
   runTransaction: runTransaction,
   onValue: onValue,
-  
+
   getAuth: getAuth,
   onAuthStateChanged: onAuthStateChanged,
   updateEmail: updateEmail,
@@ -28,7 +28,7 @@ window.fire = {
   EmailAuthProvider: EmailAuthProvider,
   reauthenticateWithCredential: reauthenticateWithCredential,
   reauthenticateWithPopup: reauthenticateWithPopup,
-  
+
 };
 */
 
@@ -114,7 +114,7 @@ const then_function = async (result) => {
         display_result(`signed in successfully!`, color.green);
       }).catch(console.error);
     });
-    
+
     /*
     if (first_better) {
       const new_result = await read_levels();
@@ -206,7 +206,7 @@ export const firebase = {
   remove: (path) => {
     return ref(db, path)?.remove();
   },
-  
+
   register_user: function (username, password) {
     const email = username + "@example.com";
     firebase.stored_username = username;
